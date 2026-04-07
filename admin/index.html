@@ -9,35 +9,42 @@
 </head>
 <body>
   <script>
-    // KHAI BÁO CẤU HÌNH TRỰC TIẾP TẠI ĐÂY
-    CMS.init({
-      config: {
-        backend: {
-          name: "github",
-          repo: "HONGANH20212/MORACHI",
-          branch: "main",
-        },
-        media_folder: "images",
-        public_folder: "images",
-        collections: [
-          {
-            name: "products",
-            label: "Sản Phẩm",
-            folder: "products",
-            create: true,
-            slug: "{{slug}}",
-            fields: [
-              { label: "Tên sản phẩm", name: "title", widget: "string" },
-              { label: "Thương hiệu", name: "brand", widget: "string" },
-              { label: "Ảnh sản phẩm", name: "thumbnail", widget: "image" },
-              { label: "Giá bán hiện tại", name: "current_price", widget: "string" },
-              { label: "Giá cũ", name: "old_price", widget: "string", required: false },
-              { label: "Giảm giá", name: "discount", widget: "string", required: false },
+    // Đảm bảo thư viện tải xong mới chạy cấu hình
+    const initCMS = () => {
+      if (window.CMS) {
+        CMS.init({
+          config: {
+            backend: {
+              name: "github",
+              repo: "HONGANH20212/MORACHI",
+              branch: "main",
+            },
+            media_folder: "images",
+            public_folder: "images",
+            collections: [
+              {
+                name: "products",
+                label: "Sản Phẩm",
+                folder: "products",
+                create: true,
+                slug: "{{slug}}",
+                fields: [
+                  { label: "Tên sản phẩm", name: "title", widget: "string" },
+                  { label: "Thương hiệu", name: "brand", widget: "string" },
+                  { label: "Ảnh sản phẩm", name: "thumbnail", widget: "image" },
+                  { label: "Giá bán hiện tại", name: "current_price", widget: "string" },
+                  { label: "Giá cũ", name: "old_price", widget: "string", required: false },
+                  { label: "Giảm giá", name: "discount", widget: "string", required: false },
+                ],
+              },
             ],
           },
-        ],
-      },
-    });
+        });
+      } else {
+        setTimeout(initCMS, 100); // Thử lại sau 0.1 giây nếu chưa tải xong
+      }
+    };
+    initCMS();
   </script>
 </body>
 </html>
