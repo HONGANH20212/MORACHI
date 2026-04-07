@@ -1,20 +1,27 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
   <meta charset="utf-8" />
-  <title>Admin MORACHI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản lý Cửa hàng MORACHI</title>
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 </head>
 <body>
   <script>
-    // Ép CMS khởi tạo bằng cấu hình nội bộ, không đọc file config.yml bên ngoài nữa
+    // Chỉ định CMS không tự động tìm file config.yml bên ngoài
     window.CMS_MANUAL_INIT = true;
-    
-    function initAdmin() {
+
+    // Đợi thư viện tải xong hoàn toàn
+    document.addEventListener('DOMContentLoaded', function() {
       if (window.CMS) {
         CMS.init({
           config: {
-            backend: { name: "github", repo: "HONGANH20212/MORACHI", branch: "main" },
+            backend: {
+              name: "github",
+              repo: "HONGANH20212/MORACHI",
+              branch: "main"
+            },
+            display_url: "https://morachi.vthanh.cloud",
             media_folder: "images",
             public_folder: "images",
             collections: [
@@ -23,20 +30,18 @@
                 label: "Sản Phẩm",
                 folder: "products",
                 create: true,
+                slug: "{{slug}}",
                 fields: [
-                  { label: "Tên", name: "title", widget: "string" },
-                  { label: "Ảnh", name: "thumbnail", widget: "image" },
-                  { label: "Giá", name: "current_price", widget: "string" }
+                  { label: "Tên sản phẩm", name: "title", widget: "string" },
+                  { label: "Giá", name: "current_price", widget: "string" },
+                  { label: "Ảnh", name: "thumbnail", widget: "image" }
                 ]
               }
             ]
           }
         });
-      } else {
-        setTimeout(initAdmin, 100);
       }
-    }
-    initAdmin();
+    });
   </script>
 </body>
 </html>
