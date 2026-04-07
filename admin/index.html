@@ -5,18 +5,39 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Quản lý Cửa hàng MORACHI</title>
   <link rel="icon" href="../images/icon-logo.png" type="image/png">
-
-  <link href="./config.yml" type="text/yaml" rel="cms-config-url">
-
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
-
-  <style>
-    .nc-github-authentication-button {
-      background-color: #a81411 !important;
-      color: white !important;
-    }
-  </style>
 </head>
 <body>
-  </body>
+  <script>
+    // KHAI BÁO CẤU HÌNH TRỰC TIẾP TẠI ĐÂY
+    CMS.init({
+      config: {
+        backend: {
+          name: "github",
+          repo: "HONGANH20212/MORACHI",
+          branch: "main",
+        },
+        media_folder: "images",
+        public_folder: "images",
+        collections: [
+          {
+            name: "products",
+            label: "Sản Phẩm",
+            folder: "products",
+            create: true,
+            slug: "{{slug}}",
+            fields: [
+              { label: "Tên sản phẩm", name: "title", widget: "string" },
+              { label: "Thương hiệu", name: "brand", widget: "string" },
+              { label: "Ảnh sản phẩm", name: "thumbnail", widget: "image" },
+              { label: "Giá bán hiện tại", name: "current_price", widget: "string" },
+              { label: "Giá cũ", name: "old_price", widget: "string", required: false },
+              { label: "Giảm giá", name: "discount", widget: "string", required: false },
+            ],
+          },
+        ],
+      },
+    });
+  </script>
+</body>
 </html>
