@@ -2,47 +2,41 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quản lý Cửa hàng MORACHI</title>
-  <link rel="icon" href="../images/icon-logo.png" type="image/png">
-  
+  <title>Admin MORACHI</title>
   <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 </head>
 <body>
   <script>
-    // ĐỊNH NGHĨA CẤU HÌNH TRỰC TIẾP - KHÔNG CẦN FILE NGOÀI
-    window.CMS_MANUAL_INIT = true; // Ngăn CMS tự đi tìm file config.yml
-
-    document.addEventListener('DOMContentLoaded', function() {
-      CMS.init({
-        config: {
-          backend: {
-            name: "github",
-            repo: "HONGANH20212/MORACHI", // Đảm bảo đúng tên repo của bạn
-            branch: "main",
-          },
-          media_folder: "images",
-          public_folder: "images",
-          collections: [
-            {
-              name: "products",
-              label: "Sản Phẩm",
-              folder: "products",
-              create: true,
-              slug: "{{slug}}",
-              fields: [
-                { label: "Tên sản phẩm", name: "title", widget: "string" },
-                { label: "Thương hiệu", name: "brand", widget: "string" },
-                { label: "Ảnh sản phẩm", name: "thumbnail", widget: "image" },
-                { label: "Giá bán hiện tại", name: "current_price", widget: "string" },
-                { label: "Giá cũ", name: "old_price", widget: "string", required: false },
-                { label: "Giảm giá", name: "discount", widget: "string", required: false }
-              ]
-            }
-          ]
-        }
-      });
-    });
+    // Ép CMS khởi tạo bằng cấu hình nội bộ, không đọc file config.yml bên ngoài nữa
+    window.CMS_MANUAL_INIT = true;
+    
+    function initAdmin() {
+      if (window.CMS) {
+        CMS.init({
+          config: {
+            backend: { name: "github", repo: "HONGANH20212/MORACHI", branch: "main" },
+            media_folder: "images",
+            public_folder: "images",
+            collections: [
+              {
+                name: "products",
+                label: "Sản Phẩm",
+                folder: "products",
+                create: true,
+                fields: [
+                  { label: "Tên", name: "title", widget: "string" },
+                  { label: "Ảnh", name: "thumbnail", widget: "image" },
+                  { label: "Giá", name: "current_price", widget: "string" }
+                ]
+              }
+            ]
+          }
+        });
+      } else {
+        setTimeout(initAdmin, 100);
+      }
+    }
+    initAdmin();
   </script>
 </body>
 </html>
