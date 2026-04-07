@@ -3,28 +3,91 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Azure Shop - Catalogue</title>
+    <title>MORACHI - Cửa hàng trực tuyến</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <header>
-        <h1>CỬA HÀNG TRỰC TUYẾN</h1>
-        <p>Chuyên cung cấp sản phẩm chất lượng cao</p>
-    </header>
 
-    <main class="container">
-        <div id="product-grid" class="grid">
-            <div class="product-card">
-                <img src="https://via.placeholder.com/300" alt="Sản phẩm mẫu">
-                <h3>Sản phẩm mẫu 1</h3>
-                <p class="price">500.000 VNĐ</p>
-                <button class="btn-detail">Xem chi tiết</button>
+    <header class="header">
+        <div class="header-top container">
+            <div class="logo">
+                <a href="/">
+                    <img src="images/icon-logo.png" alt="MORACHI JAPAN BEAUTY" class="logo-icon">
+                    
+                    <div class="logo-text">
+                        <h1>MORACHI</h1>
+                        <p>JAPAN BEAUTY</p>
+                    </div>
+                </a>
+            </div>
+            <div class="search-bar">
+                <input type="text" placeholder="Tìm sản phẩm, thương hiệu bạn mong muốn...">
+                <button><i class="fas fa-search"></i></button>
+            </div>
+            <div class="header-actions">
+                <div class="action-item"><i class="fas fa-user"></i> Tài khoản</div>
+                <div class="action-item"><i class="fas fa-shopping-cart"></i> Giỏ hàng <span class="cart-count">0</span></div>
             </div>
         </div>
-    </main>
+        <nav class="header-nav">
+            <div class="container">
+                <ul>
+                    <li><i class="fas fa-bars"></i> DANH MỤC</li>
+                    <li>HOT DEALS</li>
+                    <li>THƯƠNG HIỆU</li>
+                    <li>HÀNG MỚI VỀ</li>
+                    <li>BÁN CHẠY</li>
+                </ul>
+            </div>
+        </nav>
+    </header>
 
-    <footer>
-        <p>© 2026 My Azure Shop - Hoạt động trên Azure Static Web Apps</p>
-    </footer>
+    <div class="breadcrumb container">
+        <p>Trang chủ > <span>Sản Phẩm Bán Chạy</span></p>
+    </div>
+
+    <div class="main-layout container">
+        
+        <aside class="sidebar">
+            <div class="filter-section">
+                <h3>KHOẢNG GIÁ</h3>
+                <div class="price-inputs">
+                    <input type="text" placeholder="đ TỪ"> - 
+                    <input type="text" placeholder="đ ĐẾN">
+                </div>
+                <button class="btn-apply">ÁP DỤNG</button>
+            </div>
+
+            <div class="filter-section">
+                <h3>THƯƠNG HIỆU</h3>
+                <label><input type="checkbox"> CeraVe (8)</label>
+                <label><input type="checkbox"> Cocoon (16)</label>
+                <label><input type="checkbox"> L'Oreal (15)</label>
+                <label><input type="checkbox"> La Roche-Posay (13)</label>
+            </div>
+        </aside>
+
+        <main class="content">
+            <div class="content-header">
+                <h2>Sản Phẩm Bán Chạy <span>(Danh sách từ Admin)</span></h2>
+                <div class="sort-tabs">
+                    <span>Mới nhất</span>
+                    <span class="active">Bán chạy</span>
+                    <span>Giá thấp đến cao</span>
+                    <span>Giá cao đến thấp</span>
+                </div>
+            </div>
+
+            <div id="product-list" class="product-grid">
+                <p style="grid-column: 1/-1; text-align: center; padding: 50px;">Đang tải sản phẩm từ hệ thống...</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
