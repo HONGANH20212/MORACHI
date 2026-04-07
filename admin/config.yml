@@ -1,24 +1,21 @@
 backend:
   name: github
-  repo: HONGANH20212/MORACHI  # Tên Repo GitHub của bạn
+  repo: HONGANH20212/MORACHI
   branch: main
 
-# Nơi lưu trữ ảnh bạn upload
 media_folder: "images"
 public_folder: "images"
 
 collections:
   - name: "products"
     label: "Sản Phẩm"
-    folder: "products" # Trang CMS sẽ lưu dữ liệu vào thư mục này
+    folder: "products"
     create: true
     slug: "{{slug}}"
     fields:
       - {label: "Tên sản phẩm", name: "title", widget: "string"}
       - {label: "Thương hiệu", name: "brand", widget: "string"}
       - {label: "Ảnh sản phẩm", name: "thumbnail", widget: "image"}
-      - {label: "Giá bán hiện tại (VNĐ)", name: "current_price", widget: "string"}
-      - {label: "Giá cũ / Giá gốc (VNĐ)", name: "old_price", widget: "string", required: false}
-      - {label: "Nhãn giảm giá (VD: -34%)", name: "discount", widget: "string", required: false}
-      - {label: "Đánh giá (Số sao)", name: "rating", widget: "string", default: "5.0"}
-      - {label: "Đã bán", name: "sold", widget: "string", default: "1.0k/tháng"}
+      - {label: "Giá bán hiện tại", name: "current_price", widget: "string"}
+      - {label: "Giá cũ", name: "old_price", widget: "string", required: false}
+      - {label: "Giảm giá", name: "discount", widget: "string", required: false}
