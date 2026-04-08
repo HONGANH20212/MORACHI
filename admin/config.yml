@@ -3,9 +3,10 @@ backend:
   repo: HONGANH20212/MORACHI
   branch: main
   base_url: https://netlify-cms-github-oauth-provider-beta.vercel.app
+  auth_endpoint: auth
 
 media_folder: "images"
-public_folder: "images"
+public_folder: "/images"
 
 collections:
   - name: "products"
@@ -14,9 +15,9 @@ collections:
     create: true
     slug: "{{slug}}"
     fields:
-      - {label: "Tên sản phẩm", name: "title", widget: "string"}
-      - {label: "Thương hiệu", name: "brand", widget: "string"}
-      - {label: "Ảnh sản phẩm", name: "thumbnail", widget: "image"}
-      - {label: "Giá bán hiện tại", name: "current_price", widget: "string"}
-      - {label: "Giá cũ", name: "old_price", widget: "string", required: false}
-      - {label: "Giảm giá", name: "discount", widget: "string", required: false}
+      - { label: "Tên sản phẩm", name: "title", widget: "string" }
+      - { label: "Thương hiệu", name: "brand", widget: "string" }
+      - { label: "Ảnh sản phẩm", name: "thumbnail", widget: "image" }
+      - { label: "Giá bán hiện tại", name: "current_price", widget: "string" }
+      - { label: "Giá cũ", name: "old_price", widget: "string", required: false }
+      - { label: "Giảm giá", name: "discount", widget: "string", required: false }
