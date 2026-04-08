@@ -1,6 +1,6 @@
 backend:
   name: github
-  repo: HONGANH20212/MORACHI
+  repo: honganh20212/MORACHI
   branch: main
   base_url: https://netlify-cms-github-oauth-provider-beta.vercel.app
 
