@@ -4,44 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Quản lý Cửa hàng MORACHI</title>
-  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  <link href="/admin/config.yml" type="text/yaml" rel="cms-config-url">
 </head>
 <body>
-  <script>
-    // Chỉ định CMS không tự động tìm file config.yml bên ngoài
-    window.CMS_MANUAL_INIT = true;
-
-    // Đợi thư viện tải xong hoàn toàn
-    document.addEventListener('DOMContentLoaded', function() {
-      if (window.CMS) {
-        CMS.init({
-          config: {
-            backend: {
-              name: "github",
-              repo: "HONGANH20212/MORACHI",
-              branch: "main"
-            },
-            display_url: "https://morachi.vthanh.cloud",
-            media_folder: "images",
-            public_folder: "images",
-            collections: [
-              {
-                name: "products",
-                label: "Sản Phẩm",
-                folder: "products",
-                create: true,
-                slug: "{{slug}}",
-                fields: [
-                  { label: "Tên sản phẩm", name: "title", widget: "string" },
-                  { label: "Giá", name: "current_price", widget: "string" },
-                  { label: "Ảnh", name: "thumbnail", widget: "image" }
-                ]
-              }
-            ]
-          }
-        });
-      }
-    });
-  </script>
+  <!-- Tải Decap CMS ở trong thẻ body để tránh lỗi DOM chưa được tải -->
+  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
 </body>
 </html>
