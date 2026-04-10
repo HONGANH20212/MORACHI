@@ -116,17 +116,46 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    cursor: pointer;
+    cursor: default;
     color: white;
 }
 
-.cart-count {
-    background: #ff8c00;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 50%;
-    font-size: 12px;
+.phone-number {
+    font-size: 18px;
     font-weight: bold;
+    color: #ffd700;
+}
+
+.social-icons {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.social-link {
+    color: white;
+    font-size: 20px;
+    transition: transform 0.2s, color 0.2s;
+}
+
+.social-link:hover {
+    color: #ff8c00;
+    transform: scale(1.2);
+}
+
+.announcement {
+    background-color: #a81411;
+    color: white;
+    padding: 10px 0;
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.announcement p {
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    margin: 0;
 }
 
 
