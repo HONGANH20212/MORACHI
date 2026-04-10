@@ -1,129 +1,439 @@
 /* RESET BẢN LỀ */
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Arial', sans-serif; }
-body { background-color: #f4f4f4; color: #333; }
-.container { max-width: 1200px; margin: 0 auto; padding: 0 15px; }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
 
 /* HEADER */
 /* PHẦN TRÊN (LOGO + THANH TÌM KIẾM): ĐỔI SANG MÀU ĐEN */
-.header { 
-    background-color: #000000; /* Màu Đen thuần */
-    color: white; 
+.header {
+    background-color: #000000;
+    /* Màu Đen thuần */
+    color: white;
 }
-.header-top { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; }
+
+.header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 0;
+}
 
 /* --- ĐỊNH DẠNG LOGO PHỨC HỢP (ẢNH HOA + CHỮ) --- */
-.logo a { 
-    display: flex; 
-    align-items: center; 
-    gap: 15px; /* Khoảng cách giữa bông hoa và chữ */
-    text-decoration: none; 
+.logo a {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    /* Khoảng cách giữa bông hoa và chữ */
+    text-decoration: none;
 }
 
 /* Kiểu dáng ảnh bông hoa */
-.logo-icon { 
-    height: 50px; /* Kích thước hoa vừa vặn */
-    width: auto; 
-    object-fit: contain; 
+.logo-icon {
+    height: 50px;
+    /* Kích thước hoa vừa vặn */
+    width: auto;
+    object-fit: contain;
 }
 
 /* Khu vực chữ Logo */
-.logo-text { 
-    display: flex; 
-    flex-direction: column; 
-    color: white; /* Chữ màu trắng trên nền đen */
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    color: white;
+    /* Chữ màu trắng trên nền đen */
 }
 
 /* Chữ MORACHI (Kiểu Serif chân phương sang trọng) */
-.logo-text h1 { 
-    font-family: 'Playfair Display', serif; /* Dùng Font sang trọng vừa nhúng */
-    font-size: 28px; 
-    font-weight: 700; 
-    letter-spacing: 2px; /* Giãn chữ nhẹ */
-    margin: 0; 
+.logo-text h1 {
+    font-family: 'Playfair Display', serif;
+    /* Dùng Font sang trọng vừa nhúng */
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    /* Giãn chữ nhẹ */
+    margin: 0;
 }
 
 /* Chữ JAPAN BEAUTY (Kiểu Sans-serif mỏng bên dưới) */
-.logo-text p { 
-    font-family: Arial, sans-serif; /* Font sạch sẽ */
-    font-size: 11px; 
-    letter-spacing: 4px; /* Giãn chữ rộng ra */
-    margin: 0; 
-    text-transform: uppercase; /* Viết hoa toàn bộ */
-    color: #eee; /* Màu trắng hơi xám nhẹ */
+.logo-text p {
+    font-family: Arial, sans-serif;
+    /* Font sạch sẽ */
+    font-size: 11px;
+    letter-spacing: 4px;
+    /* Giãn chữ rộng ra */
+    margin: 0;
+    text-transform: uppercase;
+    /* Viết hoa toàn bộ */
+    color: #eee;
+    /* Màu trắng hơi xám nhẹ */
 }
 
 /* THANH TÌM KIẾM: Cập nhật màu nút bấm Đen/Trắng */
-.search-bar { display: flex; width: 50%; }
-.search-bar input { width: 100%; padding: 10px 15px; border: none; border-radius: 4px 0 0 4px; outline: none; }
-.search-bar button { padding: 10px 20px; border: none; background: #fff; color: #000; border-radius: 0 4px 4px 0; cursor: pointer; }
+.search-bar {
+    display: flex;
+    width: 50%;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px 0 0 4px;
+    outline: none;
+}
+
+.search-bar button {
+    padding: 10px 20px;
+    border: none;
+    background: #fff;
+    color: #000;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+}
 
 /* CÁC HÀNH ĐỘNG HEADER (XÁC THỰC MÀU TRẮNG) */
-.header-actions { display: flex; gap: 20px; font-size: 14px; }
-.action-item { display: flex; align-items: center; gap: 8px; cursor: pointer; color: white; }
-.cart-count { background: #ff8c00; color: white; padding: 2px 6px; border-radius: 50%; font-size: 12px; font-weight: bold; }
+.header-actions {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+}
+
+.action-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    color: white;
+}
+
+.cart-count {
+    background: #ff8c00;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: bold;
+}
 
 
-.search-bar { display: flex; width: 50%; }
-.search-bar input { width: 100%; padding: 10px 15px; border: none; border-radius: 4px 0 0 4px; outline: none; }
-.search-bar button { padding: 10px 20px; border: none; background: #fff; color: #000000; border-radius: 0 4px 4px 0; cursor: pointer; }
+.search-bar {
+    display: flex;
+    width: 50%;
+}
 
-.header-actions { display: flex; gap: 20px; font-size: 14px; }
-.action-item { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-.cart-count { background: #ff8c00; color: white; padding: 2px 6px; border-radius: 50%; font-size: 12px; font-weight: bold; }
+.search-bar input {
+    width: 100%;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px 0 0 4px;
+    outline: none;
+}
 
-.header-nav { background-color: #a81411; border-top: 1px solid #c21915; }
-.header-nav ul { display: flex; list-style: none; gap: 25px; padding: 12px 0; font-size: 13px; font-weight: bold; }
-.header-nav ul li { cursor: pointer; }
+.search-bar button {
+    padding: 10px 20px;
+    border: none;
+    background: #fff;
+    color: #000000;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+}
+
+.header-actions {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+}
+
+.action-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.cart-count {
+    background: #ff8c00;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.header-nav {
+    background-color: #a81411;
+    border-top: 1px solid #c21915;
+}
+
+.header-nav ul {
+    display: flex;
+    list-style: none;
+    gap: 25px;
+    padding: 12px 0;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.header-nav ul li {
+    cursor: pointer;
+}
 
 /* BREADCRUMB */
-.breadcrumb { padding: 15px 15px; font-size: 13px; color: #666; }
-.breadcrumb span { color: #333; font-weight: bold; }
+.breadcrumb {
+    padding: 15px 15px;
+    font-size: 13px;
+    color: #666;
+}
+
+.breadcrumb span {
+    color: #333;
+    font-weight: bold;
+}
 
 /* MAIN LAYOUT (CHIA CỘT) */
-.main-layout { display: flex; gap: 20px; padding-bottom: 50px; }
+.main-layout {
+    display: flex;
+    gap: 20px;
+    padding-bottom: 50px;
+}
 
 /* SIDEBAR (BỘ LỌC) */
-.sidebar { width: 240px; background: white; padding: 15px; border-radius: 4px; height: fit-content; }
-.filter-section { margin-bottom: 25px; }
-.filter-section h3 { font-size: 14px; margin-bottom: 15px; text-transform: uppercase; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-.price-inputs { display: flex; align-items: center; gap: 5px; margin-bottom: 10px; }
-.price-inputs input { width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; text-align: center; }
-.btn-apply { width: 100%; padding: 8px; background: #000000; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
-.filter-section label { display: block; font-size: 13px; margin-bottom: 10px; cursor: pointer; color: #444; }
+.sidebar {
+    width: 240px;
+    background: white;
+    padding: 15px;
+    border-radius: 4px;
+    height: fit-content;
+}
+
+.filter-section {
+    margin-bottom: 25px;
+}
+
+.filter-section h3 {
+    font-size: 14px;
+    margin-bottom: 15px;
+    text-transform: uppercase;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+}
+
+.price-inputs {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.price-inputs input {
+    width: 100%;
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.btn-apply {
+    width: 100%;
+    padding: 8px;
+    background: #000000;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.filter-section label {
+    display: block;
+    font-size: 13px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    color: #444;
+}
 
 /* CONTENT (BÊN PHẢI) */
-.content { flex: 1; background: white; padding: 20px; border-radius: 4px; }
-.content-header h2 { font-size: 20px; margin-bottom: 15px; }
-.content-header h2 span { font-size: 14px; color: #888; font-weight: normal; }
-.sort-tabs { display: flex; gap: 30px; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; font-size: 14px; }
-.sort-tabs span { cursor: pointer; color: #666; }
-.sort-tabs .active { color: #f57224; border-bottom: 2px solid #f57224; padding-bottom: 10px; margin-bottom: -12px; font-weight: bold; }
+.content {
+    flex: 1;
+    background: white;
+    padding: 20px;
+    border-radius: 4px;
+}
+
+.content-header h2 {
+    font-size: 20px;
+    margin-bottom: 15px;
+}
+
+.content-header h2 span {
+    font-size: 14px;
+    color: #888;
+    font-weight: normal;
+}
+
+.sort-tabs {
+    display: flex;
+    gap: 30px;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.sort-tabs span {
+    cursor: pointer;
+    color: #666;
+}
+
+.sort-tabs .active {
+    color: #f57224;
+    border-bottom: 2px solid #f57224;
+    padding-bottom: 10px;
+    margin-bottom: -12px;
+    font-weight: bold;
+}
 
 /* PRODUCT GRID */
-.product-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+}
 
 /* PRODUCT CARD */
-.product-card { border: 1px solid #eee; border-radius: 4px; padding: 10px; position: relative; transition: box-shadow 0.2s; cursor: pointer; display: flex; flex-direction: column; }
-.product-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-color: #ddd; }
-.discount-badge { position: absolute; top: 10px; right: 10px; background: #f57224; color: white; padding: 3px 8px; font-size: 12px; font-weight: bold; border-radius: 4px; }
-.product-img { width: 100%; height: 200px; object-fit: contain; margin-bottom: 10px; }
-.product-info { flex: 1; display: flex; flex-direction: column; }
-.brand { color: #000000; font-weight: bold; font-size: 12px; margin-bottom: 5px; text-transform: uppercase; }
-.product-title { font-size: 13px; color: #333; font-weight: normal; margin-bottom: 10px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.price-group { margin-top: auto; margin-bottom: 8px; }
-.current-price { color: #f57224; font-size: 16px; font-weight: bold; display: block; }
-.old-price { color: #999; font-size: 12px; text-decoration: line-through; }
-.product-rating { display: flex; justify-content: space-between; font-size: 11px; color: #666; border-top: 1px dashed #eee; padding-top: 8px; }
-.stars { color: #f57224; }
+.product-card {
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 10px;
+    position: relative;
+    transition: box-shadow 0.2s;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-color: #ddd;
+}
+
+.discount-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #f57224;
+    color: white;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: bold;
+    border-radius: 4px;
+}
+
+.product-img {
+    width: 100%;
+    height: 200px;
+    object-fit: contain;
+    margin-bottom: 10px;
+}
+
+.product-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.brand {
+    color: #000000;
+    font-weight: bold;
+    font-size: 12px;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.product-title {
+    font-size: 13px;
+    color: #333;
+    font-weight: normal;
+    margin-bottom: 10px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.price-group {
+    margin-top: auto;
+    margin-bottom: 8px;
+}
+
+.current-price {
+    color: #f57224;
+    font-size: 16px;
+    font-weight: bold;
+    display: block;
+}
+
+.old-price {
+    color: #999;
+    font-size: 12px;
+    text-decoration: line-through;
+}
+
+.product-rating {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #666;
+    border-top: 1px dashed #eee;
+    padding-top: 8px;
+}
+
+.stars {
+    color: #f57224;
+}
 
 /* RESPONSIVE CHO ĐIỆN THOẠI & TABLET */
 @media (max-width: 992px) {
-    .product-grid { grid-template-columns: repeat(3, 1fr); }
+    .product-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
+
 @media (max-width: 768px) {
-    .main-layout { flex-direction: column; }
-    .sidebar { width: 100%; }
-    .product-grid { grid-template-columns: repeat(2, 1fr); }
-    .search-bar { width: 100%; margin-top: 10px; }
-    .header-top { flex-direction: column; align-items: flex-start; }
+    .main-layout {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+    }
+
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .search-bar {
+        width: 100%;
+        margin-top: 10px;
+    }
+
+    .header-top {
+        flex-direction: column;
+        align-items: flex-start;
+    }
 }

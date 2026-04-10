@@ -1,13 +1,100 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quản lý Cửa hàng MORACHI</title>
-  <link href="/admin/config.yml" type="text/yaml" rel="cms-config-url">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morachi Admin</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background: #f5f5f5;
+      margin: 0;
+      padding: 30px;
+    }
+
+    .admin-container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 24px;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    form {
+      display: grid;
+      gap: 12px;
+    }
+
+    input,
+    button {
+      padding: 12px;
+      font-size: 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+    }
+
+    button {
+      background: #111;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+    }
+
+    #message {
+      margin-top: 16px;
+      font-weight: bold;
+    }
+
+    #preview-wrap {
+      margin-top: 8px;
+    }
+
+    #preview-image {
+      max-width: 180px;
+      max-height: 180px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      display: none;
+    }
+  </style>
 </head>
+
 <body>
-  <!-- Tải Decap CMS ở trong thẻ body để tránh lỗi DOM chưa được tải -->
-  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  <div class="admin-container">
+    <h1>Quản lý sản phẩm</h1>
+
+    <form id="product-form">
+      <input type="text" id="title" placeholder="Tên sản phẩm" required>
+      <input type="text" id="brand" placeholder="Thương hiệu" required>
+      <input type="number" id="current_price" placeholder="Giá hiện tại" required>
+      <input type="number" id="old_price" placeholder="Giá cũ">
+      <input type="text" id="discount" placeholder="Giảm giá, ví dụ -27%">
+      <input type="text" id="rating" placeholder="Rating, ví dụ 4.9">
+      <input type="text" id="sold_text" placeholder="Lượt bán, ví dụ 1.4k/tháng">
+
+      <input type="file" id="thumbnail_file" accept="image/*" required>
+
+      <div id="preview-wrap">
+        <img id="preview-image" alt="Preview ảnh sản phẩm">
+      </div>
+
+      <button type="submit">Lưu sản phẩm</button>
+    </form>
+
+    <div id="message"></div>
+  </div>
+
+  <script src="admin.js"></script>
 </body>
+
 </html>
