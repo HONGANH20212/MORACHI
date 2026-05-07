@@ -53,10 +53,16 @@
         <div class="menu-item"><i class="fas fa-cog"></i> Cấu hình</div>
     </div>
 
-    <div class="main">
-        <div class="header-main">
-            <h1>Danh sách sản phẩm</h1>
-            <button class="btn-add" onclick="openModal()"><i class="fas fa-plus"></i> Thêm sản phẩm mới</button>
+      <div class="header-main">
+          <h1>Danh sách sản phẩm</h1>
+          <div style="display: flex; gap: 15px; align-items: center;">
+              <div class="search-box" style="position: relative;">
+                  <input type="text" id="admin-search-input" placeholder="Tìm tên sản phẩm..." 
+                        style="padding: 10px 15px 10px 35px; width: 250px; border-radius: 20px; border: 1px solid #ddd;">
+                  <i class="fas fa-search" style="position: absolute; left: 12px; top: 12px; color: #aaa;"></i>
+              </div>
+              <button class="btn-add" onclick="openModal()"><i class="fas fa-plus"></i> Thêm mới</button>
+          </div>
         </div>
 
         <div class="card">

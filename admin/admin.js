@@ -1,36 +1,71 @@
 const API_BASE_URL = "/api";
 let isEditing = false;
-
+let allProductsData = [];
 // 1. TẢI DANH SÁCH SẢN PHẨM
 async function loadAdminProducts() {
     const tbody = document.getElementById("admin-product-list");
-    tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 40px;'>Đang tải dữ liệu hệ thống...</td></tr>";
+    tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 40px;'>Đang tải dữ liệu...</td></tr>";
 
     try {
         const response = await fetch(`${API_BASE_URL}/products`);
         const products = await response.json();
         
-        if (products.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 40px;'>Chưa có sản phẩm nào.</td></tr>";
-            return;
-        }
-
-        tbody.innerHTML = products.map(p => `
-            <tr>
-                <td><img src="${p.thumbnail}" class="product-img-mini" onerror="this.src='/images/icon-logo.png'"></td>
-                <td><strong>${p.title}</strong></td>
-                <td>${p.brand}</td>
-                <td style="color: #f57224; font-weight: bold;">${Number(p.current_price).toLocaleString()} đ</td>
-                <td class="actions">
-                    <button class="btn-icon edit-btn" title="Sửa" onclick="editProduct('${p.id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn-icon delete-btn" title="Xóa" onclick="deleteProduct('${p.id}', '${p.brand}')"><i class="fas fa-trash"></i></button>
-                </td>
-            </tr>
-        `).join("");
+        // Lưu dữ liệu vào biến toàn cục để dùng cho việc tìm kiếm
+        allProductsData = Array.isArray(products) ? products : [];
+        
+        renderTable(allProductsData);
     } catch (err) {
         tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; color:red; padding: 40px;'>Lỗi kết nối API!</td></tr>";
     }
 }
+
+// 2. HÀM RENDER BẢNG (Tách riêng để dùng chung cho tìm kiếm)
+function renderTable(products) {
+    const tbody = document.getElementById("admin-product-list");
+    
+    if (products.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 40px;'>Không tìm thấy sản phẩm nào phù hợp.</td></tr>";
+        return;
+    }
+
+    tbody.innerHTML = products.map(p => `
+        <tr>
+            <td><img src="${p.thumbnail}" class="product-img-mini" onerror="this.src='/images/icon-logo.png'"></td>
+            <td><strong>${p.title}</strong></td>
+            <td>${p.brand}</td>
+            <td style="color: #f57224; font-weight: bold;">${Number(p.current_price).toLocaleString()} đ</td>
+            <td class="actions">
+                <button class="btn-icon edit-btn" title="Sửa" onclick="editProduct('${p.id}')"><i class="fas fa-edit"></i></button>
+                <button class="btn-icon delete-btn" title="Xóa" onclick="deleteProduct('${p.id}', '${p.brand}')"><i class="fas fa-trash"></i></button>
+            </td>
+        </tr>
+    `).join("");
+}
+
+// 3. XỬ LÝ SỰ KIỆN TÌM KIẾM
+function bindAdminSearch() {
+    const searchInput = document.getElementById("admin-search-input");
+    if (!searchInput) return;
+
+    searchInput.addEventListener("input", (e) => {
+        const keyword = e.target.value.toLowerCase().trim();
+        
+        // Lọc danh sách dựa trên tên sản phẩm hoặc thương hiệu
+        const filtered = allProductsData.filter(p => {
+            const title = (p.title || "").toLowerCase();
+            const brand = (p.brand || "").toLowerCase();
+            return title.includes(keyword) || brand.includes(keyword);
+        });
+
+        renderTable(filtered);
+    });
+}
+
+// Cập nhật hàm khởi chạy
+document.addEventListener("DOMContentLoaded", () => {
+    loadAdminProducts();
+    bindAdminSearch(); // Kích hoạt thanh tìm kiếm
+});
 
 // 2. XÓA SẢN PHẨM
 async function deleteProduct(id, brand) {
