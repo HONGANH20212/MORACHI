@@ -17,7 +17,7 @@ async function loadAdminProducts() {
 
         tbody.innerHTML = products.map(p => `
             <tr>
-                <td><img src="${p.thumbnail}" class="product-img-mini" onerror="this.src='https://via.placeholder.com/60'"></td>
+                <td><img src="${p.thumbnail}" class="product-img-mini" onerror="this.src='/images/icon-logo.png'"></td>
                 <td><strong>${p.title}</strong></td>
                 <td>${p.brand}</td>
                 <td style="color: #f57224; font-weight: bold;">${Number(p.current_price).toLocaleString()} đ</td>
