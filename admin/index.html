@@ -1,100 +1,101 @@
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Morachi Admin</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      font-family: Arial, sans-serif;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Morachi | Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { --primary: #111; --accent: #f57224; --bg: #f8f9fa; --text: #333; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; }
+        
+        /* Sidebar */
+        .sidebar { width: 250px; background: var(--primary); color: white; min-height: 100vh; padding: 20px; position: fixed; }
+        .sidebar h2 { font-size: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        .menu-item { padding: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; border-radius: 6px; transition: 0.3s; }
+        .menu-item:hover, .menu-item.active { background: var(--accent); }
 
-    body {
-      background: #f5f5f5;
-      margin: 0;
-      padding: 30px;
-    }
+        /* Main Content */
+        .main { margin-left: 250px; flex: 1; padding: 30px; }
+        .header-main { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .btn-add { background: var(--accent); color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
 
-    .admin-container {
-      max-width: 800px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 24px;
-      border-radius: 10px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    }
+        /* Table Style */
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; padding: 15px; border-bottom: 2px solid #eee; color: #666; }
+        td { padding: 15px; border-bottom: 1px solid #eee; vertical-align: middle; }
+        .product-img-mini { width: 50px; height: 50px; object-fit: contain; border-radius: 4px; background: #f4f4f4; }
+        .actions { display: flex; gap: 10px; }
+        .btn-icon { border: none; background: none; cursor: pointer; font-size: 16px; }
+        .edit-btn { color: #2196F3; }
+        .delete-btn { color: #f44336; }
 
-    h1 {
-      margin-bottom: 20px;
-    }
-
-    form {
-      display: grid;
-      gap: 12px;
-    }
-
-    input,
-    button {
-      padding: 12px;
-      font-size: 15px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-    }
-
-    button {
-      background: #111;
-      color: #fff;
-      border: none;
-      cursor: pointer;
-    }
-
-    #message {
-      margin-top: 16px;
-      font-weight: bold;
-    }
-
-    #preview-wrap {
-      margin-top: 8px;
-    }
-
-    #preview-image {
-      max-width: 180px;
-      max-height: 180px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      display: none;
-    }
-  </style>
+        /* Modal Form (Ẩn mặc định) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; width: 500px; padding: 30px; border-radius: 12px; position: relative; max-height: 90vh; overflow-y: auto; }
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; }
+        
+        form { display: grid; gap: 15px; }
+        input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+        label { font-size: 13px; font-weight: bold; color: #666; }
+    </style>
 </head>
-
 <body>
-  <div class="admin-container">
-    <h1>Quản lý sản phẩm</h1>
+    <div class="sidebar">
+        <h2>MORACHI ADMIN</h2>
+        <div class="menu-item active"><i class="fas fa-box"></i> Sản phẩm</div>
+        <div class="menu-item"><i class="fas fa-chart-line"></i> Thống kê</div>
+        <div class="menu-item"><i class="fas fa-cog"></i> Cài đặt</div>
+    </div>
 
-    <form id="product-form">
-      <input type="text" id="title" placeholder="Tên sản phẩm" required>
-      <input type="text" id="brand" placeholder="Thương hiệu" required>
-      <input type="number" id="current_price" placeholder="Giá hiện tại" required>
-      <input type="number" id="old_price" placeholder="Giá cũ">
-      <input type="text" id="discount" placeholder="Giảm giá, ví dụ -27%">
-      <input type="text" id="rating" placeholder="Rating, ví dụ 4.9">
-      <input type="text" id="sold_text" placeholder="Lượt bán, ví dụ 1.4k/tháng">
+    <div class="main">
+        <div class="header-main">
+            <h1>Quản lý sản phẩm</h1>
+            <button class="btn-add" onclick="openModal()"><i class="fas fa-plus"></i> Thêm sản phẩm mới</button>
+        </div>
 
-      <input type="file" id="thumbnail_file" accept="image/*" required>
+        <div class="card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ảnh</th>
+                        <th>Tên sản phẩm</th>
+                        <th>Thương hiệu</th>
+                        <th>Giá</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-product-list">
+                    </tbody>
+            </table>
+        </div>
+    </div>
 
-      <div id="preview-wrap">
-        <img id="preview-image" alt="Preview ảnh sản phẩm">
-      </div>
+    <div id="productModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h2 id="modalTitle">Thêm sản phẩm</h2>
+            <form id="product-form">
+                <input type="hidden" id="product-id">
+                <label>Tên sản phẩm</label>
+                <input type="text" id="title" required>
+                <label>Thương hiệu</label>
+                <input type="text" id="brand" required>
+                <label>Giá hiện tại (số)</label>
+                <input type="number" id="current_price" required>
+                <label>Giá cũ (nếu có)</label>
+                <input type="number" id="old_price">
+                <label>Giảm giá (-20%)</label>
+                <input type="text" id="discount">
+                <label>Ảnh sản phẩm</label>
+                <input type="file" id="thumbnail_file" accept="image/*">
+                <button type="submit" id="save-btn">Lưu thông tin</button>
+            </form>
+            <div id="message" style="margin-top:10px; text-align:center;"></div>
+        </div>
+    </div>
 
-      <button type="submit">Lưu sản phẩm</button>
-    </form>
-
-    <div id="message"></div>
-  </div>
-
-  <script src="/admin/admin.js"></script>
+    <script src="admin.js"></script>
 </body>
-
 </html>

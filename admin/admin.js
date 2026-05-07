@@ -1,107 +1,114 @@
 const API_BASE_URL = "/api";
+let isEditing = false;
 
-async function uploadImage(file) {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const response = await fetch(`${API_BASE_URL}/upload-image`, {
-        method: "POST",
-        body: formData
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-        throw new Error(result.error || "Upload ảnh thất bại");
-    }
-
-    return result.url;
-}
-
-async function createProduct(product) {
-    const response = await fetch(`${API_BASE_URL}/products`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(product)
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-        const message = result.error || (result.errors ? result.errors.join(", ") : "Tạo sản phẩm thất bại");
-        throw new Error(message);
-    }
-
-    return result;
-}
-
-function bindImagePreview() {
-    const fileInput = document.getElementById("thumbnail_file");
-    const previewImage = document.getElementById("preview-image");
-
-    if (!fileInput || !previewImage) return;
-
-    fileInput.addEventListener("change", () => {
-        const file = fileInput.files[0];
-        if (!file) {
-            previewImage.style.display = "none";
-            previewImage.src = "";
-            return;
-        }
-
-        const objectUrl = URL.createObjectURL(file);
-        previewImage.src = objectUrl;
-        previewImage.style.display = "block";
-    });
-}
-
-document.getElementById("product-form").addEventListener("submit", async function (e) {
-    e.preventDefault();
-
-    const messageBox = document.getElementById("message");
-    messageBox.innerText = "Đang xử lý...";
-    messageBox.style.color = "#333";
+// 1. TẢI DANH SÁCH SẢN PHẨM
+async function loadAdminProducts() {
+    const tbody = document.getElementById("admin-product-list");
+    tbody.innerHTML = "<tr><td colspan='5' style='text-align:center'>Đang tải dữ liệu...</td></tr>";
 
     try {
-        const fileInput = document.getElementById("thumbnail_file");
-        const file = fileInput.files[0];
+        const response = await fetch(`${API_BASE_URL}/products`);
+        const products = await response.json();
+        
+        tbody.innerHTML = products.map(p => `
+            <tr>
+                <td><img src="${p.thumbnail}" class="product-img-mini"></td>
+                <td><strong>${p.title}</strong></td>
+                <td>${p.brand}</td>
+                <td>${Number(p.current_price).toLocaleString()} đ</td>
+                <td class="actions">
+                    <button class="btn-icon edit-btn" onclick="editProduct('${p.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn-icon delete-btn" onclick="deleteProduct('${p.id}', '${p.brand}')"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>
+        `).join("");
+    } catch (err) {
+        tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; color:red'>Lỗi tải dữ liệu</td></tr>";
+    }
+}
 
-        if (!file) {
-            throw new Error("Vui lòng chọn ảnh sản phẩm");
+// 2. XÓA SẢN PHẨM
+async function deleteProduct(id, brand) {
+    if (!confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/products/${id}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" }
+            // Lưu ý: Code backend của bạn cần partition_key, ở đây là brand
+        });
+
+        if (response.ok) {
+            alert("Đã xóa thành công!");
+            loadAdminProducts(); // Tải lại danh sách
+        }
+    } catch (err) {
+        alert("Lỗi khi xóa sản phẩm");
+    }
+}
+
+// 3. MỞ MODAL ĐỂ THÊM/SỬA
+function openModal(isEdit = false) {
+    isEditing = isEdit;
+    document.getElementById("modalTitle").innerText = isEdit ? "Sửa sản phẩm" : "Thêm sản phẩm mới";
+    document.getElementById("productModal").style.display = "flex";
+    if (!isEdit) {
+        document.getElementById("product-form").reset();
+        document.getElementById("product-id").value = "";
+    }
+}
+
+function closeModal() {
+    document.getElementById("productModal").style.display = "none";
+}
+
+// 4. XỬ LÝ LƯU (SUBMIT FORM)
+document.getElementById("product-form").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const msg = document.getElementById("message");
+    msg.innerText = "Đang xử lý...";
+
+    try {
+        const id = document.getElementById("product-id").value;
+        const file = document.getElementById("thumbnail_file").files[0];
+        let imageUrl = "";
+
+        // Nếu có chọn file mới thì upload ảnh
+        if (file) {
+            const formData = new FormData();
+            formData.append("file", file);
+            const resImg = await fetch(`${API_BASE_URL}/upload-image`, { method: "POST", body: formData });
+            const dataImg = await resImg.json();
+            imageUrl = dataImg.url;
         }
 
-        const imageUrl = await uploadImage(file);
-
-        const product = {
-            title: document.getElementById("title").value.trim(),
-            brand: document.getElementById("brand").value.trim(),
-            thumbnail: imageUrl,
-            current_price: document.getElementById("current_price").value.trim(),
-            old_price: document.getElementById("old_price").value.trim(),
-            discount: document.getElementById("discount").value.trim(),
-            rating: document.getElementById("rating").value.trim() || "4.9",
-            sold_text: document.getElementById("sold_text").value.trim() || "1k/tháng",
+        const productData = {
+            title: document.getElementById("title").value,
+            brand: document.getElementById("brand").value,
+            current_price: document.getElementById("current_price").value,
+            old_price: document.getElementById("old_price").value,
+            discount: document.getElementById("discount").value,
             status: "active"
         };
+        if (imageUrl) productData.thumbnail = imageUrl;
 
-        await createProduct(product);
+        const url = isEditing ? `${API_BASE_URL}/products/${id}` : `${API_BASE_URL}/products`;
+        const method = isEditing ? "PUT" : "POST";
 
-        messageBox.innerText = "Lưu sản phẩm thành công";
-        messageBox.style.color = "green";
-        this.reset();
+        const res = await fetch(url, {
+            method: method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(productData)
+        });
 
-        const previewImage = document.getElementById("preview-image");
-        previewImage.src = "";
-        previewImage.style.display = "none";
-    } catch (error) {
-        console.error(error);
-        messageBox.innerText = error.message || "Có lỗi xảy ra";
-        messageBox.style.color = "red";
+        if (res.ok) {
+            msg.innerText = "Thành công!";
+            setTimeout(() => { closeModal(); loadAdminProducts(); }, 1000);
+        }
+    } catch (err) {
+        msg.innerText = "Có lỗi xảy ra!";
     }
 });
 
-document.addEventListener("DOMContentLoaded", () => {
-    bindImagePreview();
-});
+// Chạy khi trang load
+document.addEventListener("DOMContentLoaded", loadAdminProducts);
