@@ -73,7 +73,7 @@ function setProductCount(count) {
     }
 }
 
-// --- Hàm hiển thị sản phẩm: Cập nhật nhãn trạng thái Hàng Order / Hết hàng ---
+// --- Hàm hiển thị sản phẩm: Hiển thị nhãn trạng thái và Số lượng dựa trên biến thể ---
 function renderProducts(products) {
     const productList = document.getElementById("product-list");
     if (!productList) return;
@@ -100,25 +100,48 @@ function renderProducts(products) {
         const rating = escapeHtml(product.rating || "4.9");
         const soldText = escapeHtml(product.sold_text || "1k/tháng");
 
-        // Logic xử lý nhãn trạng thái dựa trên biến thể (Sản phẩm phụ)
+        // Logic xử lý biến thể (Sản phẩm phụ)
         const variants = product.variants || [];
         let statusBadge = "";
-        
+        let totalInstock = 0;
+        let hasOrder = false;
+        let hasInstock = false;
+
         if (variants.length > 0) {
-            // Lấy trạng thái của biến thể đầu tiên để đại diện (hoặc tùy biến theo ý bạn)
+            variants.forEach(v => {
+                if (v.status === 'instock') {
+                    totalInstock += (parseInt(v.stock) || 0);
+                    hasInstock = true;
+                }
+                if (v.status === 'order') {
+                    hasOrder = true;
+                }
+            });
+
+            // Nhãn trạng thái (Badge) dựa trên biến thể đầu tiên (giữ nguyên logic cũ)
             const firstVariant = variants[0];
             if (firstVariant.status === 'out') {
                 statusBadge = `<span class="badge-status status-out">HẾT HÀNG</span>`;
             } else if (firstVariant.status === 'order') {
-                const dateInfo = firstVariant.date ? `<br><small style="font-size:9px;">Về ngày: ${firstVariant.date}</small>` : "";
+                const dateInfo = firstVariant.date ? `<br><small style="font-size:9px;">Dự kiến: ${firstVariant.date}</small>` : "";
                 statusBadge = `<span class="badge-status status-order">HÀNG ORDER${dateInfo}</span>`;
             }
+        }
+
+        // Logic hiển thị Số lượng
+        let stockHTML = "";
+        if (hasInstock) {
+            stockHTML = `<span style="font-size: 12px; color: #666;">Số lượng: ${totalInstock}</span>`;
+        } else if (hasOrder) {
+            stockHTML = `<span style="font-size: 12px; color: red; font-weight: bold;">Số lượng: NULL</span>`;
+        } else {
+            stockHTML = `<span style="font-size: 12px; color: #999;">Số lượng: 0</span>`;
         }
 
         return `
             <div class="product-card" style="position: relative;">
                 <a href="product-detail.html?id=${id}" style="text-decoration: none; color: inherit; display: block;">
-                    <!-- Nhãn trạng thái (Hết hàng/Order) -->
+                    <!-- Nhãn trạng thái (Nếu có) -->
                     ${statusBadge}
                     
                     ${discount ? `<span class="discount-badge">${discount}</span>` : ""}
@@ -132,6 +155,11 @@ function renderProducts(products) {
                     <div class="product-info">
                         <div class="brand">${brand}</div>
                         <div class="product-title" title="${title}">${title}</div>
+                        
+                        <div style="margin-bottom: 5px;">
+                            ${stockHTML}
+                        </div>
+
                         <div class="price-group">
                             <span class="current-price">${currentPrice}</span>
                             ${oldPrice ? `<span class="old-price">${oldPrice}</span>` : ""}
@@ -177,6 +205,7 @@ function applyClientFilters() {
     } else if (state.sort === "price_desc") {
         products.sort((a, b) => parsePrice(b.current_price) - parsePrice(a.current_price));
     } else {
+        // Mặc định sắp xếp theo ID (hoặc thời gian tạo nếu có)
         products.sort((a, b) => String(b.id || "").localeCompare(String(a.id || "")));
     }
 
@@ -292,7 +321,7 @@ function bindPriceFilter() {
     });
 }
 
-// --- Chạy khi trang sẵn sàng ---
+// --- Khởi chạy ---
 document.addEventListener("DOMContentLoaded", () => {
     bindSortTabs();
     bindSearch();
