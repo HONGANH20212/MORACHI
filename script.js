@@ -73,7 +73,7 @@ function setProductCount(count) {
     }
 }
 
-// --- HÀM HIỂN THỊ SẢN PHẨM (ĐÃ DÙNG ONCLICK ĐỂ CHỐNG VỠ GIAO DIỆN) ---
+// --- HÀM HIỂN THỊ SẢN PHẨM (GIẢI PHÁP ONCLICK ĐỂ KHÔNG VỠ CSS) ---
 function renderProducts(products) {
     const productList = document.getElementById("product-list");
     if (!productList) return;
@@ -118,7 +118,7 @@ function renderProducts(products) {
                 }
             });
 
-            // Nhãn trạng thái Order/Hết hàng (Góc trái)
+            // Lấy trạng thái của biến thể đầu tiên để dán nhãn
             const firstVariant = variants[0];
             if (firstVariant.status === 'out') {
                 statusBadge = `<span class="discount-badge" style="background:#666; right:auto; left:10px;">HẾT HÀNG</span>`;
@@ -127,7 +127,7 @@ function renderProducts(products) {
             }
         }
 
-        // Logic hiển thị Số lượng (Theo yêu cầu)
+        // Logic hiển thị Số lượng
         let stockHTML = "";
         if (hasInstock) {
             stockHTML = `<div style="font-size: 11px; color: #27ae60; font-weight: bold; margin-bottom: 5px;">Số lượng: ${totalInstock}</div>`;
@@ -137,11 +137,13 @@ function renderProducts(products) {
             stockHTML = `<div style="font-size: 11px; color: #999; font-weight: bold; margin-bottom: 5px;">Hết hàng</div>`;
         }
 
-        // CHÌA KHÓA: Dùng onclick trên div.product-card để không phá vỡ Flexbox của CSS
+        const discountBadgeHTML = discount ? `<span class="discount-badge">${discount}</span>` : "";
+
+        // CHÌA KHÓA: Dùng onclick trên thẻ div gốc, KHÔNG dùng thẻ <a> để giữ 100% CSS của bạn
         return `
-            <div class="product-card" onclick="window.location.href='product-detail.html?id=${id}'">
+            <div class="product-card" onclick="window.location.href='product-detail.html?id=${id}'" style="cursor:pointer;">
                 ${statusBadge}
-                ${discount ? `<span class="discount-badge">${discount}</span>` : ""}
+                ${discountBadgeHTML}
                 
                 <img
                     class="product-img"

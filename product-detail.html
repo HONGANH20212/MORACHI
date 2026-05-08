@@ -11,25 +11,23 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* CSS CHO TRANG CHI TIẾT (Cô lập an toàn) */
+        /* CSS DÀNH RIÊNG CHO CHI TIẾT SẢN PHẨM (Cô lập an toàn) */
         .pd-wrapper { display: flex; gap: 30px; background: #fff; padding: 25px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .pd-gallery { width: 45%; flex-shrink: 0; }
         .pd-info { flex: 1; }
         
-        .pd-main-img { border: 1px solid #f0f0f0; border-radius: 4px; margin-bottom: 10px; padding: 10px; display: flex; justify-content: center; align-items: center;}
-        .pd-main-img img { width: 100%; max-height: 400px; object-fit: contain; }
-        
-        .pd-thumbs { display: flex; gap: 10px; overflow-x: auto; }
-        .pd-thumb { width: 65px; height: 65px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; object-fit: contain; padding: 2px; }
+        .pd-main-img { border: 1px solid #f0f0f0; border-radius: 4px; margin-bottom: 10px; padding: 10px; display: flex; justify-content: center; align-items: center; height: 400px; background: #fff;}
+        .pd-main-img img { width: 100%; height: 100%; object-fit: contain; }
+        .pd-thumbs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
+        .pd-thumb { width: 65px; height: 65px; border: 1px solid #eee; border-radius: 4px; cursor: pointer; object-fit: contain; padding: 2px; }
         .pd-thumb.active { border-color: #f57224; border-width: 2px; }
 
-        .pd-brand { color: #2980b9; font-weight: bold; font-size: 13px; text-transform: uppercase; margin-bottom: 8px; }
-        .pd-title { font-size: 22px; color: #333; line-height: 1.4; margin-bottom: 15px; }
-        
-        .pd-rating { font-size: 13px; color: #666; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        .pd-rating i { color: #f1c40f; }
+        .pd-brand { color: #2980b9; font-weight: bold; font-size: 14px; text-transform: uppercase; margin-bottom: 8px; }
+        .pd-title { font-size: 24px; color: #333; line-height: 1.4; margin-bottom: 15px; }
+        .pd-rating { color: #f57224; font-size: 13px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .pd-rating span { color: #666; }
 
-        .pd-flash-deal { background: linear-gradient(90deg, #ff8c00, #f57224); color: white; padding: 10px 15px; display: flex; justify-content: space-between; font-weight: bold; border-radius: 4px; margin-bottom: 15px; font-size: 14px;}
+        .pd-flash-deal { background: linear-gradient(90deg, #ff8c00, #f57224); color: white; padding: 10px 15px; display: flex; justify-content: space-between; font-weight: bold; border-radius: 4px; margin-bottom: 15px; }
         .pd-timer { background: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 4px; font-weight: normal; }
 
         .pd-price-box { background: #fafafa; padding: 20px; border: 1px dashed #eee; border-radius: 4px; margin-bottom: 20px; }
@@ -39,17 +37,17 @@
         .pd-variants { margin-bottom: 20px; }
         .pd-variant-label { font-weight: bold; font-size: 14px; display: block; margin-bottom: 10px; }
         .pd-variant-list { display: flex; gap: 10px; flex-wrap: wrap; }
-        .pd-btn-v { border: 1px solid #ddd; background: white; padding: 8px 15px; border-radius: 4px; cursor: pointer; transition: 0.2s; color: #333; }
+        .pd-btn-v { border: 1px solid #ddd; background: white; padding: 8px 15px; border-radius: 4px; cursor: pointer; transition: 0.2s; color: #333; font-size: 14px; }
         .pd-btn-v:hover { border-color: #f57224; }
-        .pd-btn-v.active { border-color: #f57224; color: #f57224; background: #fff5f0; }
+        .pd-btn-v.active { border-color: #f57224; color: #f57224; background: #fff5f0; font-weight: bold;}
 
         .pd-status { padding: 15px; background: #f9f9f9; border: 1px solid #eee; border-radius: 4px; margin-bottom: 25px; font-size: 14px; line-height: 1.6; }
         .pd-text-green { color: #27ae60; font-weight: bold; }
         .pd-text-red { color: #e74c3c; font-weight: bold; }
 
         .pd-actions { display: flex; gap: 15px; }
-        .pd-btn-cart { flex: 1; padding: 15px; border: 1px solid #f57224; color: #f57224; background: #fff5f0; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 14px; }
-        .pd-btn-buy { flex: 1; padding: 15px; background: #f57224; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 14px; }
+        .pd-btn-cart { flex: 1; padding: 15px; border: 1px solid #f57224; color: #f57224; background: #fff5f0; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 15px; }
+        .pd-btn-buy { flex: 1; padding: 15px; background: #f57224; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 15px; }
 
         @media (max-width: 768px) {
             .pd-wrapper { flex-direction: column; }
@@ -60,7 +58,7 @@
 
 <body>
 
-    <!-- COPY CHÍNH XÁC HEADER CỦA BẠN -->
+    <!-- GIỮ NGUYÊN HEADER TỪ BẢN GỐC -->
     <header class="header">
         <div class="header-top container">
             <div class="logo">
@@ -97,7 +95,7 @@
 
     <div class="main-layout container">
 
-        <!-- COPY CHÍNH XÁC SIDEBAR CỦA BẠN (Sửa nội dung cho phù hợp) -->
+        <!-- GIỮ NGUYÊN SIDEBAR TỪ BẢN GỐC -->
         <aside class="sidebar">
             <div class="filter-section">
                 <h3>THÔNG TIN GIAO HÀNG</h3>
@@ -107,25 +105,28 @@
                     <div><i class="fas fa-undo" style="color: #2980b9; width: 20px;"></i> Đổi trả trong 30 ngày</div>
                 </div>
             </div>
-            <div class="filter-section">
-                <h3>MÔ TẢ NGẮN</h3>
-                <p style="font-size: 13px; color: #666; line-height: 1.6;">Sản phẩm cam kết chính hãng. Vui lòng chọn đúng phân loại hoặc dung tích trước khi thêm vào giỏ hàng.</p>
-            </div>
         </aside>
 
-        <!-- KHU VỰC HIỂN THỊ CHI TIẾT SẢN PHẨM -->
+        <!-- NỘI DUNG HIỂN THỊ CHI TIẾT SẢN PHẨM -->
         <main class="content" style="background: transparent; padding: 0;">
             <div id="product-detail-root">
-                <div style="background: white; padding: 50px; text-align: center; border-radius: 4px;">Đang tải thông tin sản phẩm...</div>
+                <div style="background: white; padding: 50px; text-align: center; border-radius: 4px;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: #f57224; margin-bottom: 15px;"></i>
+                    <p>Đang tải thông tin sản phẩm...</p>
+                </div>
             </div>
         </main>
     </div>
 
-    <!-- SCRIPT ĐỂ LẤY DỮ LIỆU SẢN PHẨM -->
+    <!-- SCRIPT CHẠY CHI TIẾT SẢN PHẨM -->
     <script>
         const API_URL = "/api/products";
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
+
+        function formatVND(val) {
+            return Number(val || 0).toLocaleString('vi-VN') + ' đ';
+        }
 
         async function initDetail() {
             const root = document.getElementById('product-detail-root');
@@ -158,6 +159,12 @@
             document.getElementById('bread-title').innerText = p.title;
 
             const variants = p.variants || [];
+            
+            // Thu thập hình ảnh: Ảnh chính + Ảnh các biến thể
+            const images = [p.thumbnail];
+            variants.forEach(v => {
+                if (v.image && !images.includes(v.image)) images.push(v.image);
+            });
 
             let html = `
                 <div class="pd-wrapper">
@@ -166,9 +173,8 @@
                             <img src="${p.thumbnail || 'images/icon-logo.png'}" id="pd-main-image" onerror="this.src='images/icon-logo.png'">
                         </div>
                         <div class="pd-thumbs">
-                            <img src="${p.thumbnail || 'images/icon-logo.png'}" class="pd-thumb active" onclick="switchImage('${p.thumbnail}', this)" onerror="this.src='images/icon-logo.png'">
-                            ${variants.filter(v => v.image).map(v => `
-                                <img src="${v.image}" class="pd-thumb" onclick="switchImage('${v.image}', this)" onerror="this.src='images/icon-logo.png'">
+                            ${images.map((img, index) => `
+                                <img src="${img || 'images/icon-logo.png'}" class="pd-thumb ${index === 0 ? 'active' : ''}" onclick="switchImage('${img}', this)" onerror="this.style.display='none'">
                             `).join('')}
                         </div>
                     </div>
@@ -182,14 +188,9 @@
                             <span>${p.rating || '4.9'} đánh giá | Đã bán ${p.sold_text || '1.2k'}</span>
                         </div>
 
-                        <div class="pd-flash-deal">
-                            <span><i class="fas fa-bolt"></i> FLASH DEAL</span>
-                            <span class="pd-timer">KẾT THÚC TRONG 01 : 04 : 43</span>
-                        </div>
-
                         <div class="pd-price-box">
-                            <span class="pd-price-now" id="pd-price-view">${Number(p.current_price).toLocaleString()} đ</span>
-                            ${p.old_price ? `<span class="pd-price-old">${Number(p.old_price).toLocaleString()} đ</span>` : ''}
+                            <span class="pd-price-now" id="pd-price-view">${formatVND(p.current_price)}</span>
+                            ${p.old_price ? `<span class="pd-price-old">${formatVND(p.old_price)}</span>` : ''}
                         </div>
 
                         ${variants.length > 0 ? `
@@ -197,7 +198,7 @@
                                 <span class="pd-variant-label">Dung tích / Phân loại:</span>
                                 <div class="pd-variant-list">
                                     ${variants.map((v, i) => `
-                                        <button class="pd-btn-v ${i === 0 ? 'active' : ''}" onclick="selectVariant(${JSON.stringify(v).replace(/"/g, '&quot;')}, this)">
+                                        <button class="pd-btn-v ${i === 0 ? 'active' : ''}" onclick="selectVariant(${JSON.stringify(v).replace(/"/g, '&quot;')}, this, '${p.current_price}')">
                                             ${v.name}
                                         </button>
                                     `).join('')}
@@ -206,12 +207,12 @@
                         ` : ''}
 
                         <div class="pd-status" id="pd-status-view">
-                            <!-- Trạng thái kho hàng -->
+                            <!-- Trạng thái sẽ được render bằng JS -->
                         </div>
 
                         <div class="pd-actions">
                             <button class="pd-btn-cart" onclick="alert('Đã thêm vào giỏ hàng!')"><i class="fas fa-cart-plus"></i> THÊM GIỎ HÀNG</button>
-                            <button class="pd-btn-buy" onclick="alert('Chuyển tới thanh toán')">MUA NGAY</button>
+                            <button class="pd-btn-buy" onclick="alert('Chuyển tới trang thanh toán')">MUA NGAY</button>
                         </div>
                     </div>
                 </div>
@@ -219,6 +220,7 @@
 
             document.getElementById('product-detail-root').innerHTML = html;
 
+            // Kích hoạt trạng thái của biến thể đầu tiên
             if (variants.length > 0) {
                 updateVariantStatus(variants[0]);
             } else {
@@ -226,16 +228,20 @@
             }
         }
 
+        // Đổi ảnh chính khi click vào thumbnail
         function switchImage(url, el) {
             document.getElementById('pd-main-image').src = url;
             document.querySelectorAll('.pd-thumb').forEach(t => t.classList.remove('active'));
             el.classList.add('active');
         }
 
-        function selectVariant(v, el) {
+        // Xử lý khi click vào nút phân loại (biến thể)
+        function selectVariant(v, el, basePrice) {
+            // Nổi bật nút đang chọn
             document.querySelectorAll('.pd-btn-v').forEach(btn => btn.classList.remove('active'));
             el.classList.add('active');
 
+            // Đổi ảnh nếu biến thể có ảnh riêng
             if (v.image) {
                 document.getElementById('pd-main-image').src = v.image;
                 document.querySelectorAll('.pd-thumb').forEach(t => {
@@ -244,13 +250,15 @@
                 });
             }
 
-            if (v.price) {
-                document.getElementById('pd-price-view').innerText = Number(v.price).toLocaleString() + ' đ';
-            }
+            // Đổi giá nếu biến thể có giá riêng
+            const displayPrice = v.price ? v.price : basePrice;
+            document.getElementById('pd-price-view').innerText = formatVND(displayPrice);
 
+            // Đổi trạng thái kho (Sẵn hàng/Order)
             updateVariantStatus(v);
         }
 
+        // Cập nhật khung trạng thái tồn kho
         function updateVariantStatus(v) {
             const box = document.getElementById('pd-status-view');
             if (v.status === 'instock') {

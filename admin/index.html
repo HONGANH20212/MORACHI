@@ -163,7 +163,7 @@
 
         .variant-row {
             display: grid;
-            grid-template-columns: 2fr 1fr 1.5fr 1.5fr 1.5fr 40px;
+            grid-template-columns: 1.5fr 1fr 1.5fr 1fr 1.5fr 1.5fr 40px;
             gap: 10px;
             background: #f9f9f9;
             padding: 15px;
@@ -307,6 +307,10 @@
             const container = document.getElementById("variants-container");
             const row = document.createElement("div");
             row.className = "variant-row";
+            
+            // Nếu data đã có sẵn ảnh, lưu url lại để không bị mất khi sửa
+            const existingImage = data.image || '';
+
             row.innerHTML = `
                 <div>
                     <label>Tên phân loại</label>
@@ -329,12 +333,18 @@
                     <input type="text" class="v-date" value="${data.date || ''}" placeholder="VD: 25/05">
                 </div>
                 <div>
-                    <label>Giá riêng (nếu có)</label>
+                    <label>Giá riêng</label>
                     <input type="number" class="v-price" value="${data.price || ''}" placeholder="Giá VNĐ">
+                </div>
+                <div>
+                    <label>Ảnh riêng</label>
+                    <input type="file" class="v-file" accept="image/*" style="padding: 5px;">
+                    <input type="hidden" class="v-image-url" value="${existingImage}">
                 </div>
                 <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; color:#e74c3c; cursor:pointer; font-size: 18px; margin-bottom: 8px;">
                     <i class="fas fa-trash-alt"></i>
                 </button>
+                ${existingImage ? `<div style="grid-column: 1/-1;"><small>Ảnh hiện tại: <a href="${existingImage}" target="_blank">Xem ảnh</a></small></div>` : ''}
             `;
             container.appendChild(row);
         }
@@ -409,7 +419,7 @@
         document.getElementById("product-form").addEventListener("submit", async function(e) {
             e.preventDefault();
             const msg = document.getElementById("message");
-            msg.innerText = "Đang lưu dữ liệu...";
+            msg.innerText = "Đang lưu dữ liệu và tải ảnh...";
 
             try {
                 const id = document.getElementById("product-id").value;
@@ -427,15 +437,31 @@
 
                 // Thu thập biến thể
                 const variants = [];
-                document.querySelectorAll(".variant-row").forEach(row => {
+                const variantRows = document.querySelectorAll(".variant-row");
+                
+                for (let row of variantRows) {
+                    const vFile = row.querySelector(".v-file").files[0];
+                    let vImgUrl = row.querySelector(".v-image-url").value;
+
+                    // Upload ảnh của biến thể nếu người dùng có chọn file
+                    if (vFile) {
+                        msg.innerText = `Đang tải ảnh cho biến thể: ${row.querySelector(".v-name").value}...`;
+                        const vFormData = new FormData();
+                        vFormData.append("file", vFile);
+                        const vResImg = await fetch(`${API_BASE_URL}/upload-image`, { method: "POST", body: vFormData });
+                        const vDataImg = await vResImg.json();
+                        vImgUrl = vDataImg.url;
+                    }
+
                     variants.push({
                         name: row.querySelector(".v-name").value,
                         stock: parseInt(row.querySelector(".v-stock").value) || 0,
                         status: row.querySelector(".v-status").value,
                         date: row.querySelector(".v-date").value,
-                        price: parseInt(row.querySelector(".v-price").value) || null
+                        price: parseInt(row.querySelector(".v-price").value) || null,
+                        image: vImgUrl // Lưu URL ảnh riêng vào dữ liệu
                     });
-                });
+                }
 
                 const productData = {
                     title: document.getElementById("title").value,
