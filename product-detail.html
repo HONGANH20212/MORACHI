@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MORACHI - Chi tiết sản phẩm</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* CSS CHO TRANG CHI TIẾT (Cô lập an toàn) */
+        .pd-wrapper { display: flex; gap: 30px; background: #fff; padding: 25px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .pd-gallery { width: 45%; flex-shrink: 0; }
+        .pd-info { flex: 1; }
+        
+        .pd-main-img { border: 1px solid #f0f0f0; border-radius: 4px; margin-bottom: 10px; padding: 10px; display: flex; justify-content: center; align-items: center;}
+        .pd-main-img img { width: 100%; max-height: 400px; object-fit: contain; }
+        
+        .pd-thumbs { display: flex; gap: 10px; overflow-x: auto; }
+        .pd-thumb { width: 65px; height: 65px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; object-fit: contain; padding: 2px; }
+        .pd-thumb.active { border-color: #f57224; border-width: 2px; }
+
+        .pd-brand { color: #2980b9; font-weight: bold; font-size: 13px; text-transform: uppercase; margin-bottom: 8px; }
+        .pd-title { font-size: 22px; color: #333; line-height: 1.4; margin-bottom: 15px; }
+        
+        .pd-rating { font-size: 13px; color: #666; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .pd-rating i { color: #f1c40f; }
+
+        .pd-flash-deal { background: linear-gradient(90deg, #ff8c00, #f57224); color: white; padding: 10px 15px; display: flex; justify-content: space-between; font-weight: bold; border-radius: 4px; margin-bottom: 15px; font-size: 14px;}
+        .pd-timer { background: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 4px; font-weight: normal; }
+
+        .pd-price-box { background: #fafafa; padding: 20px; border: 1px dashed #eee; border-radius: 4px; margin-bottom: 20px; }
+        .pd-price-now { color: #f57224; font-size: 32px; font-weight: bold; }
+        .pd-price-old { text-decoration: line-through; color: #999; font-size: 16px; margin-left: 15px; }
+
+        .pd-variants { margin-bottom: 20px; }
+        .pd-variant-label { font-weight: bold; font-size: 14px; display: block; margin-bottom: 10px; }
+        .pd-variant-list { display: flex; gap: 10px; flex-wrap: wrap; }
+        .pd-btn-v { border: 1px solid #ddd; background: white; padding: 8px 15px; border-radius: 4px; cursor: pointer; transition: 0.2s; color: #333; }
+        .pd-btn-v:hover { border-color: #f57224; }
+        .pd-btn-v.active { border-color: #f57224; color: #f57224; background: #fff5f0; }
+
+        .pd-status { padding: 15px; background: #f9f9f9; border: 1px solid #eee; border-radius: 4px; margin-bottom: 25px; font-size: 14px; line-height: 1.6; }
+        .pd-text-green { color: #27ae60; font-weight: bold; }
+        .pd-text-red { color: #e74c3c; font-weight: bold; }
+
+        .pd-actions { display: flex; gap: 15px; }
+        .pd-btn-cart { flex: 1; padding: 15px; border: 1px solid #f57224; color: #f57224; background: #fff5f0; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 14px; }
+        .pd-btn-buy { flex: 1; padding: 15px; background: #f57224; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 14px; }
+
+        @media (max-width: 768px) {
+            .pd-wrapper { flex-direction: column; }
+            .pd-gallery { width: 100%; }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- COPY CHÍNH XÁC HEADER CỦA BẠN -->
+    <header class="header">
+        <div class="header-top container">
+            <div class="logo">
+                <a href="/">
+                    <img src="images/icon-logo.png" alt="MORACHI JAPAN BEAUTY" class="logo-icon">
+                    <div class="logo-text">
+                        <h1>MORACHI</h1>
+                        <p>JAPAN BEAUTY</p>
+                    </div>
+                </a>
+            </div>
+            <div class="search-bar">
+                <input type="text" placeholder="Tìm sản phẩm, thương hiệu bạn mong muốn...">
+                <button><i class="fas fa-search"></i></button>
+            </div>
+            <div class="header-actions">
+                <div class="action-item phone-number"><i class="fas fa-phone"></i> 0123456789</div>
+                <div class="social-icons">
+                    <a href="https://www.tiktok.com/@chuyendong24h" target="_blank" class="social-link"><i class="fab fa-tiktok"></i></a>
+                    <a href="https://www.facebook.com/chuyendong24h" target="_blank" class="social-link"><i class="fab fa-facebook"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="announcement">
+            <div class="container">
+                <p>CHUYÊN BÁN MỸ PHẨM NHẬT BẢN CHÍNH HÃNG & NHẬN ORDER HÀNG NHẬT BẢN 10-15 DAY</p>
+            </div>
+        </div>
+    </header>
+
+    <div class="breadcrumb container">
+        <p><a href="/" style="text-decoration:none; color:inherit;">Trang chủ</a> > <span id="bread-brand">Thương hiệu</span> > <span id="bread-title" style="color:#f57224">Chi tiết sản phẩm</span></p>
+    </div>
+
+    <div class="main-layout container">
+
+        <!-- COPY CHÍNH XÁC SIDEBAR CỦA BẠN (Sửa nội dung cho phù hợp) -->
+        <aside class="sidebar">
+            <div class="filter-section">
+                <h3>THÔNG TIN GIAO HÀNG</h3>
+                <div style="font-size: 13px; color: #444; line-height: 2.2; margin-top: 10px;">
+                    <div><i class="fas fa-truck" style="color: #27ae60; width: 20px;"></i> Giao Nhanh Miễn Phí 2H</div>
+                    <div><i class="fas fa-box" style="color: #f57224; width: 20px;"></i> Đền bù 100% nếu phát hiện giả</div>
+                    <div><i class="fas fa-undo" style="color: #2980b9; width: 20px;"></i> Đổi trả trong 30 ngày</div>
+                </div>
+            </div>
+            <div class="filter-section">
+                <h3>MÔ TẢ NGẮN</h3>
+                <p style="font-size: 13px; color: #666; line-height: 1.6;">Sản phẩm cam kết chính hãng. Vui lòng chọn đúng phân loại hoặc dung tích trước khi thêm vào giỏ hàng.</p>
+            </div>
+        </aside>
+
+        <!-- KHU VỰC HIỂN THỊ CHI TIẾT SẢN PHẨM -->
+        <main class="content" style="background: transparent; padding: 0;">
+            <div id="product-detail-root">
+                <div style="background: white; padding: 50px; text-align: center; border-radius: 4px;">Đang tải thông tin sản phẩm...</div>
+            </div>
+        </main>
+    </div>
+
+    <!-- SCRIPT ĐỂ LẤY DỮ LIỆU SẢN PHẨM -->
+    <script>
+        const API_URL = "/api/products";
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('id');
+
+        async function initDetail() {
+            const root = document.getElementById('product-detail-root');
+            
+            if (!productId) {
+                root.innerHTML = `<div style="background: white; padding: 50px; text-align: center; border-radius: 4px;">Không tìm thấy mã sản phẩm. <a href="/">Quay về trang chủ</a></div>`;
+                return;
+            }
+
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error("API Error");
+                const products = await response.json();
+                const product = products.find(p => p.id === productId);
+
+                if (!product) {
+                    root.innerHTML = `<div style="background: white; padding: 50px; text-align: center; border-radius: 4px;">Sản phẩm không tồn tại hoặc đã bị xóa.</div>`;
+                    return;
+                }
+
+                renderProductDetail(product);
+            } catch (error) {
+                root.innerHTML = `<div style="background: white; padding: 50px; text-align: center; border-radius: 4px; color:red;">Lỗi kết nối máy chủ. Vui lòng thử lại.</div>`;
+            }
+        }
+
+        function renderProductDetail(p) {
+            document.title = p.title + " | MORACHI";
+            document.getElementById('bread-brand').innerText = p.brand;
+            document.getElementById('bread-title').innerText = p.title;
+
+            const variants = p.variants || [];
+
+            let html = `
+                <div class="pd-wrapper">
+                    <div class="pd-gallery">
+                        <div class="pd-main-img">
+                            <img src="${p.thumbnail || 'images/icon-logo.png'}" id="pd-main-image" onerror="this.src='images/icon-logo.png'">
+                        </div>
+                        <div class="pd-thumbs">
+                            <img src="${p.thumbnail || 'images/icon-logo.png'}" class="pd-thumb active" onclick="switchImage('${p.thumbnail}', this)" onerror="this.src='images/icon-logo.png'">
+                            ${variants.filter(v => v.image).map(v => `
+                                <img src="${v.image}" class="pd-thumb" onclick="switchImage('${v.image}', this)" onerror="this.src='images/icon-logo.png'">
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="pd-info">
+                        <div class="pd-brand">${p.brand}</div>
+                        <h1 class="pd-title">${p.title}</h1>
+                        
+                        <div class="pd-rating">
+                            <span><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i></span>
+                            <span>${p.rating || '4.9'} đánh giá | Đã bán ${p.sold_text || '1.2k'}</span>
+                        </div>
+
+                        <div class="pd-flash-deal">
+                            <span><i class="fas fa-bolt"></i> FLASH DEAL</span>
+                            <span class="pd-timer">KẾT THÚC TRONG 01 : 04 : 43</span>
+                        </div>
+
+                        <div class="pd-price-box">
+                            <span class="pd-price-now" id="pd-price-view">${Number(p.current_price).toLocaleString()} đ</span>
+                            ${p.old_price ? `<span class="pd-price-old">${Number(p.old_price).toLocaleString()} đ</span>` : ''}
+                        </div>
+
+                        ${variants.length > 0 ? `
+                            <div class="pd-variants">
+                                <span class="pd-variant-label">Dung tích / Phân loại:</span>
+                                <div class="pd-variant-list">
+                                    ${variants.map((v, i) => `
+                                        <button class="pd-btn-v ${i === 0 ? 'active' : ''}" onclick="selectVariant(${JSON.stringify(v).replace(/"/g, '&quot;')}, this)">
+                                            ${v.name}
+                                        </button>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <div class="pd-status" id="pd-status-view">
+                            <!-- Trạng thái kho hàng -->
+                        </div>
+
+                        <div class="pd-actions">
+                            <button class="pd-btn-cart" onclick="alert('Đã thêm vào giỏ hàng!')"><i class="fas fa-cart-plus"></i> THÊM GIỎ HÀNG</button>
+                            <button class="pd-btn-buy" onclick="alert('Chuyển tới thanh toán')">MUA NGAY</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('product-detail-root').innerHTML = html;
+
+            if (variants.length > 0) {
+                updateVariantStatus(variants[0]);
+            } else {
+                updateVariantStatus({ status: 'instock', stock: 10 });
+            }
+        }
+
+        function switchImage(url, el) {
+            document.getElementById('pd-main-image').src = url;
+            document.querySelectorAll('.pd-thumb').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function selectVariant(v, el) {
+            document.querySelectorAll('.pd-btn-v').forEach(btn => btn.classList.remove('active'));
+            el.classList.add('active');
+
+            if (v.image) {
+                document.getElementById('pd-main-image').src = v.image;
+                document.querySelectorAll('.pd-thumb').forEach(t => {
+                    t.classList.remove('active');
+                    if(t.src.includes(v.image)) t.classList.add('active');
+                });
+            }
+
+            if (v.price) {
+                document.getElementById('pd-price-view').innerText = Number(v.price).toLocaleString() + ' đ';
+            }
+
+            updateVariantStatus(v);
+        }
+
+        function updateVariantStatus(v) {
+            const box = document.getElementById('pd-status-view');
+            if (v.status === 'instock') {
+                box.innerHTML = `
+                    <div style="margin-bottom: 5px;"><i class="fas fa-check-circle pd-text-green"></i> Tình trạng: <span class="pd-text-green">Sẵn hàng tại kho</span></div>
+                    <div>Số lượng: <strong>${v.stock || 0} sản phẩm</strong></div>
+                `;
+            } else if (v.status === 'order') {
+                box.innerHTML = `
+                    <div style="margin-bottom: 5px;"><i class="fas fa-plane pd-text-red"></i> Tình trạng: <span class="pd-text-red">HÀNG ORDER (NULL)</span></div>
+                    <div>Dự kiến có hàng: <strong class="pd-text-red">${v.date || 'Đang cập nhật'}</strong></div>
+                `;
+            } else {
+                box.innerHTML = `<div><i class="fas fa-times-circle" style="color:#999;"></i> <strong>Hết hàng tạm thời</strong></div>`;
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", initDetail);
+    </script>
+</body>
+
+</html>

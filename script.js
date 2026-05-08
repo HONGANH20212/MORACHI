@@ -73,7 +73,7 @@ function setProductCount(count) {
     }
 }
 
-// --- Hàm hiển thị sản phẩm: Hiển thị nhãn trạng thái và Số lượng dựa trên biến thể ---
+// --- HÀM HIỂN THỊ SẢN PHẨM (ĐÃ DÙNG ONCLICK ĐỂ CHỐNG VỠ GIAO DIỆN) ---
 function renderProducts(products) {
     const productList = document.getElementById("product-list");
     if (!productList) return;
@@ -93,7 +93,7 @@ function renderProducts(products) {
         const id = product.id; 
         const title = escapeHtml(product.title || "");
         const brand = escapeHtml(product.brand || "");
-        const thumbnail = escapeHtml(product.thumbnail || "/images/icon-logo.png");
+        const thumbnail = escapeHtml(product.thumbnail || "images/icon-logo.png");
         const currentPrice = formatPrice(product.current_price);
         const oldPrice = parsePrice(product.old_price) > 0 ? formatPrice(product.old_price) : "";
         const discount = escapeHtml(product.discount || "");
@@ -118,58 +118,52 @@ function renderProducts(products) {
                 }
             });
 
-            // Nhãn trạng thái (Badge) dựa trên biến thể đầu tiên (giữ nguyên logic cũ)
+            // Nhãn trạng thái Order/Hết hàng (Góc trái)
             const firstVariant = variants[0];
             if (firstVariant.status === 'out') {
-                statusBadge = `<span class="badge-status status-out">HẾT HÀNG</span>`;
+                statusBadge = `<span class="discount-badge" style="background:#666; right:auto; left:10px;">HẾT HÀNG</span>`;
             } else if (firstVariant.status === 'order') {
-                const dateInfo = firstVariant.date ? `<br><small style="font-size:9px;">Dự kiến: ${firstVariant.date}</small>` : "";
-                statusBadge = `<span class="badge-status status-order">HÀNG ORDER${dateInfo}</span>`;
+                statusBadge = `<span class="discount-badge" style="background:#f57224; right:auto; left:10px;">ORDER</span>`;
             }
         }
 
-        // Logic hiển thị Số lượng
+        // Logic hiển thị Số lượng (Theo yêu cầu)
         let stockHTML = "";
         if (hasInstock) {
-            stockHTML = `<span style="font-size: 12px; color: #666;">Số lượng: ${totalInstock}</span>`;
+            stockHTML = `<div style="font-size: 11px; color: #27ae60; font-weight: bold; margin-bottom: 5px;">Số lượng: ${totalInstock}</div>`;
         } else if (hasOrder) {
-            stockHTML = `<span style="font-size: 12px; color: red; font-weight: bold;">Số lượng: NULL</span>`;
+            stockHTML = `<div style="font-size: 11px; color: #e74c3c; font-weight: bold; margin-bottom: 5px;">Số lượng: NULL</div>`;
         } else {
-            stockHTML = `<span style="font-size: 12px; color: #999;">Số lượng: 0</span>`;
+            stockHTML = `<div style="font-size: 11px; color: #999; font-weight: bold; margin-bottom: 5px;">Hết hàng</div>`;
         }
 
+        // CHÌA KHÓA: Dùng onclick trên div.product-card để không phá vỡ Flexbox của CSS
         return `
-            <div class="product-card" style="position: relative;">
-                <a href="product-detail.html?id=${id}" style="text-decoration: none; color: inherit; display: block;">
-                    <!-- Nhãn trạng thái (Nếu có) -->
-                    ${statusBadge}
+            <div class="product-card" onclick="window.location.href='product-detail.html?id=${id}'">
+                ${statusBadge}
+                ${discount ? `<span class="discount-badge">${discount}</span>` : ""}
+                
+                <img
+                    class="product-img"
+                    src="${thumbnail}"
+                    alt="${title}"
+                    onerror="this.src='images/icon-logo.png'"
+                >
+                <div class="product-info">
+                    <div class="brand">${brand}</div>
+                    <div class="product-title" title="${title}">${title}</div>
                     
-                    ${discount ? `<span class="discount-badge">${discount}</span>` : ""}
-                    
-                    <img
-                        class="product-img"
-                        src="${thumbnail}"
-                        alt="${title}"
-                        onerror="this.src='/images/icon-logo.png'"
-                    >
-                    <div class="product-info">
-                        <div class="brand">${brand}</div>
-                        <div class="product-title" title="${title}">${title}</div>
-                        
-                        <div style="margin-bottom: 5px;">
-                            ${stockHTML}
-                        </div>
+                    ${stockHTML}
 
-                        <div class="price-group">
-                            <span class="current-price">${currentPrice}</span>
-                            ${oldPrice ? `<span class="old-price">${oldPrice}</span>` : ""}
-                        </div>
-                        <div class="product-rating">
-                            <span class="stars">★ ${rating}</span>
-                            <span>${soldText}</span>
-                        </div>
+                    <div class="price-group">
+                        <span class="current-price">${currentPrice}</span>
+                        ${oldPrice ? `<span class="old-price">${oldPrice}</span>` : ""}
                     </div>
-                </a>
+                    <div class="product-rating">
+                        <span class="stars">★ ${rating}</span>
+                        <span>Đã bán ${soldText}</span>
+                    </div>
+                </div>
             </div>
         `;
     }).join("");
@@ -205,7 +199,6 @@ function applyClientFilters() {
     } else if (state.sort === "price_desc") {
         products.sort((a, b) => parsePrice(b.current_price) - parsePrice(a.current_price));
     } else {
-        // Mặc định sắp xếp theo ID (hoặc thời gian tạo nếu có)
         products.sort((a, b) => String(b.id || "").localeCompare(String(a.id || "")));
     }
 
