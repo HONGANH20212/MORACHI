@@ -10,6 +10,7 @@ const state = {
     maxPrice: null
 };
 
+// --- Các hàm tiện ích ---
 function parsePrice(value) {
     if (value === null || value === undefined) return 0;
     const cleaned = String(value).replace(/[^\d]/g, "");
@@ -30,6 +31,7 @@ function escapeHtml(text) {
         .replace(/'/g, "&#039;");
 }
 
+// --- Xử lý giao diện ---
 function getSearchElements() {
     const searchBar = document.querySelector(".search-bar");
     return {
@@ -56,12 +58,8 @@ function getPriceFilterElements() {
 
 function getSortValueFromText(text) {
     const normalized = text.trim().toLowerCase();
-
     if (normalized.includes("giá thấp")) return "price_asc";
     if (normalized.includes("giá cao")) return "price_desc";
-    if (normalized.includes("mới nhất")) return "created_desc";
-    if (normalized.includes("bán chạy")) return "created_desc";
-
     return "created_desc";
 }
 
@@ -75,6 +73,7 @@ function setProductCount(count) {
     }
 }
 
+// --- Hàm quan trọng: Hiển thị sản phẩm và tạo link trang chi tiết ---
 function renderProducts(products) {
     const productList = document.getElementById("product-list");
     if (!productList) return;
@@ -91,9 +90,10 @@ function renderProducts(products) {
     }
 
     productList.innerHTML = products.map((product) => {
+        const id = product.id; 
         const title = escapeHtml(product.title || "");
         const brand = escapeHtml(product.brand || "");
-        const thumbnail = escapeHtml(product.thumbnail || "https://via.placeholder.com/300x300?text=No+Image");
+        const thumbnail = escapeHtml(product.thumbnail || "/images/icon-logo.png");
         const currentPrice = formatPrice(product.current_price);
         const oldPrice = parsePrice(product.old_price) > 0 ? formatPrice(product.old_price) : "";
         const discount = escapeHtml(product.discount || "");
@@ -102,30 +102,34 @@ function renderProducts(products) {
 
         return `
             <div class="product-card">
-                ${discount ? `<span class="discount-badge">${discount}</span>` : ""}
-                <img
-                    class="product-img"
-                    src="${thumbnail}"
-                    alt="${title}"
-                    onerror="this.src='https://via.placeholder.com/300x300?text=No+Image'"
-                >
-                <div class="product-info">
-                    <div class="brand">${brand}</div>
-                    <div class="product-title" title="${title}">${title}</div>
-                    <div class="price-group">
-                        <span class="current-price">${currentPrice}</span>
-                        ${oldPrice ? `<span class="old-price">${oldPrice}</span>` : ""}
+                <!-- Click vào bất kỳ đâu trong thẻ sẽ dẫn sang trang chi tiết -->
+                <a href="product-detail.html?id=${id}" style="text-decoration: none; color: inherit; display: block;">
+                    ${discount ? `<span class="discount-badge">${discount}</span>` : ""}
+                    <img
+                        class="product-img"
+                        src="${thumbnail}"
+                        alt="${title}"
+                        onerror="this.src='/images/icon-logo.png'"
+                    >
+                    <div class="product-info">
+                        <div class="brand">${brand}</div>
+                        <div class="product-title" title="${title}">${title}</div>
+                        <div class="price-group">
+                            <span class="current-price">${currentPrice}</span>
+                            ${oldPrice ? `<span class="old-price">${oldPrice}</span>` : ""}
+                        </div>
+                        <div class="product-rating">
+                            <span class="stars">★ ${rating}</span>
+                            <span>${soldText}</span>
+                        </div>
                     </div>
-                    <div class="product-rating">
-                        <span class="stars">★ ${rating}</span>
-                        <span>${soldText}</span>
-                    </div>
-                </div>
+                </a>
             </div>
         `;
     }).join("");
 }
 
+// --- Logic lọc và sắp xếp ---
 function applyClientFilters() {
     let products = [...state.allProducts];
 
@@ -150,18 +154,21 @@ function applyClientFilters() {
         products = products.filter((item) => parsePrice(item.current_price) <= state.maxPrice);
     }
 
+    // Sắp xếp
     if (state.sort === "price_asc") {
         products.sort((a, b) => parsePrice(a.current_price) - parsePrice(b.current_price));
     } else if (state.sort === "price_desc") {
         products.sort((a, b) => parsePrice(b.current_price) - parsePrice(a.current_price));
     } else {
-        products.sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
+        // Mặc định mới nhất (giả định có trường id hoặc timestamp)
+        products.sort((a, b) => String(b.id || "").localeCompare(String(a.id || "")));
     }
 
     state.filteredProducts = products;
     renderProducts(products);
 }
 
+// --- Bộ lọc thương hiệu động ---
 function renderBrandFilters(products) {
     const filterSections = document.querySelectorAll(".filter-section");
     if (filterSections.length < 2) return;
@@ -203,22 +210,16 @@ function renderBrandFilters(products) {
     });
 }
 
+// --- Gọi API lấy dữ liệu ---
 async function loadProducts() {
     const productList = document.getElementById("product-list");
     if (!productList) return;
 
     try {
-        productList.innerHTML = `
-            <p style="grid-column: 1/-1; text-align: center; padding: 50px;">
-                Đang tải sản phẩm từ hệ thống...
-            </p>
-        `;
+        productList.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 50px;">Đang tải sản phẩm...</p>`;
 
         const response = await fetch(`${API_BASE_URL}/products`);
-
-        if (!response.ok) {
-            throw new Error(`API lỗi: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`API lỗi: ${response.status}`);
 
         const products = await response.json();
         state.allProducts = Array.isArray(products) ? products : [];
@@ -227,21 +228,17 @@ async function loadProducts() {
         applyClientFilters();
     } catch (error) {
         console.error("Lỗi tải sản phẩm:", error);
-        productList.innerHTML = `
-            <p style="grid-column: 1/-1; text-align: center; padding: 50px; color:red;">
-                Không tải được sản phẩm từ hệ thống.
-            </p>
-        `;
+        productList.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 50px; color:red;">Không tải được dữ liệu.</p>`;
     }
 }
 
+// --- Gán sự kiện (Binding) ---
 function bindSortTabs() {
     const tabs = document.querySelectorAll(".sort-tabs span");
     tabs.forEach((tab) => {
         tab.addEventListener("click", () => {
             tabs.forEach((item) => item.classList.remove("active"));
             tab.classList.add("active");
-
             state.sort = getSortValueFromText(tab.textContent);
             applyClientFilters();
         });
@@ -273,14 +270,13 @@ function bindPriceFilter() {
     applyBtn.addEventListener("click", () => {
         const min = parsePrice(minInput.value);
         const max = parsePrice(maxInput.value);
-
         state.minPrice = minInput.value.trim() ? min : null;
         state.maxPrice = maxInput.value.trim() ? max : null;
-
         applyClientFilters();
     });
 }
 
+// --- Chạy khi trang sẵn sàng ---
 document.addEventListener("DOMContentLoaded", () => {
     bindSortTabs();
     bindSearch();
