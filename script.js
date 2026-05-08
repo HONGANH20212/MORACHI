@@ -73,7 +73,7 @@ function setProductCount(count) {
     }
 }
 
-// --- Hàm quan trọng: Hiển thị sản phẩm và tạo link trang chi tiết ---
+// --- Hàm hiển thị sản phẩm: Cập nhật nhãn trạng thái Hàng Order / Hết hàng ---
 function renderProducts(products) {
     const productList = document.getElementById("product-list");
     if (!productList) return;
@@ -100,11 +100,29 @@ function renderProducts(products) {
         const rating = escapeHtml(product.rating || "4.9");
         const soldText = escapeHtml(product.sold_text || "1k/tháng");
 
+        // Logic xử lý nhãn trạng thái dựa trên biến thể (Sản phẩm phụ)
+        const variants = product.variants || [];
+        let statusBadge = "";
+        
+        if (variants.length > 0) {
+            // Lấy trạng thái của biến thể đầu tiên để đại diện (hoặc tùy biến theo ý bạn)
+            const firstVariant = variants[0];
+            if (firstVariant.status === 'out') {
+                statusBadge = `<span class="badge-status status-out">HẾT HÀNG</span>`;
+            } else if (firstVariant.status === 'order') {
+                const dateInfo = firstVariant.date ? `<br><small style="font-size:9px;">Về ngày: ${firstVariant.date}</small>` : "";
+                statusBadge = `<span class="badge-status status-order">HÀNG ORDER${dateInfo}</span>`;
+            }
+        }
+
         return `
-            <div class="product-card">
-                <!-- Click vào bất kỳ đâu trong thẻ sẽ dẫn sang trang chi tiết -->
+            <div class="product-card" style="position: relative;">
                 <a href="product-detail.html?id=${id}" style="text-decoration: none; color: inherit; display: block;">
+                    <!-- Nhãn trạng thái (Hết hàng/Order) -->
+                    ${statusBadge}
+                    
                     ${discount ? `<span class="discount-badge">${discount}</span>` : ""}
+                    
                     <img
                         class="product-img"
                         src="${thumbnail}"
@@ -154,13 +172,11 @@ function applyClientFilters() {
         products = products.filter((item) => parsePrice(item.current_price) <= state.maxPrice);
     }
 
-    // Sắp xếp
     if (state.sort === "price_asc") {
         products.sort((a, b) => parsePrice(a.current_price) - parsePrice(b.current_price));
     } else if (state.sort === "price_desc") {
         products.sort((a, b) => parsePrice(b.current_price) - parsePrice(a.current_price));
     } else {
-        // Mặc định mới nhất (giả định có trường id hoặc timestamp)
         products.sort((a, b) => String(b.id || "").localeCompare(String(a.id || "")));
     }
 
