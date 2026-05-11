@@ -73,7 +73,7 @@ function setProductCount(count) {
     }
 }
 
-// --- HÀM HIỂN THỊ SẢN PHẨM (GIẢI PHÁP ONCLICK ĐỂ KHÔNG VỠ CSS) ---
+// --- HÀM HIỂN THỊ SẢN PHẨM TRANG CHỦ ---
 function renderProducts(products) {
     const productList = document.getElementById("product-list");
     if (!productList) return;
@@ -100,7 +100,7 @@ function renderProducts(products) {
         const rating = escapeHtml(product.rating || "4.9");
         const soldText = escapeHtml(product.sold_text || "1k/tháng");
 
-        // Logic xử lý biến thể (Sản phẩm phụ)
+        // QUÉT CÁC BIẾN THỂ ĐỂ LẤY SỐ LƯỢNG & TRẠNG THÁI
         const variants = product.variants || [];
         let statusBadge = "";
         let totalInstock = 0;
@@ -127,19 +127,19 @@ function renderProducts(products) {
             }
         }
 
-        // Logic hiển thị Số lượng
+        // TẠO GIAO DIỆN SỐ LƯỢNG
         let stockHTML = "";
         if (hasInstock) {
-            stockHTML = `<div style="font-size: 11px; color: #27ae60; font-weight: bold; margin-bottom: 5px;">Số lượng: ${totalInstock}</div>`;
+            stockHTML = `<div style="font-size: 12px; color: #27ae60; font-weight: bold; margin-bottom: 5px;">Số lượng: ${totalInstock}</div>`;
         } else if (hasOrder) {
-            stockHTML = `<div style="font-size: 11px; color: #e74c3c; font-weight: bold; margin-bottom: 5px;">Số lượng: NULL</div>`;
+            stockHTML = `<div style="font-size: 12px; color: #e74c3c; font-weight: bold; margin-bottom: 5px;">Số lượng: NULL</div>`;
         } else {
-            stockHTML = `<div style="font-size: 11px; color: #999; font-weight: bold; margin-bottom: 5px;">Hết hàng</div>`;
+            stockHTML = `<div style="font-size: 12px; color: #999; font-weight: bold; margin-bottom: 5px;">Hết hàng</div>`;
         }
 
         const discountBadgeHTML = discount ? `<span class="discount-badge">${discount}</span>` : "";
 
-        // CHÌA KHÓA: Dùng onclick trên thẻ div gốc, KHÔNG dùng thẻ <a> để giữ 100% CSS của bạn
+        // CHÌA KHÓA: Dùng onclick để không làm hỏng CSS Flexbox của trang chủ
         return `
             <div class="product-card" onclick="window.location.href='product-detail.html?id=${id}'" style="cursor:pointer;">
                 ${statusBadge}
