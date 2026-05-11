@@ -87,6 +87,7 @@ function addVariantRow(data = {}) {
     const row = document.createElement("div");
     row.className = "variant-row";
     
+    // Gắn giá trị cũ vào nếu đang trong chế độ Edit
     row.innerHTML = `
         <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: flex-end; background:#f9f9f9; padding: 15px; border-radius: 8px;">
             <div style="flex: 1.5;">
@@ -130,19 +131,13 @@ function addVariantRow(data = {}) {
 // 6. NẠP DỮ LIỆU ĐỂ SỬA
 async function editProduct(id) {
     try {
-        const response = await fetch(`${API_BASE_URL}/products`);
-        const products = await response.json();
-        const p = products.find(item => item.id === id);
+        const p = allProductsData.find(item => item.id === id);
         
         if (p) {
             document.getElementById("product-id").value = p.id;
-            // Tương thích nhiều loại ID input khác nhau
-            if(document.getElementById("title")) document.getElementById("title").value = p.title;
-            if(document.getElementById("p-title")) document.getElementById("p-title").value = p.title;
-            if(document.getElementById("brand")) document.getElementById("brand").value = p.brand;
-            if(document.getElementById("current_price")) document.getElementById("current_price").value = p.current_price;
-            if(document.getElementById("old_price")) document.getElementById("old_price").value = p.old_price || "";
-            if(document.getElementById("discount")) document.getElementById("discount").value = p.discount || "";
+            document.getElementById("title").value = p.title || "";
+            document.getElementById("brand").value = p.brand || "";
+            document.getElementById("current_price").value = p.current_price || "";
             
             // Vẽ lại các biến thể đã lưu
             const container = document.getElementById("variants-container");
@@ -168,13 +163,13 @@ function openModal(isEdit = false) {
     const titleEl = document.getElementById("modalTitle");
     if(titleEl) titleEl.innerText = isEdit ? "Cập nhật sản phẩm" : "Thêm sản phẩm mới";
     
-    const modal = document.getElementById("productModal") || document.querySelector(".modal");
+    const modal = document.getElementById("productModal");
     if(modal) modal.style.display = "flex";
     
     if (!isEdit) {
-        const form = document.getElementById("product-form") || document.getElementById("admin-product-form");
+        const form = document.getElementById("product-form");
         if(form) form.reset();
-        if(document.getElementById("product-id")) document.getElementById("product-id").value = "";
+        document.getElementById("product-id").value = "";
         
         const container = document.getElementById("variants-container");
         if (container) {
@@ -185,36 +180,63 @@ function openModal(isEdit = false) {
 }
 
 function closeModal() {
-    const modal = document.getElementById("productModal") || document.querySelector(".modal");
+    const modal = document.getElementById("productModal");
     if(modal) modal.style.display = "none";
 }
 
 // 8. LƯU DỮ LIỆU (QUÉT VÀ GỬI BIẾN THỂ)
-const form = document.getElementById("product-form") || document.getElementById("admin-product-form");
-if(form) {
+const form = document.getElementById("product-form");
+if (form) {
     form.addEventListener("submit", async function(e) {
         e.preventDefault();
         const msg = document.getElementById("message") || document.createElement('div');
-        msg.innerText = "Đang thu thập dữ liệu...";
+        msg.innerText = "Đang lưu và đồng bộ dữ liệu...";
         msg.style.color = "#333";
 
         try {
-            const idEl = document.getElementById("product-id");
-            const id = idEl ? idEl.value : "";
-            
+            const id = document.getElementById("product-id").value;
+            const file = document.getElementById("thumbnail_file").files[0];
+            let imageUrl = "";
+
+            if (file) {
+                const formData = new FormData();
+                formData.append("file", file);
+                const resImg = await fetch(`${API_BASE_URL}/upload-image`, { method: "POST", body: formData });
+                if (!resImg.ok) throw new Error("Lỗi upload ảnh chính");
+                const dataImg = await resImg.json();
+                imageUrl = dataImg.url;
+            }
+
             // --- BƯỚC QUAN TRỌNG: QUÉT TOÀN BỘ BIẾN THỂ ---
             const variantsArray = [];
             const variantRows = document.querySelectorAll(".variant-row");
             
             for (let row of variantRows) {
                 const vNameInput = row.querySelector(".v-name");
-                if (!vNameInput || vNameInput.value.trim() === "") continue; // Bỏ qua dòng trống
+                if (!vNameInput || vNameInput.value.trim() === "") continue;
 
                 const vStockInput = row.querySelector(".v-stock");
                 const vStatusInput = row.querySelector(".v-status");
                 const vDateInput = row.querySelector(".v-date");
                 const vPriceInput = row.querySelector(".v-price");
-                const vUrlInput = row.querySelector(".v-image-url");
+                
+                let vImageUrl = row.querySelector(".v-image-url") ? row.querySelector(".v-image-url").value : "";
+                const vFile = row.querySelector(".v-file");
+
+                if (vFile && vFile.files && vFile.files[0]) {
+                    msg.innerText = `Đang tải ảnh phân loại: ${vNameInput.value}...`;
+                    const vFormData = new FormData();
+                    vFormData.append("file", vFile.files[0]);
+                    try {
+                        const vResImg = await fetch(`${API_BASE_URL}/upload-image`, { method: "POST", body: vFormData });
+                        if (vResImg.ok) {
+                            const vDataImg = await vResImg.json();
+                            vImageUrl = vDataImg.url;
+                        }
+                    } catch (e) {
+                        console.error("Lỗi upload ảnh biến thể:", e);
+                    }
+                }
 
                 variantsArray.push({
                     name: vNameInput.value.trim(),
@@ -222,26 +244,23 @@ if(form) {
                     status: vStatusInput ? vStatusInput.value : "instock",
                     date: vDateInput ? vDateInput.value.trim() : "",
                     price: vPriceInput && vPriceInput.value ? parseInt(vPriceInput.value) : null,
-                    image: vUrlInput ? vUrlInput.value : ""
+                    image: vImageUrl
                 });
             }
 
             // Gói dữ liệu
-            const titleEl = document.getElementById("title") || document.getElementById("p-title");
-            const brandEl = document.getElementById("brand") || document.getElementById("p-brand");
-            const priceEl = document.getElementById("current_price") || document.getElementById("p-price");
-
             const productData = {
-                title: titleEl ? titleEl.value.trim() : "",
-                brand: brandEl ? brandEl.value.trim() : "",
-                current_price: priceEl ? priceEl.value.trim() : "",
+                title: document.getElementById("title").value.trim(),
+                brand: document.getElementById("brand").value.trim(),
+                current_price: document.getElementById("current_price").value.trim(),
                 status: "active",
                 variants: variantsArray // GẮN BIẾN THỂ VÀO ĐÂY ĐỂ GỬI ĐI
             };
 
-            // IN RA MÀN HÌNH CONSOLE ĐỂ BẠN KIỂM TRA
-            console.log("🚀 DỮ LIỆU ĐANG GỬI LÊN SERVER BAO GỒM:");
-            console.log(productData);
+            if (imageUrl) productData.thumbnail = imageUrl;
+
+            // In ra Log để bạn tự kiểm tra API
+            console.log("🚀 Payload gửi lên API:", productData);
 
             const url = isEditing ? `${API_BASE_URL}/products/${id}` : `${API_BASE_URL}/products`;
             const method = isEditing ? "PUT" : "POST";
@@ -257,11 +276,12 @@ if(form) {
                 msg.style.color = "green";
                 setTimeout(() => { closeModal(); loadAdminProducts(); }, 1200);
             } else {
-                throw new Error("Lỗi lưu dữ liệu máy chủ");
+                throw new Error("API backend từ chối lưu dữ liệu");
             }
         } catch (err) {
             msg.innerText = err.message || "Có lỗi xảy ra!";
             msg.style.color = "red";
+            console.error(err);
         }
     });
 }
