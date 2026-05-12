@@ -110,6 +110,21 @@
             transition: 0.3s;
         }
 
+        .btn-excel {
+            background: #27ae60;
+            color: white; 
+            padding: 12px 25px; 
+            border: none; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.3s;
+        }
+        .btn-excel:hover { background: #219653; }
+
         /* Table Style */
         .card { 
             background: white; 
@@ -207,49 +222,86 @@
         #save-btn { 
             background: var(--primary); color: white; border: none; padding: 15px; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 30px; 
         }
+
+        /* Ẩn hiện các màn hình (Tab) */
+        .section-view { display: none; }
+        .section-view.active { display: block; }
     </style>
 </head>
 <body>
     <div class="sidebar">
         <h2>MORACHI</h2>
-        <div class="menu-item active"><i class="fas fa-box"></i> Sản phẩm</div>
-        <div class="menu-item"><i class="fas fa-history"></i> Lịch sử nhập</div>
+        <div class="menu-item active" id="menu-products" onclick="switchTab('products')"><i class="fas fa-box"></i> Kho sản phẩm</div>
+        <div class="menu-item" id="menu-orders" onclick="switchTab('orders')"><i class="fas fa-shopping-cart"></i> Đơn đặt hàng</div>
         <div class="menu-item"><i class="fas fa-cog"></i> Cấu hình</div>
     </div>
 
     <div class="main">
-        <div class="header-main">
-            <h1>Quản lý kho hàng</h1>
-            <div style="display: flex; gap: 20px; align-items: center;">
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="admin-search-input" placeholder="Tìm sản phẩm...">
+        <!-- MÀN HÌNH 1: QUẢN LÝ SẢN PHẨM -->
+        <div id="section-products" class="section-view active">
+            <div class="header-main">
+                <h1>Quản lý kho hàng</h1>
+                <div style="display: flex; gap: 20px; align-items: center;">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="admin-search-input" placeholder="Tìm sản phẩm...">
+                    </div>
+                    <button class="btn-add" onclick="openModal()">
+                        <i class="fas fa-plus"></i> Thêm sản phẩm chính
+                    </button>
                 </div>
-                <button class="btn-add" onclick="openModal()">
-                    <i class="fas fa-plus"></i> Thêm sản phẩm chính
-                </button>
+            </div>
+
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ảnh</th>
+                            <th>Sản phẩm & Biến thể</th>
+                            <th>Thương hiệu</th>
+                            <th>Giá niêm yết</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-product-list">
+                        <!-- Dữ liệu render từ JS -->
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <div class="card">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Ảnh</th>
-                        <th>Sản phẩm & Biến thể</th>
-                        <th>Thương hiệu</th>
-                        <th>Giá niêm yết</th>
-                        <th>Thao tác</th>
-                    </tr>
-                </thead>
-                <tbody id="admin-product-list">
-                    <!-- Dữ liệu render từ JS -->
-                </tbody>
-            </table>
+        <!-- MÀN HÌNH 2: QUẢN LÝ ĐƠN HÀNG -->
+        <div id="section-orders" class="section-view">
+            <div class="header-main">
+                <h1>Đơn đặt hàng</h1>
+                <div style="display: flex; gap: 20px; align-items: center;">
+                    <button class="btn-excel" onclick="exportSPX()">
+                        <i class="fas fa-file-excel"></i> Xuất file Tạo Đơn SPX
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mã Đơn</th>
+                            <th>Khách Hàng & Liên Hệ</th>
+                            <th>Sản Phẩm (SL)</th>
+                            <th>Tổng Thu</th>
+                            <th>Trạng Thái</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-order-list">
+                        <!-- Đơn hàng render từ JS -->
+                    </tbody>
+                </table>
+            </div>
         </div>
+
     </div>
 
-    <!-- Modal Form -->
+    <!-- Modal Form Thêm Sản Phẩm -->
     <div id="productModal" class="modal">
         <div class="modal-content">
             <h2 id="modalTitle" style="margin: 0 0 25px 0;">Thông tin sản phẩm</h2>
@@ -297,6 +349,7 @@
         </div>
     </div>
 
-    <script src="admin/admin.js"></script>
+    <!-- Nhúng file Script Admin -->
+    <script src="admin.js"></script>
 </body>
 </html>
