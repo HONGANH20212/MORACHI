@@ -1,12 +1,12 @@
-const API_BASE_URL = "/api";
-let isEditing = false;
-let allProductsData = [];
+var API_BASE_URL = "/api";
+var isEditing = false;
+var allProductsData = [];
 
 // =========================================================
 // PHẦN 1: QUẢN LÝ KHO SẢN PHẨM
 // =========================================================
 
-async function loadAdminProducts() {
+window.loadAdminProducts = async function() {
     const tbody = document.getElementById("admin-product-list");
     if (!tbody) return;
     tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 40px;'>Đang tải dữ liệu...</td></tr>";
@@ -16,13 +16,13 @@ async function loadAdminProducts() {
         const products = await response.json();
         
         allProductsData = Array.isArray(products) ? products : [];
-        renderTable(allProductsData);
+        window.renderTable(allProductsData);
     } catch (err) {
         tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; color:red; padding: 40px;'>Lỗi kết nối API!</td></tr>";
     }
 }
 
-function renderTable(products) {
+window.renderTable = function(products) {
     const tbody = document.getElementById("admin-product-list");
     if (!tbody) return;
     
@@ -34,7 +34,7 @@ function renderTable(products) {
     tbody.innerHTML = products.map(p => {
         const variants = p.variants || [];
         const variantSummary = variants.length > 0 
-            ? variants.map(v => `<span style="background:#f5f5f5; color:#555; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:4px;">${v.name} (SL: ${v.stock || 0})</span>`).join("")
+            ? variants.map(v => `<span style="background:#f5f5f5; color:#555; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:4px; display:inline-block; margin-bottom:2px;">${v.name} (SL: ${v.stock || 0})</span>`).join("")
             : `<small style="color:#aaa;">Chưa có biến thể</small>`;
 
         return `
@@ -45,17 +45,17 @@ function renderTable(products) {
                     <div>${variantSummary}</div>
                 </td>
                 <td>${p.brand}</td>
-                <td style="color: #f57224; font-weight: bold;">${Number(p.current_price).toLocaleString()} đ</td>
+                <td style="color: #f57224; font-weight: bold;">${Number(p.current_price).toLocaleString('vi-VN')} đ</td>
                 <td class="actions">
-                    <button class="btn-icon edit-btn" style="border:none; background:#e3f2fd; color:#1976d2; padding:5px 10px; border-radius:4px; cursor:pointer;" onclick="editProduct('${p.id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn-icon delete-btn" style="border:none; background:#ffebee; color:#d32f2f; padding:5px 10px; border-radius:4px; cursor:pointer; margin-left:5px;" onclick="deleteProduct('${p.id}', '${p.brand}')"><i class="fas fa-trash"></i></button>
+                    <button class="btn-icon edit-btn" style="border:none; background:#e3f2fd; color:#1976d2; padding:5px 10px; border-radius:4px; cursor:pointer;" onclick="window.editProduct('${p.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn-icon delete-btn" style="border:none; background:#ffebee; color:#d32f2f; padding:5px 10px; border-radius:4px; cursor:pointer; margin-left:5px;" onclick="window.deleteProduct('${p.id}', '${p.brand}')"><i class="fas fa-trash"></i></button>
                 </td>
             </tr>
         `;
     }).join("");
 }
 
-function bindAdminSearch() {
+window.bindAdminSearch = function() {
     const searchInput = document.getElementById("admin-search-input");
     if (!searchInput) return;
 
@@ -66,19 +66,19 @@ function bindAdminSearch() {
             const brand = (p.brand || "").toLowerCase();
             return title.includes(keyword) || brand.includes(keyword);
         });
-        renderTable(filtered);
+        window.renderTable(filtered);
     });
 }
 
-async function deleteProduct(id, brand) {
+window.deleteProduct = async function(id, brand) {
     if (!confirm(`Bạn có chắc chắn muốn xóa sản phẩm ${brand}?`)) return;
     try {
         const res = await fetch(`${API_BASE_URL}/products/${id}`, { method: "DELETE" });
-        if (res.ok) { alert("Xóa thành công!"); loadAdminProducts(); }
+        if (res.ok) { alert("Xóa thành công!"); window.loadAdminProducts(); }
     } catch (err) { alert("Lỗi hệ thống khi xóa!"); }
 }
 
-function addVariantRow(data = {}) {
+window.addVariantRow = function(data = {}) {
     const container = document.getElementById("variants-container");
     if (!container) return;
 
@@ -123,7 +123,7 @@ function addVariantRow(data = {}) {
     container.appendChild(row);
 }
 
-async function editProduct(id) {
+window.editProduct = async function(id) {
     try {
         const p = allProductsData.find(item => item.id === id);
         
@@ -137,17 +137,17 @@ async function editProduct(id) {
             if (container) {
                 container.innerHTML = "";
                 if (p.variants && p.variants.length > 0) {
-                    p.variants.forEach(v => addVariantRow(v));
+                    p.variants.forEach(v => window.addVariantRow(v));
                 } else {
-                    addVariantRow();
+                    window.addVariantRow();
                 }
             }
-            openModal(true);
+            window.openModal(true);
         }
     } catch (err) { alert("Lỗi khi tải thông tin sản phẩm!"); }
 }
 
-function openModal(isEdit = false) {
+window.openModal = function(isEdit = false) {
     isEditing = isEdit;
     const msg = document.getElementById("message");
     if(msg) msg.innerText = "";
@@ -159,24 +159,25 @@ function openModal(isEdit = false) {
     if(modal) modal.style.display = "flex";
     
     if (!isEdit) {
-        const form = document.getElementById("product-form");
-        if(form) form.reset();
+        const formEl = document.getElementById("product-form");
+        if(formEl) formEl.reset();
         document.getElementById("product-id").value = "";
         
         const container = document.getElementById("variants-container");
         if (container) {
             container.innerHTML = "";
-            addVariantRow(); 
+            window.addVariantRow(); 
         }
     }
 }
 
-function closeModal() {
+window.closeModal = function() {
     const modal = document.getElementById("productModal");
     if(modal) modal.style.display = "none";
 }
 
-const form = document.getElementById("product-form");
+// Xử lý Lưu Sản Phẩm
+var form = document.getElementById("product-form");
 if (form) {
     form.addEventListener("submit", async function(e) {
         e.preventDefault();
@@ -265,7 +266,7 @@ if (form) {
             if (res.ok) {
                 msg.innerText = isEditing ? "Cập nhật thành công!" : "Thêm mới thành công!";
                 msg.style.color = "green";
-                setTimeout(() => { closeModal(); loadAdminProducts(); }, 1200);
+                setTimeout(() => { window.closeModal(); window.loadAdminProducts(); }, 1200);
             } else {
                 throw new Error("API backend từ chối lưu dữ liệu");
             }
@@ -281,35 +282,42 @@ if (form) {
 // PHẦN 2: QUẢN LÝ ĐƠN HÀNG VÀ XUẤT FILE EXCEL SPX
 // =========================================================
 
-// Chuyển đổi Tab qua lại giữa Sản Phẩm và Đơn Hàng
-function switchTab(tabId) {
-    document.getElementById('section-products').classList.remove('active');
-    document.getElementById('section-orders').classList.remove('active');
-    document.getElementById('menu-products').classList.remove('active');
-    document.getElementById('menu-orders').classList.remove('active');
+window.switchTab = function(tabId) {
+    const secProducts = document.getElementById('section-products');
+    const secOrders = document.getElementById('section-orders');
+    const menuProducts = document.getElementById('menu-products');
+    const menuOrders = document.getElementById('menu-orders');
 
-    document.getElementById(`section-${tabId}`).classList.add('active');
-    document.getElementById(`menu-${tabId}`).classList.add('active');
+    if (secProducts) secProducts.classList.remove('active');
+    if (secOrders) secOrders.classList.remove('active');
+    if (menuProducts) menuProducts.classList.remove('active');
+    if (menuOrders) menuOrders.classList.remove('active');
+
+    const activeSec = document.getElementById(`section-${tabId}`);
+    const activeMenu = document.getElementById(`menu-${tabId}`);
+    if (activeSec) activeSec.classList.add('active');
+    if (activeMenu) activeMenu.classList.add('active');
 
     if (tabId === 'orders') {
-        loadOrders();
+        window.loadOrders();
     }
 }
 
-// Tải Đơn hàng từ API Python (Cosmos DB)
-async function loadOrders() {
+window.loadOrders = async function() {
     const tbody = document.getElementById('admin-order-list');
-    tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 40px;'>Đang tải đơn hàng từ máy chủ...</td></tr>";
+    if (!tbody) return;
+
+    tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 40px;'>Đang tải đơn hàng từ máy chủ...</td></tr>";
 
     try {
         const response = await fetch(`${API_BASE_URL}/orders`);
+        if (!response.ok) throw new Error("API lỗi");
         const orders = await response.json();
         
-        // Lưu tạm vào LocalStorage để tính năng Xuất CSV dễ lấy dữ liệu
         localStorage.setItem('morachi_orders', JSON.stringify(orders));
 
-        if (orders.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 40px;'>Chưa có đơn hàng nào.</td></tr>";
+        if (!orders || orders.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding: 40px;'>Chưa có đơn hàng nào.</td></tr>";
             return;
         }
 
@@ -319,10 +327,9 @@ async function loadOrders() {
             let itemNames = items.map(i => `<div style="font-size:12px;">• ${i.title} (${i.variant}) x${i.quantity}</div>`).join("");
             let statusColor = o.payment_method === 'cod' ? '#f39c12' : '#3498db';
 
-            // Xử lý in Mã SPX trong Admin nếu đã nhập
             let spxHtml = o.spx_tracking_code 
                 ? `<div style="margin-top:5px; color:#27ae60; font-size:11px;"><i class="fas fa-truck"></i> SPX: <b>${o.spx_tracking_code}</b></div>` 
-                : `<div style="margin-top:5px; color:#aaa; font-size:11px;">Chưa có mã vận đơn</div>`;
+                : `<div style="margin-top:5px; color:#aaa; font-size:11px;">Chưa có mã SPX</div>`;
 
             return `
                 <tr>
@@ -341,7 +348,7 @@ async function loadOrders() {
                         ${spxHtml}
                     </td>
                     <td class="actions">
-                        <button class="btn-icon edit-btn" title="Cập nhật Trạng thái & Mã SPX" onclick="updateOrderStatus('${o.id}', '${o.status || ''}', '${o.spx_tracking_code || ''}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon edit-btn" title="Cập nhật Trạng thái & Mã SPX" onclick="window.updateOrderStatus('${o.id}', '${o.status || ''}', '${o.spx_tracking_code || ''}')"><i class="fas fa-edit"></i></button>
                     </td>
                 </tr>
             `;
@@ -353,6 +360,15 @@ async function loadOrders() {
 }
 
 window.exportSPX = function() {
+    const orders = JSON.parse(localStorage.getItem('morachi_orders') || '[]');
+    if (orders.length === 0) {
+        alert("Chưa có đơn hàng nào để xuất!");
+        return;
+    }
+
+    const header = [
+        "*Mã đơn hàng", "*Tên người nhận", "*Số điện thoại", "*Tỉnh/Thành Phố", 
+        "*Quận/Huyện", "*Xã/Phường", "*Địa chỉ chi tiết", "Lưu ý về địa chỉ", 
         "Mã bưu chính", "*Tên sản phẩm", 
         "Số lượng (Thông tin bắt buộc khi chọn Giao hàng một phần & Thu COD)", 
         "Giá tiền (Thông tin bắt buộc khi chọn Giao hàng một phần & Thu COD)", 
@@ -366,23 +382,20 @@ window.exportSPX = function() {
         "\"Đơn chỉ hoàn thành nếu ở dưới hiện \"\"Đủ điều kiện\"\"\""
     ];
 
-    // Hàm chống vỡ phông và chống rớt cột khi nội dung có chứa dấu phẩy
     const escapeCSV = (str) => {
         if (str === null || str === undefined) return '""';
         return '"' + String(str).replace(/"/g, '""') + '"';
     };
 
-    // Chèn BOM để Excel đọc được Tiếng Việt có dấu chuẩn xác
     let csvContent = "\uFEFF" + header.join(",") + "\n";
 
     orders.forEach(o => {
         const c = o.customer_info || {};
+        const items = o.items || [];
         
-        // Gộp tên tất cả sản phẩm vào chung 1 ô cho dễ quản lý
-        const itemsStr = o.items ? o.items.map(i => `${i.title} (${i.variant}) x${i.quantity}`).join(" + ") : "";
-        const totalQty = o.items ? o.items.reduce((sum, item) => sum + item.quantity, 0) : 0;
+        const itemsStr = items.map(i => `${i.title} (${i.variant}) x${i.quantity}`).join(" + ");
+        const totalQty = items.reduce((sum, item) => sum + item.quantity, 0);
         
-        // Nếu là COD thì thu tiền bằng Tổng đơn, nếu Bank thì thu COD = 0
         const isCOD = o.payment_method === 'cod' ? "Y" : "N";
         const codAmount = o.payment_method === 'cod' ? (o.total_amount || 0) : 0;
 
@@ -394,25 +407,20 @@ window.exportSPX = function() {
             escapeCSV(c.dist),
             escapeCSV(c.ward),
             escapeCSV(c.address),
-            '""', // Lưu ý
-            '""', // Mã bưu chính
-            escapeCSV(itemsStr), // Tên SP đã gộp
-            totalQty, // SL
-            o.total_amount || 0, // Giá tiền
-            "1", // Cân nặng (Mặc định 1KG)
-            "20", "10", "10", // D-R-C (Mặc định)
-            '""', // Mã KH
-            o.total_amount || 0, // Giá trị đơn
-            '"N"', // Giao 1 phần (Tắt để gộp chung 1 dòng cho dễ up SPX)
-            '"N"', // Cho phép thử
-            '"Y"', // Cho xem ko thử
-            '"N"', // Thu phí từ chối
-            '""', // Phí
-            escapeCSV(isCOD), // Thu COD
-            codAmount, // Tiền COD
-            '"N"', // GT Cao
-            '"Người gửi trả"', // Thanh toán cước
-            '"Cho xem hàng"' , // Lưu ý giao
+            '""', '""',
+            escapeCSV(itemsStr),
+            totalQty,
+            o.total_amount || 0,
+            "1", "20", "10", "10",
+            '""',
+            o.total_amount || 0,
+            '"N"', '"N"', '"Y"', '"N"',
+            '""',
+            escapeCSV(isCOD),
+            codAmount,
+            '"N"',
+            '"Người gửi trả"',
+            '"Cho xem hàng"',
             '""',
             '"Đủ điều kiện"'
         ];
@@ -420,7 +428,6 @@ window.exportSPX = function() {
         csvContent += row.join(",") + "\n";
     });
 
-    // Tạo file tải về máy tính
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -432,9 +439,8 @@ window.exportSPX = function() {
     document.body.removeChild(link);
 }
 
-// BỔ SUNG HÀM ADMIN NHẬP MÃ SPX VÀ CẬP NHẬT TRẠNG THÁI
 window.updateOrderStatus = async function(id, currentStatus, currentSpxCode) {
-    const newStatus = prompt("Cập nhật trạng thái (VD: Đang lấy hàng, Đang giao hàng, Đã hoàn thành...):", currentStatus || "Đang giao hàng");
+    const newStatus = prompt("Cập nhật trạng thái (VD: Đang giao hàng, Đã hoàn thành...):", currentStatus || "Đang giao hàng");
     if (newStatus === null) return;
 
     const newSpxCode = prompt("Nhập Mã Vận Đơn Shopee Xpress (nếu có, để in ra cho khách tự tra):", currentSpxCode || "");
@@ -449,7 +455,7 @@ window.updateOrderStatus = async function(id, currentStatus, currentSpxCode) {
 
         if (response.ok) {
             alert("Đã cập nhật trạng thái đơn hàng thành công!");
-            loadOrders(); // Tải lại bảng đơn hàng để thấy chữ xanh lá
+            window.loadOrders(); 
         } else {
             alert("Lỗi khi cập nhật trên máy chủ!");
         }
@@ -460,12 +466,12 @@ window.updateOrderStatus = async function(id, currentStatus, currentSpxCode) {
 
 // Khởi chạy mặc định khi trang load
 document.addEventListener("DOMContentLoaded", () => {
-    loadAdminProducts();
-    bindAdminSearch();
+    window.loadAdminProducts();
+    window.bindAdminSearch();
 });
 
 // Đóng modal khi click nền xám
 window.onclick = function(event) {
     const modal = document.getElementById("productModal");
-    if (event.target == modal) closeModal();
+    if (event.target == modal) window.closeModal();
 }
