@@ -1,12 +1,12 @@
-const API_BASE_URL = "/api";
-let isEditing = false;
-let allProductsData = [];
+var API_BASE_URL = "/api";
+var isEditing = false;
+var allProductsData = [];
 
 // =========================================================
 // PHẦN 1: QUẢN LÝ KHO SẢN PHẨM
 // =========================================================
 
-async function loadAdminProducts() {
+window.loadAdminProducts = async function() {
     const tbody = document.getElementById("admin-product-list");
     if (!tbody) return;
     tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 40px;'>Đang tải dữ liệu...</td></tr>";
@@ -16,13 +16,13 @@ async function loadAdminProducts() {
         const products = await response.json();
         
         allProductsData = Array.isArray(products) ? products : [];
-        renderTable(allProductsData);
+        window.renderTable(allProductsData);
     } catch (err) {
         tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; color:red; padding: 40px;'>Lỗi kết nối API!</td></tr>";
     }
 }
 
-function renderTable(products) {
+window.renderTable = function(products) {
     const tbody = document.getElementById("admin-product-list");
     if (!tbody) return;
     
@@ -47,15 +47,15 @@ function renderTable(products) {
                 <td>${p.brand}</td>
                 <td style="color: #f57224; font-weight: bold;">${Number(p.current_price).toLocaleString('vi-VN')} đ</td>
                 <td class="actions">
-                    <button class="btn-icon edit-btn" style="border:none; background:#e3f2fd; color:#1976d2; padding:5px 10px; border-radius:4px; cursor:pointer;" onclick="editProduct('${p.id}')"><i class="fas fa-edit"></i></button>
-                    <button class="btn-icon delete-btn" style="border:none; background:#ffebee; color:#d32f2f; padding:5px 10px; border-radius:4px; cursor:pointer; margin-left:5px;" onclick="deleteProduct('${p.id}', '${p.brand}')"><i class="fas fa-trash"></i></button>
+                    <button class="btn-icon edit-btn" style="border:none; background:#e3f2fd; color:#1976d2; padding:5px 10px; border-radius:4px; cursor:pointer;" onclick="window.editProduct('${p.id}')"><i class="fas fa-edit"></i></button>
+                    <button class="btn-icon delete-btn" style="border:none; background:#ffebee; color:#d32f2f; padding:5px 10px; border-radius:4px; cursor:pointer; margin-left:5px;" onclick="window.deleteProduct('${p.id}', '${p.brand}')"><i class="fas fa-trash"></i></button>
                 </td>
             </tr>
         `;
     }).join("");
 }
 
-function bindAdminSearch() {
+window.bindAdminSearch = function() {
     const searchInput = document.getElementById("admin-search-input");
     if (!searchInput) return;
 
@@ -66,7 +66,7 @@ function bindAdminSearch() {
             const brand = (p.brand || "").toLowerCase();
             return title.includes(keyword) || brand.includes(keyword);
         });
-        renderTable(filtered);
+        window.renderTable(filtered);
     });
 }
 
@@ -74,7 +74,7 @@ window.deleteProduct = async function(id, brand) {
     if (!confirm(`Bạn có chắc chắn muốn xóa sản phẩm ${brand}?`)) return;
     try {
         const res = await fetch(`${API_BASE_URL}/products/${id}`, { method: "DELETE" });
-        if (res.ok) { alert("Xóa thành công!"); loadAdminProducts(); }
+        if (res.ok) { alert("Xóa thành công!"); window.loadAdminProducts(); }
     } catch (err) { alert("Lỗi hệ thống khi xóa!"); }
 }
 
@@ -137,12 +137,12 @@ window.editProduct = async function(id) {
             if (container) {
                 container.innerHTML = "";
                 if (p.variants && p.variants.length > 0) {
-                    p.variants.forEach(v => addVariantRow(v));
+                    p.variants.forEach(v => window.addVariantRow(v));
                 } else {
-                    addVariantRow();
+                    window.addVariantRow();
                 }
             }
-            openModal(true);
+            window.openModal(true);
         }
     } catch (err) { alert("Lỗi khi tải thông tin sản phẩm!"); }
 }
@@ -159,14 +159,14 @@ window.openModal = function(isEdit = false) {
     if(modal) modal.style.display = "flex";
     
     if (!isEdit) {
-        const form = document.getElementById("product-form");
-        if(form) form.reset();
+        const formEl = document.getElementById("product-form");
+        if(formEl) formEl.reset();
         document.getElementById("product-id").value = "";
         
         const container = document.getElementById("variants-container");
         if (container) {
             container.innerHTML = "";
-            addVariantRow(); 
+            window.addVariantRow(); 
         }
     }
 }
@@ -176,8 +176,8 @@ window.closeModal = function() {
     if(modal) modal.style.display = "none";
 }
 
-// Xử lý Lưu Sản Phẩm
-const form = document.getElementById("product-form");
+// Xử lý Lưu Sản Phẩm (Đổi const thành var)
+var form = document.getElementById("product-form");
 if (form) {
     form.addEventListener("submit", async function(e) {
         e.preventDefault();
@@ -261,7 +261,7 @@ if (form) {
             if (res.ok) {
                 msg.innerText = isEditing ? "Cập nhật thành công!" : "Thêm mới thành công!";
                 msg.style.color = "green";
-                setTimeout(() => { closeModal(); loadAdminProducts(); }, 1200);
+                setTimeout(() => { window.closeModal(); window.loadAdminProducts(); }, 1200);
             } else {
                 throw new Error("API backend từ chối lưu dữ liệu");
             }
@@ -294,7 +294,7 @@ window.switchTab = function(tabId) {
     if (activeMenu) activeMenu.classList.add('active');
 
     if (tabId === 'orders') {
-        loadOrders();
+        window.loadOrders();
     }
 }
 
@@ -353,7 +353,6 @@ window.exportSPX = function() {
         return;
     }
 
-    // Header chính xác theo template của Shopee Xpress
     const header = [
         "*Mã đơn hàng", "*Tên người nhận", "*Số điện thoại", "*Tỉnh/Thành Phố", 
         "*Quận/Huyện", "*Xã/Phường", "*Địa chỉ chi tiết", "Lưu ý về địa chỉ", 
@@ -370,7 +369,6 @@ window.exportSPX = function() {
         "\"Đơn chỉ hoàn thành nếu ở dưới hiện \"\"Đủ điều kiện\"\"\""
     ];
 
-    // Hàm bọc dấu ngoặc kép an toàn cho dữ liệu CSV
     const escapeCSV = (str) => {
         if (str === null || str === undefined) return '""';
         return '"' + String(str).replace(/"/g, '""') + '"';
@@ -430,12 +428,12 @@ window.exportSPX = function() {
 
 // Khởi chạy mặc định khi trang load
 document.addEventListener("DOMContentLoaded", () => {
-    loadAdminProducts();
-    bindAdminSearch();
+    window.loadAdminProducts();
+    window.bindAdminSearch();
 });
 
 // Đóng modal khi bấm ra vùng xám
 window.onclick = function(event) {
     const modal = document.getElementById("productModal");
-    if (event.target == modal) closeModal();
+    if (event.target == modal) window.closeModal();
 }
