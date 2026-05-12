@@ -311,3 +311,46 @@ def brands(req: func.HttpRequest) -> func.HttpResponse:
 
     except Exception as e:
         return json_response({"error": str(e)}, 500)
+
+
+@app.route(route="orders", methods=["GET", "POST", "OPTIONS"])
+def orders_api(req: func.HttpRequest) -> func.HttpResponse:
+    if req.method == "OPTIONS":
+        return options_response()
+
+    try:
+        container = get_cosmos_container() # Dùng chung database hiện tại
+
+        if req.method == "GET":
+            # API này dùng để trang Admin lấy danh sách đơn hàng về xem
+            query = "SELECT * FROM c WHERE c.type = 'order'"
+            items = list(container.query_items(
+                query=query,
+                enable_cross_partition_query=True
+            ))
+            items.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+            return json_response(items)
+
+        if req.method == "POST":
+            # API này dùng để Website gửi Đơn hàng mới lên
+            body = req.get_json()
+            now = datetime.utcnow().isoformat() + "Z"
+            
+            order_item = {
+                "id": str(uuid.uuid4()),
+                "brand": "ORDER", # Bắt buộc phải có để hệ thống không báo lỗi (Partition Key)
+                "type": "order",  # Nhãn dán phân biệt đây là Đơn hàng chứ không phải Sản phẩm
+                "order_id": body.get("order_id"),
+                "customer_info": body.get("customer_info", {}),
+                "items": body.get("items", []),
+                "total_amount": body.get("total_amount", 0),
+                "payment_method": body.get("payment_method", "cod"),
+                "status": body.get("status", "Chờ xác nhận"),
+                "created_at": now
+            }
+
+            container.create_item(body=order_item)
+            return json_response({"message": "Tạo đơn hàng thành công", "order": order_item}, 201)
+
+    except Exception as e:
+        return json_response({"error": str(e)}, 500)

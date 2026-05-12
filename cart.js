@@ -139,7 +139,7 @@ function openCheckoutModal() {
     // TẠO MÃ ĐƠN HÀNG DUY NHẤT (VD: DH-7B3F9A)
     const orderId = 'DH-' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
-    // THÔNG TIN NGÂN HÀNG CỦA BẠN (Sửa lại ở đây)
+    // THÔNG TIN NGÂN HÀNG CỦA BẠN
     const BANK_ID = "VCB"; 
     const BANK_ACCOUNT = "1234567890"; 
     const ACCOUNT_NAME = "NGUYEN VAN A"; 
@@ -338,8 +338,12 @@ window.loadWards = function() {
     wSelect.trigger('change');
 }
 
-// XỬ LÝ ĐẶT HÀNG VÀ TẠO DATA
-window.submitOrder = function(orderId) {
+// XỬ LÝ ĐẶT HÀNG VÀ BẮN API VÀO DATABASE (PYTHON)
+window.submitOrder = async function(tempOrderId) {
+    const btn = document.querySelector('.btn-checkout-confirm');
+    btn.innerText = "Đang xử lý...";
+    btn.disabled = true;
+
     const name = document.getElementById('chk-name').value.trim();
     const phone = document.getElementById('chk-phone').value.trim();
     const address = document.getElementById('chk-address').value.trim();
@@ -354,32 +358,56 @@ window.submitOrder = function(orderId) {
 
     if (!name || !phone || !address || !document.getElementById('chk-province').value) {
         alert("Vui lòng điền đầy đủ Thông tin giao hàng!");
+        btn.innerText = "HOÀN TẤT ĐẶT HÀNG";
+        btn.disabled = false;
         return;
     }
 
+    // Lấy số thứ tự đơn hàng (MO0001, MO0002...)
+    let orderCount = parseInt(localStorage.getItem('morachi_order_count') || '0');
+    orderCount++;
+    localStorage.setItem('morachi_order_count', orderCount);
+    const orderId = 'MO' + String(orderCount).padStart(4, '0');
+
     const method = document.querySelector('input[name="chk-payment"]:checked').value;
+    const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) + 11000;
     
     const orderData = {
         order_id: orderId,
-        customer_info: { name, phone, address: `${address}, ${ward}, ${dist}, ${prov}` },
+        customer_info: { name, phone, address, prov, dist, ward }, 
         items: cart,
-        total_amount: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) + 11000,
+        total_amount: totalAmount,
         payment_method: method,
-        status: method === 'bank' ? 'pending_payment' : 'pending_cod',
-        created_at: new Date().toISOString()
+        status: method === 'bank' ? 'Chờ chuyển khoản' : 'Chờ xác nhận COD'
     };
 
-    console.log("Đã tạo đơn hàng:", orderData);
+    // GỌI API PYTHON ĐỂ LƯU ĐƠN HÀNG VÀO DATABASE
+    try {
+        const response = await fetch('/api/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderData)
+        });
 
-    if (method === 'bank') {
-        alert(`Cảm ơn ${name} đã đặt hàng!\n\nMã đơn hàng của bạn là: ${orderId}\n\nVui lòng đảm bảo bạn đã quét mã QR để chuyển khoản. Chúng tôi sẽ xác nhận đơn hàng khi nhận được thanh toán.`);
-    } else {
-        alert(`Cảm ơn ${name} đã đặt hàng!\n\nMã đơn hàng của bạn là: ${orderId}\n\nChúng tôi sẽ đóng gói và thu tiền mặt (COD) tận nhà cho bạn.`);
+        if (!response.ok) throw new Error("API lỗi");
+
+        if (method === 'bank') {
+            alert(`Cảm ơn ${name} đã đặt hàng!\n\nMã đơn hàng của bạn là: ${orderId}\n\nVui lòng đảm bảo bạn đã quét mã QR để chuyển khoản. Hệ thống Admin đã ghi nhận đơn hàng.`);
+        } else {
+            alert(`Cảm ơn ${name} đã đặt hàng!\n\nMã đơn hàng của bạn là: ${orderId}\n\nChúng tôi sẽ đóng gói và thu tiền mặt (COD) tận nhà cho bạn.`);
+        }
+
+        cart = [];
+        saveCart();
+        closeCheckoutModal();
+
+    } catch (error) {
+        console.error("Lỗi:", error);
+        alert("Máy chủ đang bận, không thể lưu đơn hàng. Vui lòng thử lại!");
+    } finally {
+        btn.innerText = "HOÀN TẤT ĐẶT HÀNG";
+        btn.disabled = false;
     }
-
-    cart = [];
-    saveCart();
-    closeCheckoutModal();
 }
 
 // ==========================================
