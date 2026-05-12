@@ -176,7 +176,6 @@ window.closeModal = function() {
     if(modal) modal.style.display = "none";
 }
 
-// Xử lý Lưu Sản Phẩm (Đổi const thành var)
 var form = document.getElementById("product-form");
 if (form) {
     form.addEventListener("submit", async function(e) {
@@ -274,7 +273,7 @@ if (form) {
 }
 
 // =========================================================
-// PHẦN 2: QUẢN LÝ ĐƠN HÀNG & XUẤT CSV (SHOPEE XPRESS)
+// PHẦN 2: QUẢN LÝ ĐƠN HÀNG & CẬP NHẬT TRẠNG THÁI HÀNG LOẠT
 // =========================================================
 
 window.switchTab = function(tabId) {
@@ -302,7 +301,7 @@ window.loadOrders = async function() {
     const tbody = document.getElementById('admin-order-list');
     if (!tbody) return;
 
-    tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 40px;'>Đang tải đơn hàng từ máy chủ...</td></tr>";
+    tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; padding: 40px;'>Đang tải đơn hàng từ máy chủ...</td></tr>";
 
     try {
         const response = await fetch(`${API_BASE_URL}/orders`);
@@ -311,8 +310,11 @@ window.loadOrders = async function() {
         
         localStorage.setItem('morachi_orders', JSON.stringify(orders));
 
+        const checkAllEl = document.getElementById('check-all-orders');
+        if (checkAllEl) checkAllEl.checked = false;
+
         if (!orders || orders.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 40px;'>Chưa có đơn hàng nào.</td></tr>";
+            tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; padding: 40px;'>Chưa có đơn hàng nào.</td></tr>";
             return;
         }
 
@@ -320,10 +322,20 @@ window.loadOrders = async function() {
             const c = o.customer_info || {};
             const items = o.items || [];
             let itemNames = items.map(i => `<div style="font-size:12px;">• ${i.title} (${i.variant}) x${i.quantity}</div>`).join("");
-            let statusColor = o.payment_method === 'cod' ? '#f39c12' : '#3498db';
+            
+            let statusColor = '#3498db';
+            if(o.payment_method === 'cod') statusColor = '#f39c12';
+            if(o.status === 'Đã hoàn thành') statusColor = '#27ae60';
+            if(o.status === 'Đã hủy') statusColor = '#e74c3c';
 
+            let spxHtml = o.spx_tracking_code 
+                ? `<div style="margin-top:5px; color:#27ae60; font-size:11px;"><i class="fas fa-truck"></i> SPX: <b>${o.spx_tracking_code}</b></div>` 
+                : `<div style="margin-top:5px; color:#aaa; font-size:11px;">Chưa có mã vận đơn</div>`;
+
+            // Lưu order_id vào thuộc tính data-orderid để tái sử dụng lúc nhắc nhập SPX
             return `
                 <tr>
+                    <td style="text-align: center;"><input type="checkbox" class="order-checkbox" value="${o.id}" data-orderid="${o.order_id || 'N/A'}"></td>
                     <td style="font-weight:bold; color:#111;">${o.order_id || 'N/A'}</td>
                     <td>
                         <div style="font-weight:bold;">${c.name || 'N/A'}</div>
@@ -333,16 +345,130 @@ window.loadOrders = async function() {
                     <td>${itemNames}</td>
                     <td style="font-weight:bold; color:#e74c3c;">${Number(o.total_amount || 0).toLocaleString('vi-VN')} đ</td>
                     <td>
-                        <span style="background:${statusColor}; color:white; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold;">
+                        <span style="background:${statusColor}; color:white; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; display:inline-block;">
                             ${o.status || 'Mới'}
                         </span>
+                        ${spxHtml}
+                    </td>
+                    <td class="actions">
+                        <button class="btn-icon edit-btn" title="Cập nhật Trạng thái & Mã SPX" onclick="window.updateOrderStatus('${o.id}', '${o.status || ''}', '${o.spx_tracking_code || ''}')"><i class="fas fa-edit"></i></button>
                     </td>
                 </tr>
             `;
         }).join('');
     } catch (err) {
         console.error("Lỗi lấy đơn hàng:", err);
-        tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; color:red; padding: 40px;'>Lỗi kết nối máy chủ để lấy Đơn Hàng!</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; color:red; padding: 40px;'>Lỗi kết nối máy chủ để lấy Đơn Hàng!</td></tr>";
+    }
+}
+
+// -------------------------------------------------------------
+// CHỌN TẤT CẢ VÀ CẬP NHẬT TRẠNG THÁI HÀNG LOẠT (CÓ ÉP NHẬP SPX)
+// -------------------------------------------------------------
+window.toggleAllOrders = function(source) {
+    const checkboxes = document.querySelectorAll('.order-checkbox');
+    checkboxes.forEach(cb => cb.checked = source.checked);
+}
+
+window.applyBulkStatus = async function() {
+    const selectedStatus = document.getElementById('bulk-status-select').value;
+    if (!selectedStatus) {
+        alert("Vui lòng chọn trạng thái muốn cập nhật từ menu thả xuống!");
+        return;
+    }
+
+    const checkboxes = document.querySelectorAll('.order-checkbox:checked');
+    if (checkboxes.length === 0) {
+        alert("Vui lòng đánh dấu (tích chọn) ít nhất 1 đơn hàng trong bảng để cập nhật!");
+        return;
+    }
+
+    // Lấy thông tin các đơn hàng đang được tích chọn
+    const selectedOrders = Array.from(checkboxes).map(cb => ({
+        id: cb.value,
+        orderId: cb.getAttribute('data-orderid')
+    }));
+
+    if (!confirm(`Bạn có chắc chắn muốn chuyển đồng loạt ${selectedOrders.length} đơn hàng sang trạng thái "${selectedStatus}"?`)) return;
+
+    // --- LOGIC MỚI: NẾU LÀ "ĐANG GIAO HÀNG" THÌ ÉP NHẬP MÃ SPX ---
+    const updatePayloads = [];
+    
+    if (selectedStatus === 'Đang giao hàng') {
+        for (let order of selectedOrders) {
+            let spxCode = prompt(`NHẬP MÃ VẬN ĐƠN SPX cho đơn hàng [ ${order.orderId} ]:\n(Bắt buộc để khách hàng có thể tra cứu)`, "");
+            
+            // Nếu admin ấn Hủy (Cancel) hoặc không nhập gì -> Dừng toàn bộ tiến trình
+            if (spxCode === null || spxCode.trim() === "") {
+                alert(`Đã hủy thao tác! Đơn hàng ${order.orderId} chưa được nhập mã SPX.`);
+                return; 
+            }
+            
+            updatePayloads.push({
+                id: order.id,
+                body: { status: selectedStatus, spx_tracking_code: spxCode.trim() }
+            });
+        }
+    } else {
+        // Nếu là trạng thái khác thì không cần nhập mã SPX, chỉ cập nhật trạng thái
+        for (let order of selectedOrders) {
+            updatePayloads.push({
+                id: order.id,
+                body: { status: selectedStatus }
+            });
+        }
+    }
+
+    const btn = document.querySelector('button[onclick="window.applyBulkStatus()"]');
+    const originalText = btn.innerText;
+    btn.innerText = "Đang lưu...";
+    btn.disabled = true;
+
+    try {
+        // Gửi lệnh cập nhật cho tất cả ID được chọn
+        const updatePromises = updatePayloads.map(payload => {
+            return fetch(`${API_BASE_URL}/orders/${payload.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload.body)
+            });
+        });
+
+        await Promise.all(updatePromises);
+        
+        alert(`Đã cập nhật trạng thái thành công cho ${selectedOrders.length} đơn hàng!`);
+        window.loadOrders(); 
+    } catch (err) {
+        console.error("Lỗi cập nhật hàng loạt:", err);
+        alert("Có lỗi xảy ra trong quá trình cập nhật! Hãy kiểm tra lại.");
+    } finally {
+        btn.innerText = originalText;
+        btn.disabled = false;
+    }
+}
+
+window.updateOrderStatus = async function(id, currentStatus, currentSpxCode) {
+    const newStatus = prompt("Cập nhật trạng thái (VD: Đang giao hàng, Đã hoàn thành...):", currentStatus || "Đang giao hàng");
+    if (newStatus === null) return;
+
+    const newSpxCode = prompt("Nhập Mã Vận Đơn Shopee Xpress (nếu có, để in ra cho khách tự tra):", currentSpxCode || "");
+    if (newSpxCode === null) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/orders/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus, spx_tracking_code: newSpxCode })
+        });
+
+        if (response.ok) {
+            alert("Đã cập nhật trạng thái đơn hàng thành công!");
+            window.loadOrders(); 
+        } else {
+            alert("Lỗi khi cập nhật trên máy chủ!");
+        }
+    } catch (err) {
+        alert("Lỗi kết nối API!");
     }
 }
 
@@ -432,7 +558,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.bindAdminSearch();
 });
 
-// Đóng modal khi bấm ra vùng xám
+// Đóng modal khi click nền xám
 window.onclick = function(event) {
     const modal = document.getElementById("productModal");
     if (event.target == modal) window.closeModal();

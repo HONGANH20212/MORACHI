@@ -275,6 +275,22 @@
             <div class="header-main">
                 <h1>Đơn đặt hàng</h1>
                 <div style="display: flex; gap: 20px; align-items: center;">
+                    
+                    <!-- CỤM TÍNH NĂNG CHUYỂN ĐỔI TRẠNG THÁI HÀNG LOẠT -->
+                    <div style="display: flex; gap: 10px; align-items: center; background: #fff5f0; padding: 5px 15px; border-radius: 8px; border: 1px dashed #f57224;">
+                        <span style="font-size: 13px; font-weight: bold; color: #f57224;"><i class="fas fa-tasks"></i> Thao tác hàng loạt:</span>
+                        <select id="bulk-status-select" style="padding: 8px; border-radius: 6px; border: 1px solid #ddd; outline: none; font-size: 13px;">
+                            <option value="">-- Chọn trạng thái --</option>
+                            <option value="Chờ xác nhận">Chờ xác nhận</option>
+                            <option value="Chờ chuyển khoản">Chờ chuyển khoản</option>
+                            <option value="Đang chuẩn bị hàng">Đang chuẩn bị hàng</option>
+                            <option value="Đang giao hàng">Đang giao hàng</option>
+                            <option value="Đã hoàn thành">Đã hoàn thành</option>
+                            <option value="Đã hủy">Đã hủy</option>
+                        </select>
+                        <button onclick="window.applyBulkStatus()" style="padding: 8px 15px; background: #f57224; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px;">Cập nhật</button>
+                    </div>
+
                     <button class="btn-excel" onclick="exportSPX()">
                         <i class="fas fa-file-excel"></i> Xuất file Tạo Đơn SPX
                     </button>
@@ -285,11 +301,14 @@
                 <table>
                     <thead>
                         <tr>
+                            <!-- THÊM CHECKBOX "CHỌN TẤT CẢ" VÀO TIÊU ĐỀ BẢNG -->
+                            <th style="width: 40px; text-align: center;"><input type="checkbox" id="check-all-orders" onclick="window.toggleAllOrders(this)"></th>
                             <th>Mã Đơn</th>
                             <th>Khách Hàng & Liên Hệ</th>
                             <th>Sản Phẩm (SL)</th>
                             <th>Tổng Thu</th>
                             <th>Trạng Thái</th>
+                            <th>Thao tác</th>
                         </tr>
                     </thead>
                     <tbody id="admin-order-list">
