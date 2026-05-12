@@ -140,11 +140,10 @@ function openCheckoutModal() {
     const orderId = 'DH-' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
     // THÔNG TIN NGÂN HÀNG CỦA BẠN (Sửa lại ở đây)
-    const BANK_ID = "VCB"; // Mã ngân hàng: VCB, MB, TCB, CTG, ACB...
-    const BANK_ACCOUNT = "1234567890"; // Số tài khoản của bạn
-    const ACCOUNT_NAME = "NGUYEN VAN A"; // Tên chủ tài khoản (Viết không dấu)
+    const BANK_ID = "VCB"; 
+    const BANK_ACCOUNT = "1234567890"; 
+    const ACCOUNT_NAME = "NGUYEN VAN A"; 
     
-    // TẠO LINK VIETQR (Bao gồm số tiền, tài khoản và nội dung CK)
     const qrUrl = `https://img.vietqr.io/image/${BANK_ID}-${BANK_ACCOUNT}-compact2.jpg?amount=${total}&addInfo=${orderId}&accountName=${ACCOUNT_NAME}`;
 
     modal.innerHTML = `
@@ -159,10 +158,10 @@ function openCheckoutModal() {
                     <input type="text" id="chk-name" placeholder="Họ và tên người nhận" required>
                     <input type="tel" id="chk-phone" placeholder="Số điện thoại" required>
                     
-                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                        <select id="chk-province" onchange="loadDistricts()"><option value="">Tỉnh/Thành phố</option></select>
-                        <select id="chk-district" onchange="loadWards()"><option value="">Quận/Huyện</option></select>
-                        <select id="chk-ward"><option value="">Phường/Xã</option></select>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 12px;">
+                        <select id="chk-province" class="searchable-select"><option value="">Tỉnh/Thành phố</option></select>
+                        <select id="chk-district" class="searchable-select"><option value="">Quận/Huyện</option></select>
+                        <select id="chk-ward" class="searchable-select"><option value="">Phường/Xã</option></select>
                     </div>
                     <input type="text" id="chk-address" placeholder="Địa chỉ cụ thể (Số nhà, đường...)" required>
 
@@ -226,7 +225,7 @@ window.toggleBankInfo = function() {
 }
 
 // ==========================================
-// TÍCH HỢP API DANH SÁCH ĐỊA CHỈ VIỆT NAM
+// TÍCH HỢP TÌM KIẾM ĐỊA CHỈ (SELECT2 LIBRARIES)
 // ==========================================
 let vnProvinces = [];
 
@@ -235,7 +234,7 @@ async function fetchProvinces() {
         const res = await fetch('https://provinces.open-api.vn/api/?depth=3');
         vnProvinces = await res.json();
         const pSelect = document.getElementById('chk-province');
-        if(pSelect && pSelect.options.length === 1) { // Chỉ load 1 lần tránh lặp
+        if(pSelect && pSelect.options.length <= 1) { 
             vnProvinces.forEach(p => {
                 let opt = document.createElement('option');
                 opt.value = p.code;
@@ -243,49 +242,100 @@ async function fetchProvinces() {
                 pSelect.add(opt);
             });
         }
+        
+        // Chèn thư viện jQuery và Select2 để tạo thanh Tìm kiếm cho Địa chỉ
+        initSelect2();
+        
     } catch (e) {
         console.error("Lỗi API địa chỉ:", e);
     }
 }
 
-window.loadDistricts = function() {
-    const pCode = document.getElementById('chk-province').value;
-    const dSelect = document.getElementById('chk-district');
-    const wSelect = document.getElementById('chk-ward');
-    
-    dSelect.innerHTML = '<option value="">Quận/Huyện</option>';
-    wSelect.innerHTML = '<option value="">Phường/Xã</option>';
-    
-    if(!pCode) return;
-    const p = vnProvinces.find(x => x.code == pCode);
-    if(p && p.districts) {
-        p.districts.forEach(d => {
-            let opt = document.createElement('option');
-            opt.value = d.code;
-            opt.text = d.name;
-            dSelect.add(opt);
-        });
+// Hàm nhúng thư viện tìm kiếm ô chọn (Select2)
+function initSelect2() {
+    if (typeof jQuery === 'undefined') {
+        const script = document.createElement('script');
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js";
+        script.onload = loadS2Script;
+        document.head.appendChild(script);
+    } else {
+        loadS2Script();
     }
 }
 
+function loadS2Script() {
+    if (typeof jQuery.fn.select2 === 'undefined') {
+        const css = document.createElement('link');
+        css.rel = "stylesheet";
+        css.href = "https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css";
+        document.head.appendChild(css);
+
+        const script = document.createElement('script');
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js";
+        script.onload = applySelect2;
+        document.head.appendChild(script);
+    } else {
+        applySelect2();
+    }
+}
+
+function applySelect2() {
+    // Áp dụng khung tìm kiếm vào 3 ô địa chỉ
+    $('#chk-province').select2({ dropdownParent: $('#checkout-modal'), width: '100%', placeholder: 'Tỉnh/Thành phố' });
+    $('#chk-district').select2({ dropdownParent: $('#checkout-modal'), width: '100%', placeholder: 'Quận/Huyện' });
+    $('#chk-ward').select2({ dropdownParent: $('#checkout-modal'), width: '100%', placeholder: 'Phường/Xã' });
+
+    // Gán sự kiện khi chọn xong sẽ tải các Huyện/Xã tương ứng
+    $('#chk-province').on('change', window.loadDistricts);
+    $('#chk-district').on('change', window.loadWards);
+}
+
+window.loadDistricts = function() {
+    if (typeof jQuery === 'undefined') return;
+    const pCode = $('#chk-province').val();
+    const dSelect = $('#chk-district');
+    const wSelect = $('#chk-ward');
+    
+    dSelect.empty().append('<option value="">Quận/Huyện</option>');
+    wSelect.empty().append('<option value="">Phường/Xã</option>');
+    
+    if(!pCode) {
+        dSelect.trigger('change');
+        wSelect.trigger('change');
+        return;
+    }
+    
+    const p = vnProvinces.find(x => x.code == pCode);
+    if(p && p.districts) {
+        p.districts.forEach(d => {
+            dSelect.append(new Option(d.name, d.code));
+        });
+    }
+    dSelect.trigger('change');
+    wSelect.trigger('change');
+}
+
 window.loadWards = function() {
-    const pCode = document.getElementById('chk-province').value;
-    const dCode = document.getElementById('chk-district').value;
-    const wSelect = document.getElementById('chk-ward');
+    if (typeof jQuery === 'undefined') return;
+    const pCode = $('#chk-province').val();
+    const dCode = $('#chk-district').val();
+    const wSelect = $('#chk-ward');
     
-    wSelect.innerHTML = '<option value="">Phường/Xã</option>';
+    wSelect.empty().append('<option value="">Phường/Xã</option>');
     
-    if(!pCode || !dCode) return;
+    if(!pCode || !dCode) {
+        wSelect.trigger('change');
+        return;
+    }
+    
     const p = vnProvinces.find(x => x.code == pCode);
     const d = p.districts.find(x => x.code == dCode);
     if(d && d.wards) {
         d.wards.forEach(w => {
-            let opt = document.createElement('option');
-            opt.value = w.code;
-            opt.text = w.name;
-            wSelect.add(opt);
+            wSelect.append(new Option(w.name, w.code));
         });
     }
+    wSelect.trigger('change');
 }
 
 // XỬ LÝ ĐẶT HÀNG VÀ TẠO DATA
@@ -293,18 +343,22 @@ window.submitOrder = function(orderId) {
     const name = document.getElementById('chk-name').value.trim();
     const phone = document.getElementById('chk-phone').value.trim();
     const address = document.getElementById('chk-address').value.trim();
-    const prov = document.getElementById('chk-province').options[document.getElementById('chk-province').selectedIndex].text;
-    const dist = document.getElementById('chk-district').options[document.getElementById('chk-district').selectedIndex].text;
-    const ward = document.getElementById('chk-ward').options[document.getElementById('chk-ward').selectedIndex].text;
+    
+    const provEl = document.getElementById('chk-province');
+    const distEl = document.getElementById('chk-district');
+    const wardEl = document.getElementById('chk-ward');
+    
+    const prov = provEl.options[provEl.selectedIndex] ? provEl.options[provEl.selectedIndex].text : '';
+    const dist = distEl.options[distEl.selectedIndex] ? distEl.options[distEl.selectedIndex].text : '';
+    const ward = wardEl.options[wardEl.selectedIndex] ? wardEl.options[wardEl.selectedIndex].text : '';
 
-    if (!document.getElementById('chk-name').value.trim() || !phone || !address || document.getElementById('chk-province').value === "") {
+    if (!name || !phone || !address || !document.getElementById('chk-province').value) {
         alert("Vui lòng điền đầy đủ Thông tin giao hàng!");
         return;
     }
 
     const method = document.querySelector('input[name="chk-payment"]:checked').value;
     
-    // Thu thập dữ liệu để gửi lên backend sau này
     const orderData = {
         order_id: orderId,
         customer_info: { name, phone, address: `${address}, ${ward}, ${dist}, ${prov}` },
@@ -316,7 +370,6 @@ window.submitOrder = function(orderId) {
     };
 
     console.log("Đã tạo đơn hàng:", orderData);
-    // (Ở giai đoạn tiếp theo, ta sẽ gọi lệnh fetch() để gửi orderData này vào Python API)
 
     if (method === 'bank') {
         alert(`Cảm ơn ${name} đã đặt hàng!\n\nMã đơn hàng của bạn là: ${orderId}\n\nVui lòng đảm bảo bạn đã quét mã QR để chuyển khoản. Chúng tôi sẽ xác nhận đơn hàng khi nhận được thanh toán.`);
@@ -324,7 +377,6 @@ window.submitOrder = function(orderId) {
         alert(`Cảm ơn ${name} đã đặt hàng!\n\nMã đơn hàng của bạn là: ${orderId}\n\nChúng tôi sẽ đóng gói và thu tiền mặt (COD) tận nhà cho bạn.`);
     }
 
-    // Xóa giỏ hàng sau khi đặt thành công
     cart = [];
     saveCart();
     closeCheckoutModal();
@@ -343,8 +395,20 @@ checkoutStyle.innerHTML = `
     .checkout-header h2 { margin: 0; font-size: 16px; text-transform: uppercase;}
     .checkout-header button { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
     .checkout-body { padding: 20px; overflow-y: auto; }
-    .checkout-form input[type="text"], .checkout-form input[type="tel"], .checkout-form select { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 14px;}
-    .checkout-form input:focus, .checkout-form select:focus { outline: none; border-color: #f57224; }
+    
+    .checkout-form input[type="text"], .checkout-form input[type="tel"], .checkout-form select { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 14px; outline: none;}
+    .checkout-form input:focus { border-color: #f57224; }
+    
+    /* Ghi đè giao diện thư viện Select2 để khớp với khung nhập */
+    .select2-container--default .select2-selection--single { height: 43px; border: 1px solid #ddd; border-radius: 6px; outline: none; }
+    .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 43px; padding-left: 12px; color: #333; font-size: 14px;}
+    .select2-container--default .select2-selection--single .select2-selection__arrow { height: 40px; }
+    .select2-dropdown { border-color: #f57224; border-radius: 6px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    .select2-container--default .select2-results__option--highlighted[aria-selected], .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable { background-color: #f57224 !important; color: white !important;}
+    .select2-container--default .select2-search--dropdown .select2-search__field { border-radius: 4px; padding: 6px 10px; border: 1px solid #ddd; outline: none;}
+    .select2-container--default .select2-search--dropdown .select2-search__field:focus { border-color: #f57224; }
+    .select2-container--default .select2-selection--single:focus { border-color: #f57224; }
+
     .payment-methods label { display: flex; align-items: center; padding: 12px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; cursor: pointer; background: #fafafa; font-size: 14px;}
     .payment-methods input { width: auto; margin-right: 10px; transform: scale(1.2); accent-color: #f57224;}
     .checkout-summary { background: #fff5f0; padding: 15px; border-radius: 8px; margin-top: 10px; border: 1px dashed #f57224;}
