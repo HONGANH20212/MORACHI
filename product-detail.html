@@ -11,7 +11,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* CSS CHO TRANG CHI TIẾT (Cô lập an toàn) */
         .pd-wrapper { display: flex; gap: 30px; background: #fff; padding: 25px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .pd-gallery { width: 45%; flex-shrink: 0; }
         .pd-info { flex: 1; }
@@ -48,8 +47,10 @@
         .pd-text-red { color: #e74c3c; font-weight: bold; }
 
         .pd-actions { display: flex; gap: 15px; }
-        .pd-btn-cart { flex: 1; padding: 15px; border: 1px solid #f57224; color: #f57224; background: #fff5f0; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 14px; }
-        .pd-btn-buy { flex: 1; padding: 15px; background: #f57224; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 14px; }
+        .pd-btn-cart { flex: 1; padding: 15px; border: 1px solid #f57224; color: #f57224; background: #fff5f0; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 14px; transition: 0.2s;}
+        .pd-btn-cart:hover { background: #f57224; color: white;}
+        .pd-btn-buy { flex: 1; padding: 15px; background: #f57224; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 14px; transition: 0.2s;}
+        .pd-btn-buy:hover { background: #111; }
 
         @media (max-width: 768px) {
             .pd-wrapper { flex-direction: column; }
@@ -60,7 +61,6 @@
 
 <body>
 
-    <!-- COPY CHÍNH XÁC HEADER CỦA BẠN -->
     <header class="header">
         <div class="header-top container">
             <div class="logo">
@@ -78,6 +78,13 @@
             </div>
             <div class="header-actions">
                 <div class="action-item phone-number"><i class="fas fa-phone"></i> 0123456789</div>
+                
+                <!-- BỔ SUNG ICON GIỎ HÀNG Ở HEADER -->
+                <div class="action-item cart-icon-wrap" onclick="toggleCart()">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span class="cart-count" id="cart-count">0</span>
+                </div>
+
                 <div class="social-icons">
                     <a href="https://www.tiktok.com/@chuyendong24h" target="_blank" class="social-link"><i class="fab fa-tiktok"></i></a>
                     <a href="https://www.facebook.com/chuyendong24h" target="_blank" class="social-link"><i class="fab fa-facebook"></i></a>
@@ -96,8 +103,6 @@
     </div>
 
     <div class="main-layout container">
-
-        <!-- COPY CHÍNH XÁC SIDEBAR CỦA BẠN -->
         <aside class="sidebar">
             <div class="filter-section">
                 <h3>THÔNG TIN GIAO HÀNG</h3>
@@ -124,11 +129,37 @@
         </main>
     </div>
 
-    <!-- SCRIPT ĐỂ LẤY DỮ LIỆU SẢN PHẨM VÀ HIỂN THỊ -->
+    <!-- KHUNG GIAO DIỆN GIỎ HÀNG (Sẽ trượt từ bên phải ra) -->
+    <div class="cart-overlay" id="cart-overlay" onclick="toggleCart()"></div>
+    <div class="cart-drawer" id="cart-drawer">
+        <div class="cart-header">
+            <h2>Giỏ hàng</h2>
+            <button onclick="toggleCart()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <!-- Sản phẩm được render từ file cart.js -->
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total"><span>Tổng cộng:</span> <span id="cart-total-price">0 đ</span></div>
+            <button class="btn-checkout" onclick="alert('Tính năng thanh toán đang được nâng cấp!')">TIẾN HÀNH THANH TOÁN</button>
+        </div>
+    </div>
+
+    <!-- KHAI BÁO JS: Thêm cart.js -->
+    <script src="cart.js"></script>
+
     <script>
         const API_URL = "/api/products";
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
+
+        // Khai báo 2 biến để nhớ khách hàng đang xem Món nào và Chọn màu/size gì
+        let currentProduct = null;
+        let currentVariant = null;
+
+        function formatVND(val) {
+            return Number(val || 0).toLocaleString('vi-VN') + ' đ';
+        }
 
         async function initDetail() {
             const root = document.getElementById('product-detail-root');
@@ -149,6 +180,7 @@
                     return;
                 }
 
+                currentProduct = product; // Lưu thông tin gốc của sản phẩm
                 renderProductDetail(product);
             } catch (error) {
                 root.innerHTML = `<div style="background: white; padding: 50px; text-align: center; border-radius: 4px; color:red;">Lỗi kết nối máy chủ. Vui lòng thử lại.</div>`;
@@ -161,8 +193,6 @@
             document.getElementById('bread-title').innerText = p.title;
 
             const variants = p.variants || [];
-
-            // Gom tất cả ảnh để làm thư viện thu nhỏ
             const images = [p.thumbnail];
             variants.forEach(v => {
                 if (v.image && !images.includes(v.image)) {
@@ -192,14 +222,9 @@
                             <span>${p.rating || '4.9'} đánh giá | Đã bán ${p.sold_text || '1.2k'}</span>
                         </div>
 
-                        <div class="pd-flash-deal">
-                            <span><i class="fas fa-bolt"></i> FLASH DEAL</span>
-                            <span class="pd-timer">KẾT THÚC TRONG 01 : 04 : 43</span>
-                        </div>
-
                         <div class="pd-price-box">
-                            <span class="pd-price-now" id="pd-price-view">${Number(p.current_price).toLocaleString()} đ</span>
-                            ${p.old_price ? `<span class="pd-price-old">${Number(p.old_price).toLocaleString()} đ</span>` : ''}
+                            <span class="pd-price-now" id="pd-price-view">${formatVND(p.current_price)}</span>
+                            ${p.old_price ? `<span class="pd-price-old">${formatVND(p.old_price)}</span>` : ''}
                         </div>
 
                         ${variants.length > 0 ? `
@@ -215,13 +240,12 @@
                             </div>
                         ` : ''}
 
-                        <div class="pd-status" id="pd-status-view">
-                            <!-- Trạng thái kho hàng sẽ hiện bằng JS -->
-                        </div>
+                        <div class="pd-status" id="pd-status-view"></div>
 
                         <div class="pd-actions">
-                            <button class="pd-btn-cart" onclick="alert('Đã thêm vào giỏ hàng!')"><i class="fas fa-cart-plus"></i> THÊM GIỎ HÀNG</button>
-                            <button class="pd-btn-buy" onclick="alert('Chuyển tới thanh toán')">MUA NGAY</button>
+                            <!-- NÚT GỌI HÀM THÊM GIỎ HÀNG -->
+                            <button class="pd-btn-cart" onclick="handleAddToCart()"><i class="fas fa-cart-plus"></i> THÊM GIỎ HÀNG</button>
+                            <button class="pd-btn-buy" onclick="handleAddToCart(); setTimeout(() => alert('Chuyển tới trang thanh toán...'), 500);">MUA NGAY</button>
                         </div>
                     </div>
                 </div>
@@ -230,9 +254,34 @@
             document.getElementById('product-detail-root').innerHTML = html;
 
             if (variants.length > 0) {
+                currentVariant = variants[0];
                 updateVariantStatus(variants[0]);
             } else {
+                currentVariant = null;
                 updateVariantStatus({ status: 'instock', stock: 10 });
+            }
+        }
+
+        // HÀM: XỬ LÝ KHI BẤM THÊM VÀO GIỎ HÀNG
+        function handleAddToCart() {
+            if (!currentProduct) return;
+            const v = currentVariant || {};
+            
+            // Đóng gói thông tin sản phẩm chuẩn bị đẩy vào giỏ
+            const cartItem = {
+                id: currentProduct.id,
+                title: currentProduct.title,
+                brand: currentProduct.brand,
+                image: v.image || currentProduct.thumbnail,
+                variant: v.name || 'Mặc định',
+                price: v.price || currentProduct.current_price
+            };
+            
+            // Gọi hàm của file cart.js
+            if(typeof addToCart === 'function') {
+                addToCart(cartItem);
+            } else {
+                alert('Lỗi: File cart.js chưa được tải!');
             }
         }
 
@@ -243,6 +292,8 @@
         }
 
         function selectVariant(v, el, basePrice) {
+            currentVariant = v; // Cập nhật biến thể khách đang chọn
+            
             document.querySelectorAll('.pd-btn-v').forEach(btn => btn.classList.remove('active'));
             el.classList.add('active');
 
@@ -255,7 +306,7 @@
             }
 
             const displayPrice = v.price ? v.price : basePrice;
-            document.getElementById('pd-price-view').innerText = Number(displayPrice).toLocaleString() + ' đ';
+            document.getElementById('pd-price-view').innerText = formatVND(displayPrice);
 
             updateVariantStatus(v);
         }

@@ -7,7 +7,6 @@
     <title>MORACHI - Cửa hàng trực tuyến</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -32,36 +31,28 @@
             </div>
             <div class="header-actions">
                 <div class="action-item phone-number"><i class="fas fa-phone"></i> 0123456789</div>
+                
+                <!-- BỔ SUNG ICON GIỎ HÀNG Ở HEADER -->
+                <div class="action-item cart-icon-wrap" onclick="toggleCart()">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span class="cart-count" id="cart-count">0</span>
+                </div>
+
                 <div class="social-icons">
-                    <a href="https://www.tiktok.com/@chuyendong24h" target="_blank" class="social-link"><i
-                            class="fab fa-tiktok"></i></a>
-                    <a href="https://www.facebook.com/chuyendong24h" target="_blank" class="social-link"><i
-                            class="fab fa-facebook"></i></a>
+                    <a href="https://www.tiktok.com/@chuyendong24h" target="_blank" class="social-link"><i class="fab fa-tiktok"></i></a>
+                    <a href="https://www.facebook.com/chuyendong24h" target="_blank" class="social-link"><i class="fab fa-facebook"></i></a>
                 </div>
             </div>
         </div>
-
         <div class="announcement">
             <div class="container">
                 <p>CHUYÊN BÁN MỸ PHẨM NHẬT BẢN CHÍNH HÃNG & NHẬN ORDER HÀNG NHẬT BẢN 10-15 DAY</p>
             </div>
         </div>
-
-        <!-- <nav class="header-nav">
-            <div class="container">
-                <ul>
-                    <li><i class="fas fa-bars"></i> DANH MỤC</li>
-                    <li>HOT DEALS</li>
-                    <li>THƯƠNG HIỆU</li>
-                    <li>HÀNG MỚI VỀ</li>
-                    <li>BÁN CHẠY</li>
-                </ul>
-            </div>
-        </nav> -->
     </header>
 
     <div class="breadcrumb container">
-        <p>Trang chủ > <span>Sản Phẩm Bán Chạy</span></p>
+        <p><a href="/" style="text-decoration:none; color:inherit;">Trang chủ</a> > <span style="color:#f57224">Sản Phẩm Bán Chạy</span></p>
     </div>
 
     <div class="main-layout container">
@@ -78,10 +69,7 @@
 
             <div class="filter-section">
                 <h3>THƯƠNG HIỆU</h3>
-                <label><input type="checkbox"> CeraVe (8)</label>
-                <label><input type="checkbox"> Cocoon (16)</label>
-                <label><input type="checkbox"> L'Oreal (15)</label>
-                <label><input type="checkbox"> La Roche-Posay (13)</label>
+                <!-- Được Render Tự Động Từ Javascript -->
             </div>
         </aside>
 
@@ -102,6 +90,24 @@
         </main>
     </div>
 
+    <!-- KHUNG GIAO DIỆN GIỎ HÀNG TRƯỢT RA TỪ TRANG CHỦ -->
+    <div class="cart-overlay" id="cart-overlay" onclick="toggleCart()"></div>
+    <div class="cart-drawer" id="cart-drawer">
+        <div class="cart-header">
+            <h2>Giỏ hàng</h2>
+            <button onclick="toggleCart()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="cart-items" id="cart-items">
+            <!-- Sản phẩm được render từ file cart.js -->
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total"><span>Tổng cộng:</span> <span id="cart-total-price">0 đ</span></div>
+            <button class="btn-checkout" onclick="alert('Tính năng thanh toán đang được nâng cấp!')">TIẾN HÀNH THANH TOÁN</button>
+        </div>
+    </div>
+
+    <!-- CHÈN THÊM FILE JS GIỎ HÀNG -->
+    <script src="cart.js"></script>
     <script src="script.js"></script>
 </body>
 
