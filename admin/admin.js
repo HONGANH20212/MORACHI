@@ -79,7 +79,7 @@ async function deleteProduct(id, brand) {
     } catch (err) { alert("Lỗi hệ thống khi xóa!"); }
 }
 
-// 5. TẠO HTML DÒNG BIẾN THỂ (Đã fix lỗi giao diện bị bóp méo)
+// 5. TẠO HTML DÒNG BIẾN THỂ (Giao diện được căn chỉnh đẹp)
 function addVariantRow(data = {}) {
     const container = document.getElementById("variants-container");
     if (!container) return;
@@ -87,11 +87,10 @@ function addVariantRow(data = {}) {
     const row = document.createElement("div");
     row.className = "variant-row";
     
-    // Gắn giá trị cũ vào nếu đang trong chế độ Edit
     row.innerHTML = `
         <div>
             <label style="font-weight:bold; color:#555;">Phân loại <span style="color:red">*</span></label>
-            <input type="text" class="v-name" value="${data.name || ''}" placeholder="VD: Đỏ, 50ml" required>
+            <input type="text" class="v-name" value="${data.name || ''}" placeholder="Nhập tên..." required>
         </div>
         <div>
             <label style="font-weight:bold; color:#555;">Số lượng</label>
@@ -182,7 +181,7 @@ function closeModal() {
     if(modal) modal.style.display = "none";
 }
 
-// 8. LƯU DỮ LIỆU (QUÉT VÀ GỬI BIẾN THỂ)
+// 8. LƯU DỮ LIỆU (QUÉT VÀ CẢNH BÁO LỖI BIẾN THỂ RỖNG)
 const form = document.getElementById("product-form");
 if (form) {
     form.addEventListener("submit", async function(e) {
@@ -205,13 +204,19 @@ if (form) {
                 imageUrl = dataImg.url;
             }
 
-            // --- BƯỚC QUAN TRỌNG: QUÉT TOÀN BỘ BIẾN THỂ ---
+            // --- QUÉT BIẾN THỂ VÀ KIỂM TRA LỖI NHẬP LIỆU ---
             const variantsArray = [];
             const variantRows = document.querySelectorAll(".variant-row");
             
             for (let row of variantRows) {
                 const vNameInput = row.querySelector(".v-name");
-                if (!vNameInput || vNameInput.value.trim() === "") continue;
+                
+                // NẾU Ô PHÂN LOẠI TRỐNG, CHẶN LẠI VÀ CẢNH BÁO
+                if (!vNameInput || vNameInput.value.trim() === "") {
+                    alert("Vui lòng nhập tên Phân loại (Ví dụ: Đỏ, 50ml...) vào dòng biến thể!\n\nNếu bạn không muốn có biến thể, hãy bấm biểu tượng 'Thùng Rác' màu đỏ để xóa dòng đó đi trước khi lưu.");
+                    msg.innerText = "";
+                    return; // DỪNG LẠI KHÔNG CHO LƯU
+                }
 
                 const vStockInput = row.querySelector(".v-stock");
                 const vStatusInput = row.querySelector(".v-status");
@@ -257,7 +262,6 @@ if (form) {
 
             if (imageUrl) productData.thumbnail = imageUrl;
 
-            // In ra Log để bạn tự kiểm tra API
             console.log("🚀 Payload gửi lên API:", productData);
 
             const url = isEditing ? `${API_BASE_URL}/products/${id}` : `${API_BASE_URL}/products`;

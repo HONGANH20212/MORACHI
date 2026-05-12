@@ -71,7 +71,9 @@ def normalize_product(data, existing=None):
         "discount": str(data.get("discount") or existing.get("discount") or "").strip(),
         "rating": str(data.get("rating") or existing.get("rating") or "4.9").strip(),
         "sold_text": str(data.get("sold_text") or existing.get("sold_text") or "1k/tháng").strip(),
-        "status": (data.get("status") or existing.get("status") or "active").strip()
+        "status": (data.get("status") or existing.get("status") or "active").strip(),
+        # CHÌA KHÓA: Bổ sung đón dữ liệu variants
+        "variants": data.get("variants") if "variants" in data else existing.get("variants", [])
     }
 
 
@@ -203,6 +205,7 @@ def products(req: func.HttpRequest) -> func.HttpResponse:
                 "rating": product["rating"],
                 "sold_text": product["sold_text"],
                 "status": product["status"],
+                "variants": product.get("variants", []), # LƯU BIẾN THỂ VÀO DB TẠI ĐÂY
                 "created_at": now,
                 "updated_at": now
             }
@@ -247,6 +250,7 @@ def product_by_id(req: func.HttpRequest) -> func.HttpResponse:
 
             old_brand = existing["brand"]
 
+            # Cập nhật các trường dữ liệu
             existing["title"] = updated["title"]
             existing["brand"] = updated["brand"]
             existing["thumbnail"] = updated["thumbnail"]
@@ -256,6 +260,7 @@ def product_by_id(req: func.HttpRequest) -> func.HttpResponse:
             existing["rating"] = updated["rating"]
             existing["sold_text"] = updated["sold_text"]
             existing["status"] = updated["status"]
+            existing["variants"] = updated.get("variants", []) # CẬP NHẬT BIẾN THỂ VÀO DB TẠI ĐÂY
             existing["updated_at"] = datetime.utcnow().isoformat() + "Z"
 
             if old_brand == existing["brand"]:
