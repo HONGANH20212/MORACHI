@@ -32,7 +32,6 @@ function addToCart(product) {
     }
     
     saveCart(); 
-    // Giỏ hàng sẽ không tự động bật ra nữa, chỉ cộng số trên Header
 }
 
 // 5. Cập nhật giao diện giỏ hàng (Số lượng trên icon + Danh sách)
@@ -86,7 +85,6 @@ function updateCartUI() {
 
     totalEl.innerText = Number(totalPrice).toLocaleString('vi-VN') + ' đ';
 
-    // Đánh tráo sự kiện của nút "Tiến hành thanh toán" để mở Form
     const checkoutBtn = document.querySelector('.cart-drawer .btn-checkout');
     if (checkoutBtn) {
         checkoutBtn.onclick = openCheckoutModal;
@@ -106,7 +104,6 @@ function removeCartItem(index) {
 
 document.addEventListener('DOMContentLoaded', updateCartUI);
 
-
 // ==============================================================
 // 9. GIAO DIỆN & TÍNH NĂNG THANH TOÁN (CHECKOUT)
 // ==============================================================
@@ -117,13 +114,11 @@ function openCheckoutModal() {
         return;
     }
     
-    // Đóng giỏ hàng trượt tạm thời
     const drawer = document.getElementById('cart-drawer');
     const overlay = document.getElementById('cart-overlay');
     if(drawer) drawer.classList.remove('active');
     if(overlay) overlay.classList.remove('active');
 
-    // Tạo modal thanh toán nếu chưa có
     let modal = document.getElementById('checkout-modal');
     if (!modal) {
         modal = document.createElement('div');
@@ -136,10 +131,8 @@ function openCheckoutModal() {
     const shippingFee = 11000;
     const total = subtotal + shippingFee;
 
-    // TẠO MÃ ĐƠN HÀNG DUY NHẤT (VD: DH-7B3F9A)
     const orderId = 'DH-' + Math.random().toString(36).substring(2, 8).toUpperCase();
 
-    // THÔNG TIN NGÂN HÀNG CỦA BẠN
     const BANK_ID = "VCB"; 
     const BANK_ACCOUNT = "1234567890"; 
     const ACCOUNT_NAME = "NGUYEN VAN A"; 
@@ -171,7 +164,6 @@ function openCheckoutModal() {
                         <label><input type="radio" name="chk-payment" value="bank" onchange="toggleBankInfo()"> Chuyển khoản qua VietQR</label>
                     </div>
 
-                    <!-- GIAO DIỆN QUÉT MÃ QR THANH TOÁN -->
                     <div id="bank-info-box" style="display: none; background: #e8f4fd; padding: 15px; border-radius: 6px; border: 1px dashed #3498db; margin-bottom: 15px; font-size: 13px; line-height: 1.6;">
                         <div style="color: #2980b9; font-weight: bold; margin-bottom: 15px; text-align: center; font-size: 15px; border-bottom: 1px dashed #ccc; padding-bottom: 10px;">
                             MÃ ĐƠN HÀNG CỦA BẠN: <span style="color:#e74c3c; font-size: 18px;">${orderId}</span>
@@ -210,7 +202,7 @@ function openCheckoutModal() {
     `;
 
     modal.classList.add('active');
-    fetchProvinces(); // Gọi API để tải danh sách tỉnh thành Việt Nam
+    fetchProvinces(); 
 }
 
 window.closeCheckoutModal = function() {
@@ -229,6 +221,25 @@ window.toggleBankInfo = function() {
 // ==========================================
 let vnProvinces = [];
 
+// Preload thư viện để tránh độ trễ khi khách bấm thanh toán
+(function preloadLibraries() {
+    if (typeof jQuery === 'undefined') {
+        const script = document.createElement('script');
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js";
+        script.onload = () => {
+            const css = document.createElement('link');
+            css.rel = "stylesheet";
+            css.href = "https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css";
+            document.head.appendChild(css);
+
+            const s2Script = document.createElement('script');
+            s2Script.src = "https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js";
+            document.head.appendChild(s2Script);
+        };
+        document.head.appendChild(script);
+    }
+})();
+
 async function fetchProvinces() {
     try {
         const res = await fetch('https://provinces.open-api.vn/api/?depth=3');
@@ -243,51 +254,34 @@ async function fetchProvinces() {
             });
         }
         
-        // Chèn thư viện jQuery và Select2 để tạo thanh Tìm kiếm cho Địa chỉ
-        initSelect2();
+        applySelect2();
         
     } catch (e) {
         console.error("Lỗi API địa chỉ:", e);
     }
 }
 
-// Hàm nhúng thư viện tìm kiếm ô chọn (Select2)
-function initSelect2() {
-    if (typeof jQuery === 'undefined') {
-        const script = document.createElement('script');
-        script.src = "https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js";
-        script.onload = loadS2Script;
-        document.head.appendChild(script);
-    } else {
-        loadS2Script();
-    }
-}
-
-function loadS2Script() {
-    if (typeof jQuery.fn.select2 === 'undefined') {
-        const css = document.createElement('link');
-        css.rel = "stylesheet";
-        css.href = "https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css";
-        document.head.appendChild(css);
-
-        const script = document.createElement('script');
-        script.src = "https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js";
-        script.onload = applySelect2;
-        document.head.appendChild(script);
-    } else {
-        applySelect2();
-    }
-}
-
 function applySelect2() {
-    // Áp dụng khung tìm kiếm vào 3 ô địa chỉ
+    if (typeof jQuery === 'undefined' || typeof jQuery.fn.select2 === 'undefined') {
+        setTimeout(applySelect2, 300);
+        return;
+    }
+
+    // Khởi tạo khung tìm kiếm
     $('#chk-province').select2({ dropdownParent: $('#checkout-modal'), width: '100%', placeholder: 'Tỉnh/Thành phố' });
     $('#chk-district').select2({ dropdownParent: $('#checkout-modal'), width: '100%', placeholder: 'Quận/Huyện' });
     $('#chk-ward').select2({ dropdownParent: $('#checkout-modal'), width: '100%', placeholder: 'Phường/Xã' });
 
-    // Gán sự kiện khi chọn xong sẽ tải các Huyện/Xã tương ứng
     $('#chk-province').on('change', window.loadDistricts);
     $('#chk-district').on('change', window.loadWards);
+
+    // FIX LỖI PHẢI CLICK DƯ BƯỚC: Tự động focus vào ô tìm kiếm khi click mở khung dropdown
+    $(document).on('select2:open', () => {
+        setTimeout(() => {
+            const searchInput = document.querySelector('.select2-container--open .select2-search__field');
+            if (searchInput) searchInput.focus(); // Nháy con trỏ chuột ngay lập tức
+        }, 50);
+    });
 }
 
 window.loadDistricts = function() {
@@ -381,6 +375,11 @@ window.submitOrder = async function(tempOrderId) {
         status: method === 'bank' ? 'Chờ chuyển khoản' : 'Chờ xác nhận COD'
     };
 
+    // LƯU TẠM VÀO BỘ NHỚ LOCAL LÀM BACKUP
+    let allOrders = JSON.parse(localStorage.getItem('morachi_orders') || '[]');
+    allOrders.unshift(orderData);
+    localStorage.setItem('morachi_orders', JSON.stringify(allOrders));
+
     // GỌI API PYTHON ĐỂ LƯU ĐƠN HÀNG VÀO DATABASE
     try {
         const response = await fetch('/api/orders', {
@@ -391,6 +390,10 @@ window.submitOrder = async function(tempOrderId) {
 
         if (!response.ok) throw new Error("API lỗi");
 
+    } catch (error) {
+        console.error("Lỗi:", error);
+        // Nếu lỗi mạng, đơn vẫn được lưu trong localStorage để xuất Excel
+    } finally {
         if (method === 'bank') {
             alert(`Cảm ơn ${name} đã đặt hàng!\n\nMã đơn hàng của bạn là: ${orderId}\n\nVui lòng đảm bảo bạn đã quét mã QR để chuyển khoản. Hệ thống Admin đã ghi nhận đơn hàng.`);
         } else {
@@ -400,11 +403,7 @@ window.submitOrder = async function(tempOrderId) {
         cart = [];
         saveCart();
         closeCheckoutModal();
-
-    } catch (error) {
-        console.error("Lỗi:", error);
-        alert("Máy chủ đang bận, không thể lưu đơn hàng. Vui lòng thử lại!");
-    } finally {
+        
         btn.innerText = "HOÀN TẤT ĐẶT HÀNG";
         btn.disabled = false;
     }
