@@ -79,7 +79,7 @@ async function deleteProduct(id, brand) {
     } catch (err) { alert("Lỗi hệ thống khi xóa!"); }
 }
 
-// 5. TẠO HTML DÒNG BIẾN THỂ (Giao diện chuẩn khớp với ảnh của bạn)
+// 5. TẠO HTML DÒNG BIẾN THỂ (Đã fix lỗi giao diện bị bóp méo)
 function addVariantRow(data = {}) {
     const container = document.getElementById("variants-container");
     if (!container) return;
@@ -89,41 +89,39 @@ function addVariantRow(data = {}) {
     
     // Gắn giá trị cũ vào nếu đang trong chế độ Edit
     row.innerHTML = `
-        <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: flex-end; background:#f9f9f9; padding: 15px; border-radius: 8px;">
-            <div style="flex: 1.5;">
-                <label style="font-size:12px; color:#666; font-weight:bold;">Tên phân loại <span style="color:red">*</span></label>
-                <input type="text" class="v-name" value="${data.name || ''}" placeholder="VD: 01 / Đỏ" required style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px; margin-top:5px; background: #fff;">
-            </div>
-            <div style="flex: 1;">
-                <label style="font-size:12px; color:#666; font-weight:bold;">Số lượng</label>
-                <input type="number" class="v-stock" value="${data.stock !== undefined ? data.stock : 0}" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px; margin-top:5px;">
-            </div>
-            <div style="flex: 1.5;">
-                <label style="font-size:12px; color:#666; font-weight:bold;">Trạng thái</label>
-                <select class="v-status" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px; margin-top:5px;">
-                    <option value="instock" ${data.status === 'instock' ? 'selected' : ''}>Sẵn hàng</option>
-                    <option value="order" ${data.status === 'order' ? 'selected' : ''}>Hàng Order</option>
-                    <option value="out" ${data.status === 'out' ? 'selected' : ''}>Hết hàng</option>
-                </select>
-            </div>
-            <div style="flex: 1;">
-                <label style="font-size:12px; color:#666; font-weight:bold;">Ngày dự kiến</label>
-                <input type="text" class="v-date" value="${data.date || ''}" placeholder="VD: 25/05" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px; margin-top:5px;">
-            </div>
-            <div style="flex: 1.5;">
-                <label style="font-size:12px; color:#666; font-weight:bold;">Giá riêng</label>
-                <input type="number" class="v-price" value="${data.price || ''}" placeholder="Giá VNĐ" style="width:100%; padding:10px; border:1px solid #ddd; border-radius:4px; margin-top:5px;">
-            </div>
-            <div style="flex: 1.5;">
-                <label style="font-size:12px; color:#666; font-weight:bold;">Ảnh riêng</label>
-                <input type="file" class="v-file" accept="image/*" style="width:100%; margin-top:5px;">
-                <input type="hidden" class="v-image-url" value="${data.image || ''}">
-            </div>
-            <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; color:#e74c3c; cursor:pointer; font-size: 20px; padding-bottom:10px; margin-left:10px;">
-                <i class="fas fa-trash-alt"></i>
-            </button>
+        <div>
+            <label style="font-weight:bold; color:#555;">Phân loại <span style="color:red">*</span></label>
+            <input type="text" class="v-name" value="${data.name || ''}" placeholder="VD: Đỏ, 50ml" required>
         </div>
-        ${data.image ? `<div style="font-size: 12px; color: #2980b9; margin-top:-10px; margin-bottom:15px; margin-left:15px;">Ảnh hiện tại: <a href="${data.image}" target="_blank">Xem ảnh</a></div>` : ''}
+        <div>
+            <label style="font-weight:bold; color:#555;">Số lượng</label>
+            <input type="number" class="v-stock" value="${data.stock !== undefined ? data.stock : 0}">
+        </div>
+        <div>
+            <label style="font-weight:bold; color:#555;">Trạng thái</label>
+            <select class="v-status">
+                <option value="instock" ${data.status === 'instock' ? 'selected' : ''}>Sẵn hàng</option>
+                <option value="order" ${data.status === 'order' ? 'selected' : ''}>Hàng Order</option>
+                <option value="out" ${data.status === 'out' ? 'selected' : ''}>Hết hàng</option>
+            </select>
+        </div>
+        <div>
+            <label style="font-weight:bold; color:#555;">Dự kiến</label>
+            <input type="text" class="v-date" value="${data.date || ''}" placeholder="VD: 25/05">
+        </div>
+        <div>
+            <label style="font-weight:bold; color:#555;">Giá riêng</label>
+            <input type="number" class="v-price" value="${data.price || ''}" placeholder="Giá VNĐ">
+        </div>
+        <div>
+            <label style="font-weight:bold; color:#555;">Ảnh riêng</label>
+            <input type="file" class="v-file" accept="image/*" style="font-size: 11px; padding: 4px;">
+            <input type="hidden" class="v-image-url" value="${data.image || ''}">
+        </div>
+        <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; color:#e74c3c; cursor:pointer; font-size: 18px; padding-bottom: 5px;" title="Xóa dòng này">
+            <i class="fas fa-trash-alt"></i>
+        </button>
+        ${data.image ? `<div style="grid-column: 1/-1; margin-top: 5px; font-size: 12px;"><a href="${data.image}" target="_blank" style="color:#3498db; text-decoration:none;"><i class="fas fa-image"></i> Xem ảnh hiện tại đang lưu</a></div>` : ''}
     `;
     container.appendChild(row);
 }
