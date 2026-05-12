@@ -2,7 +2,10 @@ const API_BASE_URL = "/api";
 let isEditing = false;
 let allProductsData = [];
 
-// 1. TẢI DANH SÁCH SẢN PHẨM
+// =========================================================
+// PHẦN 1: QUẢN LÝ KHO SẢN PHẨM
+// =========================================================
+
 async function loadAdminProducts() {
     const tbody = document.getElementById("admin-product-list");
     if (!tbody) return;
@@ -19,7 +22,6 @@ async function loadAdminProducts() {
     }
 }
 
-// 2. HIỂN THỊ BẢNG SẢN PHẨM
 function renderTable(products) {
     const tbody = document.getElementById("admin-product-list");
     if (!tbody) return;
@@ -30,10 +32,9 @@ function renderTable(products) {
     }
 
     tbody.innerHTML = products.map(p => {
-        // Gom hiển thị biến thể ra ngoài bảng danh sách
         const variants = p.variants || [];
         const variantSummary = variants.length > 0 
-            ? variants.map(v => `<span style="background:#f5f5f5; color:#555; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:4px;">${v.name} (SL: ${v.stock || 0})</span>`).join("")
+            ? variants.map(v => `<span style="background:#f5f5f5; color:#555; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:4px; display:inline-block; margin-bottom:2px;">${v.name} (SL: ${v.stock || 0})</span>`).join("")
             : `<small style="color:#aaa;">Chưa có biến thể</small>`;
 
         return `
@@ -44,7 +45,7 @@ function renderTable(products) {
                     <div>${variantSummary}</div>
                 </td>
                 <td>${p.brand}</td>
-                <td style="color: #f57224; font-weight: bold;">${Number(p.current_price).toLocaleString()} đ</td>
+                <td style="color: #f57224; font-weight: bold;">${Number(p.current_price).toLocaleString('vi-VN')} đ</td>
                 <td class="actions">
                     <button class="btn-icon edit-btn" style="border:none; background:#e3f2fd; color:#1976d2; padding:5px 10px; border-radius:4px; cursor:pointer;" onclick="editProduct('${p.id}')"><i class="fas fa-edit"></i></button>
                     <button class="btn-icon delete-btn" style="border:none; background:#ffebee; color:#d32f2f; padding:5px 10px; border-radius:4px; cursor:pointer; margin-left:5px;" onclick="deleteProduct('${p.id}', '${p.brand}')"><i class="fas fa-trash"></i></button>
@@ -54,7 +55,6 @@ function renderTable(products) {
     }).join("");
 }
 
-// 3. XỬ LÝ TÌM KIẾM
 function bindAdminSearch() {
     const searchInput = document.getElementById("admin-search-input");
     if (!searchInput) return;
@@ -70,8 +70,7 @@ function bindAdminSearch() {
     });
 }
 
-// 4. XÓA SẢN PHẨM
-async function deleteProduct(id, brand) {
+window.deleteProduct = async function(id, brand) {
     if (!confirm(`Bạn có chắc chắn muốn xóa sản phẩm ${brand}?`)) return;
     try {
         const res = await fetch(`${API_BASE_URL}/products/${id}`, { method: "DELETE" });
@@ -79,8 +78,7 @@ async function deleteProduct(id, brand) {
     } catch (err) { alert("Lỗi hệ thống khi xóa!"); }
 }
 
-// 5. TẠO HTML DÒNG BIẾN THỂ (Giao diện được căn chỉnh đẹp)
-function addVariantRow(data = {}) {
+window.addVariantRow = function(data = {}) {
     const container = document.getElementById("variants-container");
     if (!container) return;
 
@@ -90,7 +88,7 @@ function addVariantRow(data = {}) {
     row.innerHTML = `
         <div>
             <label style="font-weight:bold; color:#555;">Phân loại <span style="color:red">*</span></label>
-            <input type="text" class="v-name" value="${data.name || ''}" placeholder="Nhập tên..." required>
+            <input type="text" class="v-name" value="${data.name || ''}" placeholder="VD: Đỏ, 50ml" required>
         </div>
         <div>
             <label style="font-weight:bold; color:#555;">Số lượng</label>
@@ -125,8 +123,7 @@ function addVariantRow(data = {}) {
     container.appendChild(row);
 }
 
-// 6. NẠP DỮ LIỆU ĐỂ SỬA
-async function editProduct(id) {
+window.editProduct = async function(id) {
     try {
         const p = allProductsData.find(item => item.id === id);
         
@@ -136,7 +133,6 @@ async function editProduct(id) {
             document.getElementById("brand").value = p.brand || "";
             document.getElementById("current_price").value = p.current_price || "";
             
-            // Vẽ lại các biến thể đã lưu
             const container = document.getElementById("variants-container");
             if (container) {
                 container.innerHTML = "";
@@ -151,8 +147,7 @@ async function editProduct(id) {
     } catch (err) { alert("Lỗi khi tải thông tin sản phẩm!"); }
 }
 
-// 7. MỞ / ĐÓNG MODAL
-function openModal(isEdit = false) {
+window.openModal = function(isEdit = false) {
     isEditing = isEdit;
     const msg = document.getElementById("message");
     if(msg) msg.innerText = "";
@@ -176,12 +171,12 @@ function openModal(isEdit = false) {
     }
 }
 
-function closeModal() {
+window.closeModal = function() {
     const modal = document.getElementById("productModal");
     if(modal) modal.style.display = "none";
 }
 
-// 8. LƯU DỮ LIỆU (QUÉT VÀ CẢNH BÁO LỖI BIẾN THỂ RỖNG)
+// Xử lý Lưu Sản Phẩm
 const form = document.getElementById("product-form");
 if (form) {
     form.addEventListener("submit", async function(e) {
@@ -204,19 +199,12 @@ if (form) {
                 imageUrl = dataImg.url;
             }
 
-            // --- QUÉT BIẾN THỂ VÀ KIỂM TRA LỖI NHẬP LIỆU ---
             const variantsArray = [];
             const variantRows = document.querySelectorAll(".variant-row");
             
             for (let row of variantRows) {
                 const vNameInput = row.querySelector(".v-name");
-                
-                // NẾU Ô PHÂN LOẠI TRỐNG, CHẶN LẠI VÀ CẢNH BÁO
-                if (!vNameInput || vNameInput.value.trim() === "") {
-                    alert("Vui lòng nhập tên Phân loại (Ví dụ: Đỏ, 50ml...) vào dòng biến thể!\n\nNếu bạn không muốn có biến thể, hãy bấm biểu tượng 'Thùng Rác' màu đỏ để xóa dòng đó đi trước khi lưu.");
-                    msg.innerText = "";
-                    return; // DỪNG LẠI KHÔNG CHO LƯU
-                }
+                if (!vNameInput || vNameInput.value.trim() === "") continue;
 
                 const vStockInput = row.querySelector(".v-stock");
                 const vStatusInput = row.querySelector(".v-status");
@@ -251,18 +239,15 @@ if (form) {
                 });
             }
 
-            // Gói dữ liệu
             const productData = {
                 title: document.getElementById("title").value.trim(),
                 brand: document.getElementById("brand").value.trim(),
                 current_price: document.getElementById("current_price").value.trim(),
                 status: "active",
-                variants: variantsArray // GẮN BIẾN THỂ VÀO ĐÂY ĐỂ GỬI ĐI
+                variants: variantsArray
             };
 
             if (imageUrl) productData.thumbnail = imageUrl;
-
-            console.log("🚀 Payload gửi lên API:", productData);
 
             const url = isEditing ? `${API_BASE_URL}/products/${id}` : `${API_BASE_URL}/products`;
             const method = isEditing ? "PUT" : "POST";
@@ -288,8 +273,169 @@ if (form) {
     });
 }
 
-// Khởi chạy
+// =========================================================
+// PHẦN 2: QUẢN LÝ ĐƠN HÀNG & XUẤT CSV (SHOPEE XPRESS)
+// =========================================================
+
+window.switchTab = function(tabId) {
+    const secProducts = document.getElementById('section-products');
+    const secOrders = document.getElementById('section-orders');
+    const menuProducts = document.getElementById('menu-products');
+    const menuOrders = document.getElementById('menu-orders');
+
+    if (secProducts) secProducts.classList.remove('active');
+    if (secOrders) secOrders.classList.remove('active');
+    if (menuProducts) menuProducts.classList.remove('active');
+    if (menuOrders) menuOrders.classList.remove('active');
+
+    const activeSec = document.getElementById(`section-${tabId}`);
+    const activeMenu = document.getElementById(`menu-${tabId}`);
+    if (activeSec) activeSec.classList.add('active');
+    if (activeMenu) activeMenu.classList.add('active');
+
+    if (tabId === 'orders') {
+        loadOrders();
+    }
+}
+
+window.loadOrders = async function() {
+    const tbody = document.getElementById('admin-order-list');
+    if (!tbody) return;
+
+    tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 40px;'>Đang tải đơn hàng từ máy chủ...</td></tr>";
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/orders`);
+        if (!response.ok) throw new Error("API lỗi");
+        const orders = await response.json();
+        
+        localStorage.setItem('morachi_orders', JSON.stringify(orders));
+
+        if (!orders || orders.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 40px;'>Chưa có đơn hàng nào.</td></tr>";
+            return;
+        }
+
+        tbody.innerHTML = orders.map(o => {
+            const c = o.customer_info || {};
+            const items = o.items || [];
+            let itemNames = items.map(i => `<div style="font-size:12px;">• ${i.title} (${i.variant}) x${i.quantity}</div>`).join("");
+            let statusColor = o.payment_method === 'cod' ? '#f39c12' : '#3498db';
+
+            return `
+                <tr>
+                    <td style="font-weight:bold; color:#111;">${o.order_id || 'N/A'}</td>
+                    <td>
+                        <div style="font-weight:bold;">${c.name || 'N/A'}</div>
+                        <div style="font-size:12px; color:#555;">📞 ${c.phone || ''}</div>
+                        <div style="font-size:11px; color:#888;">📍 ${c.address || ''}, ${c.ward || ''}, ${c.dist || ''}, ${c.prov || ''}</div>
+                    </td>
+                    <td>${itemNames}</td>
+                    <td style="font-weight:bold; color:#e74c3c;">${Number(o.total_amount || 0).toLocaleString('vi-VN')} đ</td>
+                    <td>
+                        <span style="background:${statusColor}; color:white; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold;">
+                            ${o.status || 'Mới'}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error("Lỗi lấy đơn hàng:", err);
+        tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; color:red; padding: 40px;'>Lỗi kết nối máy chủ để lấy Đơn Hàng!</td></tr>";
+    }
+}
+
+window.exportSPX = function() {
+    const orders = JSON.parse(localStorage.getItem('morachi_orders') || '[]');
+    if (orders.length === 0) {
+        alert("Chưa có đơn hàng nào để xuất!");
+        return;
+    }
+
+    // Header chính xác theo template của Shopee Xpress
+    const header = [
+        "*Mã đơn hàng", "*Tên người nhận", "*Số điện thoại", "*Tỉnh/Thành Phố", 
+        "*Quận/Huyện", "*Xã/Phường", "*Địa chỉ chi tiết", "Lưu ý về địa chỉ", 
+        "Mã bưu chính", "*Tên sản phẩm", 
+        "Số lượng (Thông tin bắt buộc khi chọn Giao hàng một phần & Thu COD)", 
+        "Giá tiền (Thông tin bắt buộc khi chọn Giao hàng một phần & Thu COD)", 
+        "*Tổng cân nặng bưu gửi (KG)", "Chiều dài (CM)", "Chiều rộng (CM)", 
+        "Chiều cao (CM)", "Mã khách hàng", "*Giá trị đơn hàng", 
+        "*Giao hàng một phần (Y/N)", "*Cho phép thử hàng (Y/N)", 
+        "\"*Cho xem hàng, không cho thử (Y/N)\"", "Thu phí từ chối nhận hàng (Y/N)", 
+        "Phí từ chối nhận hàng cần thu", "*Thu COD (Y/N)", "Số tiền COD", 
+        "bưu gửi giá trị cao (Y/N)", "*Hình thức thanh Toán", "Lưu ý giao hàng", 
+        "Nhắc nhở điền đúng số tiền COD", 
+        "\"Đơn chỉ hoàn thành nếu ở dưới hiện \"\"Đủ điều kiện\"\"\""
+    ];
+
+    // Hàm bọc dấu ngoặc kép an toàn cho dữ liệu CSV
+    const escapeCSV = (str) => {
+        if (str === null || str === undefined) return '""';
+        return '"' + String(str).replace(/"/g, '""') + '"';
+    };
+
+    let csvContent = "\uFEFF" + header.join(",") + "\n";
+
+    orders.forEach(o => {
+        const c = o.customer_info || {};
+        const items = o.items || [];
+        
+        const itemsStr = items.map(i => `${i.title} (${i.variant}) x${i.quantity}`).join(" + ");
+        const totalQty = items.reduce((sum, item) => sum + item.quantity, 0);
+        
+        const isCOD = o.payment_method === 'cod' ? "Y" : "N";
+        const codAmount = o.payment_method === 'cod' ? (o.total_amount || 0) : 0;
+
+        const row = [
+            escapeCSV(o.order_id),
+            escapeCSV(c.name),
+            escapeCSV(c.phone),
+            escapeCSV(c.prov),
+            escapeCSV(c.dist),
+            escapeCSV(c.ward),
+            escapeCSV(c.address),
+            '""', '""',
+            escapeCSV(itemsStr),
+            totalQty,
+            o.total_amount || 0,
+            "1", "20", "10", "10",
+            '""',
+            o.total_amount || 0,
+            '"N"', '"N"', '"Y"', '"N"',
+            '""',
+            escapeCSV(isCOD),
+            codAmount,
+            '"N"',
+            '"Người gửi trả"',
+            '"Cho xem hàng"',
+            '""',
+            '"Đủ điều kiện"'
+        ];
+
+        csvContent += row.join(",") + "\n";
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `DonHang_SPX_${new Date().getTime()}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// Khởi chạy mặc định khi trang load
 document.addEventListener("DOMContentLoaded", () => {
     loadAdminProducts();
     bindAdminSearch();
 });
+
+// Đóng modal khi bấm ra vùng xám
+window.onclick = function(event) {
+    const modal = document.getElementById("productModal");
+    if (event.target == modal) closeModal();
+}
