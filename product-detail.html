@@ -322,7 +322,6 @@
             let safeUsage = (p.usage_manual || 'Đang cập nhật...').replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n|\\n/g, '<br>').replace(/\\n/g, '<br>');
             let specsHTML = renderSpecsTable(p.specifications);
 
-            // BẢN FIX LỖI: Ở nút button pd-btn-cart chỉ gọi handleAddToCart()
             let html = `
                 <div class="pd-wrapper">
                     <div class="pd-gallery">
@@ -474,20 +473,45 @@
                 price: v.price || currentProduct.current_price
             };
             
-            // Hàm addToCart trong file cart.js đã chứa sẵn lệnh openCart()
             if(typeof addToCart === 'function') {
                 addToCart(cartItem);
+                
+                // Hiệu ứng nháy màu xanh trên nút Thêm Giỏ Hàng báo thành công
+                const btn = document.querySelector('.pd-btn-cart');
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> ĐÃ THÊM';
+                btn.style.background = '#27ae60';
+                btn.style.color = 'white';
+                btn.style.borderColor = '#27ae60';
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.style.background = '';
+                    btn.style.color = '';
+                    btn.style.borderColor = '';
+                }, 1500);
+
             } else {
                 alert('Lỗi: File cart.js chưa được tải!');
             }
         }
 
         function handleBuyNow() {
-            handleAddToCart(); 
-            if (typeof openCheckoutModal === 'function') {
-                openCheckoutModal();
-            } else {
-                alert('Hệ thống thanh toán đang tải...');
+            if (!currentProduct) return;
+            const v = currentVariant || {};
+            const cartItem = {
+                id: currentProduct.id,
+                title: currentProduct.title,
+                brand: currentProduct.brand,
+                image: v.image || currentProduct.thumbnail,
+                variant: v.name || 'Mặc định',
+                price: v.price || currentProduct.current_price
+            };
+            if(typeof addToCart === 'function') {
+                addToCart(cartItem);
+                if (typeof openCheckoutModal === 'function') {
+                    openCheckoutModal();
+                }
             }
         }
 

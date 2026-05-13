@@ -10,7 +10,7 @@ function saveCart() {
     updateCartUI(); 
 }
 
-// 3. Mở giỏ hàng (Luôn trượt ra, dùng cho nút Thêm Giỏ Hàng)
+// 3. Mở giỏ hàng (Luôn trượt ra)
 function openCart() {
     const drawer = document.getElementById('cart-drawer');
     const overlay = document.getElementById('cart-overlay');
@@ -21,7 +21,7 @@ function openCart() {
     }
 }
 
-// 3.1 Mở / Đóng giao diện giỏ hàng linh hoạt (Dùng cho icon giỏ hàng trên header)
+// 3.1 Mở / Đóng giao diện giỏ hàng linh hoạt (Toggle)
 function toggleCart() {
     const drawer = document.getElementById('cart-drawer');
     const overlay = document.getElementById('cart-overlay');
@@ -44,9 +44,7 @@ function addToCart(product) {
     }
     
     saveCart(); 
-    
-    // GỌI LỆNH TRƯỢT GIỎ HÀNG RA NGAY SAU KHI LƯU
-    openCart(); 
+    // Đã xóa lệnh tự trượt giỏ hàng ra ở đây!
 }
 
 // 5. Cập nhật giao diện giỏ hàng
@@ -126,6 +124,7 @@ function openCheckoutModal() {
         return;
     }
     
+    // Đóng giỏ hàng trượt tạm thời
     const drawer = document.getElementById('cart-drawer');
     const overlay = document.getElementById('cart-overlay');
     if(drawer) drawer.classList.remove('active');
@@ -138,6 +137,7 @@ function openCheckoutModal() {
     const nextOrderCount = parseInt(localStorage.getItem('morachi_order_count') || '0') + 1;
     currentCheckoutOrderId = 'MO' + String(nextOrderCount).padStart(4, '0');
 
+    // THÔNG TIN NGÂN HÀNG
     const BANK_ID = "VCB"; 
     const BANK_ACCOUNT = "1234567890"; 
     const ACCOUNT_NAME = "NGUYEN VAN A"; 
@@ -530,7 +530,7 @@ checkoutStyle.innerHTML = `
 document.head.appendChild(checkoutStyle);
 
 // ==============================================================
-// 10. TÍNH NĂNG NÚT LIÊN HỆ NỔI (FLOATING CONTACT)
+// 10. TÍNH NĂNG NÚT LIÊN HỆ NỔI (FLOATING CONTACT) TỰ ĐỘNG
 // ==============================================================
 function initFloatingContact() {
     if (document.querySelector('.floating-contact')) return;
@@ -582,7 +582,6 @@ function initFloatingContact() {
     document.body.appendChild(container);
 }
 
-// Khởi chạy khi DOM tải xong
 document.addEventListener('DOMContentLoaded', () => {
     updateCartUI();
     initFloatingContact(); 
