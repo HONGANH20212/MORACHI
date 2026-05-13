@@ -102,7 +102,11 @@ function removeCartItem(index) {
     saveCart();
 }
 
-document.addEventListener('DOMContentLoaded', updateCartUI);
+// Khởi chạy khi DOM tải xong: Cập nhật Giỏ hàng + Gắn Nút Liên hệ
+document.addEventListener('DOMContentLoaded', () => {
+    updateCartUI();
+    initFloatingContact(); 
+});
 
 // ==============================================================
 // 9. GIAO DIỆN & TÍNH NĂNG THANH TOÁN (CHECKOUT)
@@ -420,6 +424,7 @@ window.submitOrder = async function() {
         btn.disabled = false;
     }
 }
+
 // ==========================================
 // TỰ ĐỘNG BƠM CSS CHO GIAO DIỆN THANH TOÁN
 // ==========================================
@@ -460,3 +465,113 @@ checkoutStyle.innerHTML = `
     .btn-checkout-confirm:hover { background: #d35400; }
 `;
 document.head.appendChild(checkoutStyle);
+
+
+// ==============================================================
+// 10. TÍNH NĂNG NÚT LIÊN HỆ NỔI (FLOATING CONTACT) TỰ ĐỘNG
+// ==============================================================
+function initFloatingContact() {
+    // Không tạo lại nếu đã có
+    if (document.querySelector('.floating-contact')) return;
+
+    // 1. Gắn CSS động cho nút liên hệ
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .floating-contact {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 9999;
+        }
+        .float-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 22px;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+        }
+        .float-btn:hover {
+            transform: translateY(-5px) scale(1.05);
+            color: white;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+        }
+        .float-btn .tooltip {
+            position: absolute;
+            right: 55px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: 0.3s ease;
+            pointer-events: none;
+            font-weight: bold;
+        }
+        .float-btn:hover .tooltip {
+            opacity: 1;
+            visibility: visible;
+            right: 60px;
+        }
+        .btn-messenger { background: linear-gradient(45deg, #00C6FF, #0072FF); }
+        .btn-facebook { background: #1877F2; }
+        .btn-tiktok1 { background: #000000; border: 2px solid #fff; }
+        .btn-tiktok2 { background: #000000; border: 2px solid #00f2fe; }
+
+        /* Hoạt ảnh nhấp nháy thu hút sự chú ý cho nút Messenger */
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(0, 132, 255, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 132, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 132, 255, 0); }
+        }
+        .btn-messenger {
+            animation: pulse-ring 2s infinite;
+        }
+
+        /* Responsive Mobile */
+        @media (max-width: 768px) {
+            .floating-contact {
+                bottom: 20px;
+                right: 15px;
+                transform: scale(0.9);
+                transform-origin: bottom right;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // 2. Gắn HTML động vào Body
+    const container = document.createElement('div');
+    container.className = 'floating-contact';
+    container.innerHTML = `
+        <a href="https://m.me/chuyendong24h" target="_blank" class="float-btn btn-messenger">
+            <i class="fab fa-facebook-messenger"></i>
+            <span class="tooltip">Chat Messenger</span>
+        </a>
+        <a href="https://www.facebook.com/chuyendong24h" target="_blank" class="float-btn btn-facebook">
+            <i class="fab fa-facebook-f"></i>
+            <span class="tooltip">Facebook Fanpage</span>
+        </a>
+        <a href="https://www.tiktok.com/@chuyendong24h" target="_blank" class="float-btn btn-tiktok1">
+            <i class="fab fa-tiktok"></i>
+            <span class="tooltip">TikTok Shop 1</span>
+        </a>
+        <a href="https://www.tiktok.com/@chuyendong24h_2" target="_blank" class="float-btn btn-tiktok2">
+            <i class="fab fa-tiktok"></i>
+            <span class="tooltip">TikTok Shop 2</span>
+        </a>
+    `;
+    document.body.appendChild(container);
+}
