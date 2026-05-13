@@ -262,25 +262,51 @@ function renderBrandFilters(products) {
     });
 }
 
-// --- Gọi API lấy dữ liệu ---
+// --- Gọi API lấy dữ liệu (Đã tích hợp Caching & Skeleton) ---
 async function loadProducts() {
     const productList = document.getElementById("product-list");
     if (!productList) return;
 
-    try {
-        productList.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 50px;"><i class="fas fa-spinner fa-spin"></i> Đang tải sản phẩm...</p>`;
+    // 1. KIỂM TRA BỘ NHỚ ĐỆM (CACHE)
+    const cacheKey = 'morachi_products_cache';
+    const cachedData = sessionStorage.getItem(cacheKey);
 
+    if (cachedData) {
+        try {
+            const products = JSON.parse(cachedData);
+            state.allProducts = Array.isArray(products) ? products : [];
+            renderBrandFilters(state.allProducts);
+            applyClientFilters(); // Render ngay lập tức không cần xoay loading
+            return; 
+        } catch(e) {}
+    }
+
+    // 2. NẾU CHƯA CÓ CACHE -> HIỆN KHUNG XƯƠNG VÀ CALL API
+    productList.innerHTML = Array(8).fill(`
+        <div class="skel-card">
+            <div class="skeleton skel-img-home"></div>
+            <div class="skeleton skel-line"></div>
+            <div class="skeleton skel-line short"></div>
+            <div class="skeleton skel-price-home" style="margin-top:20px;"></div>
+        </div>
+    `).join('');
+
+    try {
         const response = await fetch(`${API_BASE_URL}/products`);
         if (!response.ok) throw new Error(`API lỗi: ${response.status}`);
 
         const products = await response.json();
+        
+        // Lưu vào bộ nhớ đệm để tái sử dụng
+        sessionStorage.setItem(cacheKey, JSON.stringify(products));
+
         state.allProducts = Array.isArray(products) ? products : [];
 
         renderBrandFilters(state.allProducts);
-        applyClientFilters(); // Sắp xếp ngay lập tức
+        applyClientFilters(); 
     } catch (error) {
         console.error("Lỗi tải sản phẩm:", error);
-        productList.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 50px; color:red;">Không tải được dữ liệu.</p>`;
+        productList.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 50px; color:red;">Không tải được dữ liệu. Vui lòng tải lại trang.</p>`;
     }
 }
 
