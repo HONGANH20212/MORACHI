@@ -71,6 +71,7 @@ def normalize_product(data, existing=None):
         "discount": str(data.get("discount") or existing.get("discount") or "").strip(),
         "rating": str(data.get("rating") or existing.get("rating") or "4.9").strip(),
         "sold_text": str(data.get("sold_text") or existing.get("sold_text") or "1k/tháng").strip(),
+        "description": str(data.get("description") or existing.get("description") or "").strip(),
         "status": (data.get("status") or existing.get("status") or "active").strip(),
         "variants": data.get("variants") if "variants" in data else existing.get("variants", [])
     }
@@ -195,6 +196,7 @@ def products(req: func.HttpRequest) -> func.HttpResponse:
                 "discount": product["discount"],
                 "rating": product["rating"],
                 "sold_text": product["sold_text"],
+                "description": product.get("description", ""),
                 "status": product["status"],
                 "variants": product.get("variants", []),
                 "created_at": now,
@@ -249,6 +251,7 @@ def product_by_id(req: func.HttpRequest) -> func.HttpResponse:
             existing["discount"] = updated["discount"]
             existing["rating"] = updated["rating"]
             existing["sold_text"] = updated["sold_text"]
+            existing["description"] = updated.get("description", "")
             existing["status"] = updated["status"]
             existing["variants"] = updated.get("variants", [])
             existing["updated_at"] = datetime.utcnow().isoformat() + "Z"

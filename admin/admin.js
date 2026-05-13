@@ -136,10 +136,10 @@ window.editProduct = async function(id) {
             document.getElementById("brand").value = p.brand || "";
             document.getElementById("current_price").value = p.current_price || "";
             
-            // ĐIỀN CÁC TRƯỜNG MỚI VÀO FORM
-            document.getElementById("old_price").value = p.old_price || "";
-            document.getElementById("discount").value = p.discount || "";
-            document.getElementById("sold_text").value = p.sold_text || "";
+            // ĐIỀN CÁC TRƯỜNG MỚI VÀO FORM (Bao gồm Mô tả)
+            if (document.getElementById("old_price")) document.getElementById("old_price").value = p.old_price || "";
+            if (document.getElementById("discount")) document.getElementById("discount").value = p.discount || "";
+            if (document.getElementById("description")) document.getElementById("description").value = p.description || "";
             
             const container = document.getElementById("variants-container");
             if (container) {
@@ -247,14 +247,14 @@ if (form) {
                 });
             }
 
-            // --- LƯU CÁC TRƯỜNG THÔNG TIN MỚI VÀO DB ---
+            // --- LƯU CÁC TRƯỜNG THÔNG TIN MỚI VÀO DB (Gồm cả Description) ---
             const productData = {
                 title: document.getElementById("title").value.trim(),
                 brand: document.getElementById("brand").value.trim(),
                 current_price: document.getElementById("current_price").value.trim(),
-                old_price: document.getElementById("old_price").value.trim(),
-                discount: document.getElementById("discount").value.trim(),
-                sold_text: document.getElementById("sold_text").value.trim(),
+                old_price: document.getElementById("old_price") ? document.getElementById("old_price").value.trim() : "",
+                discount: document.getElementById("discount") ? document.getElementById("discount").value.trim() : "",
+                description: document.getElementById("description") ? document.getElementById("description").value.trim() : "",
                 status: "active",
                 variants: variantsArray
             };

@@ -52,6 +52,14 @@
         .pd-btn-buy { flex: 1; padding: 15px; background: #f57224; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 14px; transition: 0.2s;}
         .pd-btn-buy:hover { background: #111; }
 
+        /* Vùng Tab mô tả chi tiết sản phẩm (Chuẩn Hasaki Style) */
+        .pd-desc-container { background: #fff; padding: 0; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-top: 20px; overflow: hidden; }
+        .pd-desc-tabs { display: flex; border-bottom: 1px solid #eee; background: #fafafa; padding: 0 20px; overflow-x: auto; }
+        .pd-desc-tabs span { font-size: 15px; color: #555; padding: 15px 25px; cursor: pointer; font-weight: 500; white-space: nowrap; }
+        .pd-desc-tabs span.active { color: #f57224; border-bottom: 2px solid #f57224; font-weight: bold; background: #fff; }
+        .pd-desc-tabs span:hover:not(.active) { color: #f57224; }
+        .pd-desc-content { padding: 25px; font-size: 14px; line-height: 1.8; color: #333; white-space: pre-wrap; font-family: 'Segoe UI', Arial, sans-serif; }
+
         /* Hiệu ứng rê chuột chung cho Header */
         .hover-text-orange:hover { color: #f57224 !important; }
 
@@ -106,7 +114,7 @@
                     <span class="cart-count" id="cart-count">0</span>
                 </div>
 
-                <!-- MẠNG XÃ HỘI (Ăn theo class .social-icons và .social-link trong style.css) -->
+                <!-- MẠNG XÃ HỘI -->
                 <div class="social-icons">
                     <a href="https://www.tiktok.com/@chuyendong24h" target="_blank" class="social-link"><i class="fab fa-tiktok"></i></a>
                     <a href="https://www.facebook.com/chuyendong24h" target="_blank" class="social-link"><i class="fab fa-facebook"></i></a>
@@ -223,6 +231,10 @@
                 }
             });
 
+            // Thay thế \n bằng thẻ <br> để xuống dòng hiển thị đẹp
+            let rawDescription = p.description ? p.description : 'Đang cập nhật thông tin mô tả chi tiết cho sản phẩm này...';
+            let safeDescription = rawDescription.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n|\n/g, '<br>');
+
             let html = `
                 <div class="pd-wrapper">
                     <div class="pd-gallery">
@@ -242,7 +254,7 @@
                         
                         <div class="pd-rating">
                             <span><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i></span>
-                            <span>${p.rating || '4.9'} đánh giá | Đã bán ${p.sold_text || '1.2k'}</span>
+                            <span>${p.rating || '4.9'} đánh giá</span>
                         </div>
 
                         <div class="pd-price-box">
@@ -266,12 +278,23 @@
                         <div class="pd-status" id="pd-status-view"></div>
 
                         <div class="pd-actions">
-                            <!-- NÚT GỌI HÀM THÊM GIỎ HÀNG (Sẽ trượt giỏ ra) -->
                             <button class="pd-btn-cart" onclick="handleAddToCart(); toggleCart();"><i class="fas fa-cart-plus"></i> THÊM GIỎ HÀNG</button>
-                            <!-- NÚT GỌI HÀM MUA NGAY (Bật bảng thanh toán lập tức) -->
                             <button class="pd-btn-buy" onclick="handleBuyNow()">MUA NGAY</button>
                         </div>
                     </div>
+                </div>
+
+                <!-- BỘ TABS MÔ TẢ THEO PHONG CÁCH HASAKI -->
+                <div class="pd-desc-container">
+                    <div class="pd-desc-tabs">
+                        <span class="active">Mô tả</span>
+                        <span>Thông số</span>
+                        <span>Thành phần</span>
+                        <span>HDSD</span>
+                        <span>Đánh giá</span>
+                        <span>Hỏi đáp</span>
+                    </div>
+                    <div class="pd-desc-content">${safeDescription}</div>
                 </div>
             `;
 
@@ -291,7 +314,6 @@
             if (!currentProduct) return;
             const v = currentVariant || {};
             
-            // Đóng gói thông tin sản phẩm chuẩn bị đẩy vào giỏ
             const cartItem = {
                 id: currentProduct.id,
                 title: currentProduct.title,
@@ -301,7 +323,6 @@
                 price: v.price || currentProduct.current_price
             };
             
-            // Gọi hàm của file cart.js
             if(typeof addToCart === 'function') {
                 addToCart(cartItem);
             } else {
@@ -311,9 +332,8 @@
 
         // HÀM MỚI: XỬ LÝ KHI BẤM MUA NGAY (Mở thẳng form thanh toán)
         function handleBuyNow() {
-            handleAddToCart(); // Bước 1: Lưu sản phẩm vào giỏ hàng
+            handleAddToCart(); 
             
-            // Bước 2: Bật Form điền thông tin thanh toán (checkout)
             if (typeof openCheckoutModal === 'function') {
                 openCheckoutModal();
             } else {
@@ -328,7 +348,7 @@
         }
 
         function selectVariant(v, el, basePrice) {
-            currentVariant = v; // Cập nhật biến thể khách đang chọn
+            currentVariant = v; 
             
             document.querySelectorAll('.pd-btn-v').forEach(btn => btn.classList.remove('active'));
             el.classList.add('active');
