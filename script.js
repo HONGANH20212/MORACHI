@@ -4,7 +4,7 @@ const state = {
     allProducts: [],
     filteredProducts: [],
     selectedBrands: new Set(),
-    sort: "created_desc",
+    sort: "bestseller", // Mặc định hiển thị tab Bán chạy
     search: "",
     minPrice: null,
     maxPrice: null
@@ -60,7 +60,8 @@ function getSortValueFromText(text) {
     const normalized = text.trim().toLowerCase();
     if (normalized.includes("giá thấp")) return "price_asc";
     if (normalized.includes("giá cao")) return "price_desc";
-    return "created_desc";
+    if (normalized.includes("mới")) return "newest";
+    return "bestseller"; // Mặc định là bán chạy
 }
 
 function setProductCount(count) {
@@ -118,7 +119,6 @@ function renderProducts(products) {
                 }
             });
 
-            // Lấy trạng thái của biến thể đầu tiên để dán nhãn
             const firstVariant = variants[0];
             if (firstVariant.status === 'out') {
                 statusBadge = `<span class="discount-badge" style="background:#666; right:auto; left:10px;">HẾT HÀNG</span>`;
@@ -127,7 +127,6 @@ function renderProducts(products) {
             }
         }
 
-        // TẠO GIAO DIỆN SỐ LƯỢNG
         let stockHTML = "";
         if (hasInstock) {
             stockHTML = `<div style="font-size: 12px; color: #27ae60; font-weight: bold; margin-bottom: 5px;">Số lượng: ${totalInstock}</div>`;
@@ -139,7 +138,6 @@ function renderProducts(products) {
 
         const discountBadgeHTML = discount ? `<span class="discount-badge">${discount}</span>` : "";
 
-        // CHÌA KHÓA: Dùng onclick để không làm hỏng CSS Flexbox của trang chủ
         return `
             <div class="product-card" onclick="window.location.href='product-detail.html?id=${id}'" style="cursor:pointer;">
                 ${statusBadge}
@@ -171,7 +169,7 @@ function renderProducts(products) {
     }).join("");
 }
 
-// --- Logic lọc và sắp xếp ---
+// --- Logic lọc và sắp xếp tự động ---
 function applyClientFilters() {
     let products = [...state.allProducts];
 
@@ -196,12 +194,26 @@ function applyClientFilters() {
         products = products.filter((item) => parsePrice(item.current_price) <= state.maxPrice);
     }
 
+    // THUẬT TOÁN ĐIỀU KHIỂN TAB
     if (state.sort === "price_asc") {
         products.sort((a, b) => parsePrice(a.current_price) - parsePrice(b.current_price));
     } else if (state.sort === "price_desc") {
         products.sort((a, b) => parsePrice(b.current_price) - parsePrice(a.current_price));
-    } else {
-        products.sort((a, b) => String(b.id || "").localeCompare(String(a.id || "")));
+    } else if (state.sort === "newest") {
+        // Mới nhất: Tự động sắp xếp thời gian tạo giảm dần
+        products.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    } else if (state.sort === "bestseller") {
+        // Bán chạy: Ưu tiên nhãn "bán chạy" trước, sau đó tới số lượng đã bán
+        products.sort((a, b) => {
+            const aIsBest = (a.discount || "").toLowerCase().includes("bán chạy") ? 1 : 0;
+            const bIsBest = (b.discount || "").toLowerCase().includes("bán chạy") ? 1 : 0;
+            
+            if (aIsBest !== bIsBest) return bIsBest - aIsBest; // Đẩy nhãn Bán chạy lên Top 1
+            
+            const soldA = parseFloat((a.sold_text || "0").replace(/[^\d.]/g, '')) || 0;
+            const soldB = parseFloat((b.sold_text || "0").replace(/[^\d.]/g, '')) || 0;
+            return soldB - soldA; // Xếp hạng theo Lượt bán
+        });
     }
 
     state.filteredProducts = products;
@@ -256,7 +268,7 @@ async function loadProducts() {
     if (!productList) return;
 
     try {
-        productList.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 50px;">Đang tải sản phẩm...</p>`;
+        productList.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 50px;"><i class="fas fa-spinner fa-spin"></i> Đang tải sản phẩm...</p>`;
 
         const response = await fetch(`${API_BASE_URL}/products`);
         if (!response.ok) throw new Error(`API lỗi: ${response.status}`);
@@ -265,7 +277,7 @@ async function loadProducts() {
         state.allProducts = Array.isArray(products) ? products : [];
 
         renderBrandFilters(state.allProducts);
-        applyClientFilters();
+        applyClientFilters(); // Sắp xếp ngay lập tức
     } catch (error) {
         console.error("Lỗi tải sản phẩm:", error);
         productList.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 50px; color:red;">Không tải được dữ liệu.</p>`;

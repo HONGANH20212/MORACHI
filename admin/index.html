@@ -338,10 +338,27 @@
                     </div>
                 </div>
 
+                <!-- BỔ SUNG Ô NHẬP GIÁ CŨ (Gạch ngang) -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
                     <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
                         <label style="font-size: 13px; font-weight: bold; color: #666;">Giá bán chính (VNĐ)</label>
                         <input type="number" id="current_price" placeholder="Giá niêm yết" required style="padding: 12px; border: 1px solid #ddd; border-radius: 10px;">
+                    </div>
+                    <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-size: 13px; font-weight: bold; color: #666;">Giá cũ (Tạo gạch ngang - Tùy chọn)</label>
+                        <input type="number" id="old_price" placeholder="VD: 300000" style="padding: 12px; border: 1px solid #ddd; border-radius: 10px;">
+                    </div>
+                </div>
+
+                <!-- BỔ SUNG Ô NHẬN DẠNG: NHÃN VÀ LƯỢT BÁN -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 15px;">
+                    <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-size: 13px; font-weight: bold; color: #666;">Nhãn (Ghi "Bán chạy" để lên Top)</label>
+                        <input type="text" id="discount" placeholder="VD: Bán chạy, Mới, -50%" style="padding: 12px; border: 1px solid #ddd; border-radius: 10px;">
+                    </div>
+                    <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
+                        <label style="font-size: 13px; font-weight: bold; color: #666;">Lượt bán hiển thị</label>
+                        <input type="text" id="sold_text" placeholder="VD: 1.2k/tháng" style="padding: 12px; border: 1px solid #ddd; border-radius: 10px;">
                     </div>
                     <div class="form-group" style="display: flex; flex-direction: column; gap: 8px;">
                         <label style="font-size: 13px; font-weight: bold; color: #666;">Ảnh đại diện</label>

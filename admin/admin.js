@@ -37,11 +37,14 @@ window.renderTable = function(products) {
             ? variants.map(v => `<span style="background:#f5f5f5; color:#555; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:4px; display:inline-block; margin-bottom:2px;">${v.name} (SL: ${v.stock || 0})</span>`).join("")
             : `<small style="color:#aaa;">Chưa có biến thể</small>`;
 
+        // Hỗ trợ hiển thị Nhãn ở bảng Quản trị
+        const badgeHtml = p.discount ? `<span style="background:#f57224; color:white; padding:2px 6px; border-radius:4px; font-size:10px; margin-left:6px; vertical-align: middle;">${p.discount}</span>` : '';
+
         return `
             <tr>
                 <td><img src="${p.thumbnail}" style="width: 50px; height: 50px; object-fit: contain; border-radius:4px; border:1px solid #eee;" onerror="this.src='/images/icon-logo.png'"></td>
                 <td>
-                    <strong style="display:block; margin-bottom:6px;">${p.title}</strong>
+                    <strong style="display:block; margin-bottom:6px;">${p.title} ${badgeHtml}</strong>
                     <div>${variantSummary}</div>
                 </td>
                 <td>${p.brand}</td>
@@ -132,6 +135,11 @@ window.editProduct = async function(id) {
             document.getElementById("title").value = p.title || "";
             document.getElementById("brand").value = p.brand || "";
             document.getElementById("current_price").value = p.current_price || "";
+            
+            // ĐIỀN CÁC TRƯỜNG MỚI VÀO FORM
+            document.getElementById("old_price").value = p.old_price || "";
+            document.getElementById("discount").value = p.discount || "";
+            document.getElementById("sold_text").value = p.sold_text || "";
             
             const container = document.getElementById("variants-container");
             if (container) {
@@ -239,10 +247,14 @@ if (form) {
                 });
             }
 
+            // --- LƯU CÁC TRƯỜNG THÔNG TIN MỚI VÀO DB ---
             const productData = {
                 title: document.getElementById("title").value.trim(),
                 brand: document.getElementById("brand").value.trim(),
                 current_price: document.getElementById("current_price").value.trim(),
+                old_price: document.getElementById("old_price").value.trim(),
+                discount: document.getElementById("discount").value.trim(),
+                sold_text: document.getElementById("sold_text").value.trim(),
                 status: "active",
                 variants: variantsArray
             };
