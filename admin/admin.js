@@ -176,6 +176,7 @@ window.closeModal = function() {
     if(modal) modal.style.display = "none";
 }
 
+// Xử lý Lưu Sản Phẩm 
 var form = document.getElementById("product-form");
 if (form) {
     form.addEventListener("submit", async function(e) {
@@ -351,7 +352,7 @@ window.loadOrders = async function() {
                         ${spxHtml}
                     </td>
                     <td class="actions">
-                        <button class="btn-icon edit-btn" title="Cập nhật Trạng thái & Mã SPX" onclick="window.updateOrderStatus('${o.id}', '${o.status || ''}', '${o.spx_tracking_code || ''}')"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon edit-btn" style="border:none; background:#e3f2fd; color:#1976d2; padding:5px 10px; border-radius:4px; cursor:pointer;" title="Cập nhật Trạng thái & Mã SPX" onclick="window.updateOrderStatus('${o.id}', '${o.status || ''}', '${o.spx_tracking_code || ''}')"><i class="fas fa-edit"></i></button>
                     </td>
                 </tr>
             `;
