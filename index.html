@@ -11,13 +11,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* Hiệu ứng mượt mà cho thanh Header */
+        /* Hiệu ứng mượt mà bổ sung cho các phím chức năng */
         .hover-text-orange:hover { color: #f57224 !important; }
-        .hover-scale:hover { transform: scale(1.1); color: #f57224 !important; }
 
+        /* Hỗ trợ hiển thị trên điện thoại */
         @media (max-width: 768px) {
             .header-top { flex-direction: column; gap: 15px !important; }
-            .search-bar { width: 100% !important; max-width: 100% !important; }
+            .search-bar { width: 100% !important; max-width: 100% !important; margin: 10px 0 !important;}
             .header-actions { width: 100%; justify-content: space-between; }
         }
     </style>
@@ -25,57 +25,56 @@
 
 <body>
 
-    <header class="header" style="background: #000;">
-        <!-- CĂN CHỈNH LẠI HEADER CHO CÂN ĐỐI (DÙNG GAP VÀ FLEX: 1) -->
-        <div class="header-top container" style="display: flex; align-items: center; justify-content: space-between; gap: 40px; padding: 15px 15px;">
+    <header class="header">
+        <div class="header-top container">
             
             <!-- LOGO -->
-            <div class="logo" style="flex-shrink: 0;">
-                <a href="/" style="display: flex; align-items: center; gap: 15px; text-decoration: none;">
-                    <img src="images/icon-logo.png" alt="MORACHI JAPAN BEAUTY" class="logo-icon" style="height: 50px; width: auto;">
-                    <div class="logo-text" style="color: white;">
-                        <h1 style="font-family: 'Playfair Display', serif; font-size: 28px; margin: 0; letter-spacing: 2px;">MORACHI</h1>
-                        <p style="font-family: Arial, sans-serif; font-size: 11px; margin: 0; letter-spacing: 4px; color: #eee; text-transform: uppercase;">JAPAN BEAUTY</p>
+            <div class="logo">
+                <a href="/">
+                    <img src="images/icon-logo.png" alt="MORACHI JAPAN BEAUTY" class="logo-icon">
+                    <div class="logo-text">
+                        <h1>MORACHI</h1>
+                        <p>JAPAN BEAUTY</p>
                     </div>
                 </a>
             </div>
 
-            <!-- THANH TÌM KIẾM (Đẩy ra giữa, linh hoạt độ rộng) -->
-            <div class="search-bar" style="flex: 1; max-width: 500px; display: flex; border-radius: 4px; overflow: hidden;">
-                <input type="text" placeholder="Tìm sản phẩm, thương hiệu bạn mong muốn..." style="width: 100%; padding: 12px 15px; border: none; outline: none; font-size: 14px;">
-                <button style="padding: 0 20px; border: none; background: #fff; color: #000; cursor: pointer; font-size: 16px;"><i class="fas fa-search"></i></button>
+            <!-- THANH TÌM KIẾM (Căn giữa) -->
+            <div class="search-bar" style="flex: 1; max-width: 500px; margin: 0 40px;">
+                <input type="text" placeholder="Tìm sản phẩm, thương hiệu bạn mong muốn...">
+                <button><i class="fas fa-search"></i></button>
             </div>
 
-            <!-- CỤM CHỨC NĂNG BÊN PHẢI (Cách đều nhau) -->
-            <div class="header-actions" style="display: flex; align-items: center; gap: 25px; flex-shrink: 0;">
+            <!-- CỤM CHỨC NĂNG BÊN PHẢI -->
+            <div class="header-actions">
                 
                 <!-- NÚT TRA CỨU ĐƠN HÀNG -->
-                <a href="tracking.html" class="action-item hover-text-orange" style="color: white; text-decoration: none; font-weight: bold; display: flex; align-items: center; gap: 6px; font-size: 14px; transition: 0.2s;">
+                <a href="tracking.html" class="action-item hover-text-orange" style="text-decoration: none; font-weight: bold; transition: 0.2s;">
                     <i class="fas fa-map-marker-alt" style="color:#f57224; font-size: 16px;"></i> Tra cứu đơn
                 </a>
 
                 <!-- SỐ ĐIỆN THOẠI -->
-                <div class="action-item phone-number" style="display: flex; align-items: center; gap: 6px; color: #f57224; font-weight: bold; font-size: 16px;">
+                <div class="action-item phone-number">
                     <i class="fas fa-phone"></i> 0123456789
                 </div>
                 
                 <!-- ICON GIỎ HÀNG -->
-                <div class="action-item cart-icon-wrap hover-scale" onclick="toggleCart()" style="position: relative; cursor: pointer; display: flex; align-items: center; color: white; font-size: 22px; transition: 0.2s;">
+                <div class="action-item cart-icon-wrap" onclick="toggleCart()">
                     <i class="fas fa-shopping-bag"></i>
-                    <span class="cart-count" id="cart-count" style="position: absolute; top: -8px; right: -12px; background: #f57224; color: white; font-size: 11px; font-weight: bold; padding: 2px 6px; border-radius: 10px; border: 2px solid #000; line-height: 1;">0</span>
+                    <span class="cart-count" id="cart-count">0</span>
                 </div>
 
-                <!-- MẠNG XÃ HỘI (Có đường kẻ sọc phân cách) -->
-                <div class="social-icons" style="display: flex; gap: 15px; align-items: center; border-left: 1px solid rgba(255,255,255,0.2); padding-left: 15px;">
-                    <a href="https://www.tiktok.com/@chuyendong24h" target="_blank" class="social-link hover-scale" style="color: white; font-size: 18px; transition: 0.2s;"><i class="fab fa-tiktok"></i></a>
-                    <a href="https://www.facebook.com/chuyendong24h" target="_blank" class="social-link hover-scale" style="color: white; font-size: 18px; transition: 0.2s;"><i class="fab fa-facebook"></i></a>
+                <!-- MẠNG XÃ HỘI (Ăn theo class .social-icons và .social-link trong style.css) -->
+                <div class="social-icons">
+                    <a href="https://www.tiktok.com/@chuyendong24h" target="_blank" class="social-link"><i class="fab fa-tiktok"></i></a>
+                    <a href="https://www.facebook.com/chuyendong24h" target="_blank" class="social-link"><i class="fab fa-facebook"></i></a>
                 </div>
             </div>
         </div>
         
-        <div class="announcement" style="background-color: #a81411; color: white; padding: 10px 0; text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+        <div class="announcement">
             <div class="container">
-                <p style="font-size: 13px; font-weight: bold; letter-spacing: 0.5px; margin: 0; text-transform: uppercase;">CHUYÊN BÁN MỸ PHẨM NHẬT BẢN CHÍNH HÃNG & NHẬN ORDER HÀNG NHẬT BẢN 10-15 DAY</p>
+                <p>CHUYÊN BÁN MỸ PHẨM NHẬT BẢN CHÍNH HÃNG & NHẬN ORDER HÀNG NHẬT BẢN 10-15 DAY</p>
             </div>
         </div>
     </header>

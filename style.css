@@ -18,10 +18,8 @@ body {
 }
 
 /* HEADER */
-/* PHẦN TRÊN (LOGO + THANH TÌM KIẾM): ĐỔI SANG MÀU ĐEN */
 .header {
     background-color: #000000;
-    /* Màu Đen thuần */
     color: white;
 }
 
@@ -32,57 +30,44 @@ body {
     padding: 15px 0;
 }
 
-/* --- ĐỊNH DẠNG LOGO PHỨC HỢP (ẢNH HOA + CHỮ) --- */
+/* LOGO */
 .logo a {
     display: flex;
     align-items: center;
     gap: 15px;
-    /* Khoảng cách giữa bông hoa và chữ */
     text-decoration: none;
 }
 
-/* Kiểu dáng ảnh bông hoa */
 .logo-icon {
     height: 50px;
-    /* Kích thước hoa vừa vặn */
     width: auto;
     object-fit: contain;
 }
 
-/* Khu vực chữ Logo */
 .logo-text {
     display: flex;
     flex-direction: column;
     color: white;
-    /* Chữ màu trắng trên nền đen */
 }
 
-/* Chữ MORACHI (Kiểu Serif chân phương sang trọng) */
 .logo-text h1 {
     font-family: 'Playfair Display', serif;
-    /* Dùng Font sang trọng vừa nhúng */
     font-size: 28px;
     font-weight: 700;
     letter-spacing: 2px;
-    /* Giãn chữ nhẹ */
     margin: 0;
 }
 
-/* Chữ JAPAN BEAUTY (Kiểu Sans-serif mỏng bên dưới) */
 .logo-text p {
     font-family: Arial, sans-serif;
-    /* Font sạch sẽ */
     font-size: 11px;
     letter-spacing: 4px;
-    /* Giãn chữ rộng ra */
     margin: 0;
     text-transform: uppercase;
-    /* Viết hoa toàn bộ */
     color: #eee;
-    /* Màu trắng hơi xám nhẹ */
 }
 
-/* THANH TÌM KIẾM: Cập nhật màu nút bấm Đen/Trắng */
+/* THANH TÌM KIẾM */
 .search-bar {
     display: flex;
     width: 50%;
@@ -105,18 +90,19 @@ body {
     cursor: pointer;
 }
 
-/* CÁC HÀNH ĐỘNG HEADER (XÁC THỰC MÀU TRẮNG) */
+/* CÁC HÀNH ĐỘNG HEADER */
 .header-actions {
     display: flex;
     gap: 20px;
     font-size: 14px;
+    align-items: center;
 }
 
 .action-item {
     display: flex;
     align-items: center;
     gap: 8px;
-    cursor: default;
+    cursor: pointer;
     color: white;
 }
 
@@ -124,25 +110,32 @@ body {
     font-size: 18px;
     font-weight: bold;
     color: #ffd700;
+    cursor: default;
 }
 
+/* === MẠNG XÃ HỘI (Đã chỉnh to 22px và cách đều) === */
 .social-icons {
     display: flex;
-    gap: 15px;
+    gap: 25px; /* Khoảng cách đều đặn giữa các icon */
     align-items: center;
+    border-left: 1px solid rgba(255, 255, 255, 0.3); /* Đường kẻ phân cách */
+    padding-left: 20px;
 }
 
 .social-link {
     color: white;
-    font-size: 20px;
+    font-size: 22px; /* Kích thước to bằng giỏ hàng */
     transition: transform 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
 }
 
 .social-link:hover {
-    color: #ff8c00;
+    color: #f57224;
     transform: scale(1.2);
 }
 
+/* THÔNG BÁO DƯỚI HEADER */
 .announcement {
     background-color: #a81411;
     color: white;
@@ -152,73 +145,11 @@ body {
 }
 
 .announcement p {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
     letter-spacing: 0.5px;
     margin: 0;
-}
-
-
-.search-bar {
-    display: flex;
-    width: 50%;
-}
-
-.search-bar input {
-    width: 100%;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 4px 0 0 4px;
-    outline: none;
-}
-
-.search-bar button {
-    padding: 10px 20px;
-    border: none;
-    background: #fff;
-    color: #000000;
-    border-radius: 0 4px 4px 0;
-    cursor: pointer;
-}
-
-.header-actions {
-    display: flex;
-    gap: 20px;
-    font-size: 14px;
-}
-
-.action-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-}
-
-.cart-count {
-    background: #ff8c00;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 50%;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-.header-nav {
-    background-color: #a81411;
-    border-top: 1px solid #c21915;
-}
-
-.header-nav ul {
-    display: flex;
-    list-style: none;
-    gap: 25px;
-    padding: 12px 0;
-    font-size: 13px;
-    font-weight: bold;
-}
-
-.header-nav ul li {
-    cursor: pointer;
+    text-transform: uppercase;
 }
 
 /* BREADCRUMB */
