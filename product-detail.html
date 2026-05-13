@@ -28,9 +28,6 @@
         .pd-rating { font-size: 13px; color: #666; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
         .pd-rating i { color: #f1c40f; }
 
-        .pd-flash-deal { background: linear-gradient(90deg, #ff8c00, #f57224); color: white; padding: 10px 15px; display: flex; justify-content: space-between; font-weight: bold; border-radius: 4px; margin-bottom: 15px; font-size: 14px;}
-        .pd-timer { background: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 4px; font-weight: normal; }
-
         .pd-price-box { background: #fafafa; padding: 20px; border: 1px dashed #eee; border-radius: 4px; margin-bottom: 20px; }
         .pd-price-now { color: #f57224; font-size: 32px; font-weight: bold; }
         .pd-price-old { text-decoration: line-through; color: #999; font-size: 16px; margin-left: 15px; }
@@ -52,15 +49,23 @@
         .pd-btn-buy { flex: 1; padding: 15px; background: #f57224; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 14px; transition: 0.2s;}
         .pd-btn-buy:hover { background: #111; }
 
-        /* Vùng Tab mô tả chi tiết sản phẩm (Chuẩn Hasaki Style) */
-        .pd-desc-container { background: #fff; padding: 0; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-top: 20px; overflow: hidden; }
-        .pd-desc-tabs { display: flex; border-bottom: 1px solid #eee; background: #fafafa; padding: 0 20px; overflow-x: auto; }
-        .pd-desc-tabs span { font-size: 15px; color: #555; padding: 15px 25px; cursor: pointer; font-weight: 500; white-space: nowrap; }
-        .pd-desc-tabs span.active { color: #f57224; border-bottom: 2px solid #f57224; font-weight: bold; background: #fff; }
-        .pd-desc-tabs span:hover:not(.active) { color: #f57224; }
-        .pd-desc-content { padding: 25px; font-size: 14px; line-height: 1.8; color: #333; white-space: pre-wrap; font-family: 'Segoe UI', Arial, sans-serif; }
+        /* TAB BAR STICKY HASAKI STYLE */
+        .pd-desc-container { margin-top: 30px; }
+        .pd-desc-tabs { display: flex; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow-x: auto; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #eee; }
+        .pd-tab-link { flex: 1; text-align: center; font-size: 15px; color: #555; padding: 18px 20px; cursor: pointer; font-weight: 500; text-decoration: none; white-space: nowrap; border-bottom: 3px solid transparent; transition: 0.2s; }
+        .pd-tab-link.active { color: #f57224; border-bottom: 3px solid #f57224; font-weight: bold; }
+        .pd-tab-link:hover:not(.active) { color: #f57224; }
 
-        /* Hiệu ứng rê chuột chung cho Header */
+        /* SECTION BOXES HASAKI STYLE */
+        .pd-section-block { background: white; border-radius: 8px; padding: 25px; margin-top: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .pd-section-block h3 { font-size: 18px; margin-top: 0; margin-bottom: 15px; color: #333; font-weight: bold; }
+        .pd-section-content { font-size: 14px; line-height: 1.8; color: #444; white-space: pre-wrap; font-family: 'Segoe UI', Arial, sans-serif; }
+
+        /* Bảng Thông Số */
+        .specs-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .specs-table td { padding: 12px 15px; border: 1px solid #eee; font-size: 14px; }
+        .specs-table tr td:first-child { width: 30%; background: #fafafa; color: #555; font-weight: bold; }
+
         .hover-text-orange:hover { color: #f57224 !important; }
 
         @media (max-width: 768px) {
@@ -69,6 +74,7 @@
             .header-top { flex-direction: column; gap: 15px !important; }
             .search-bar { width: 100% !important; max-width: 100% !important; margin: 10px 0 !important;}
             .header-actions { width: 100%; justify-content: space-between; }
+            .pd-tab-link { padding: 15px 10px; font-size: 14px; }
         }
     </style>
 </head>
@@ -78,7 +84,6 @@
     <header class="header">
         <div class="header-top container">
             
-            <!-- LOGO -->
             <div class="logo">
                 <a href="/">
                     <img src="images/icon-logo.png" alt="MORACHI JAPAN BEAUTY" class="logo-icon">
@@ -89,32 +94,22 @@
                 </a>
             </div>
 
-            <!-- THANH TÌM KIẾM (Căn giữa) -->
             <div class="search-bar" style="flex: 1; max-width: 500px; margin: 0 40px;">
                 <input type="text" placeholder="Tìm sản phẩm, thương hiệu bạn mong muốn...">
                 <button><i class="fas fa-search"></i></button>
             </div>
 
-            <!-- CỤM CHỨC NĂNG BÊN PHẢI -->
             <div class="header-actions">
-                
-                <!-- NÚT TRA CỨU ĐƠN HÀNG -->
                 <a href="tracking.html" class="action-item hover-text-orange" style="text-decoration: none; font-weight: bold; transition: 0.2s;">
                     <i class="fas fa-map-marker-alt" style="color:#f57224; font-size: 16px;"></i> Tra cứu đơn
                 </a>
-
-                <!-- SỐ ĐIỆN THOẠI -->
                 <div class="action-item phone-number">
                     <i class="fas fa-phone"></i> 0123456789
                 </div>
-                
-                <!-- ICON GIỎ HÀNG -->
                 <div class="action-item cart-icon-wrap" onclick="toggleCart()">
                     <i class="fas fa-shopping-bag"></i>
                     <span class="cart-count" id="cart-count">0</span>
                 </div>
-
-                <!-- MẠNG XÃ HỘI -->
                 <div class="social-icons">
                     <a href="https://www.tiktok.com/@chuyendong24h" target="_blank" class="social-link"><i class="fab fa-tiktok"></i></a>
                     <a href="https://www.facebook.com/chuyendong24h" target="_blank" class="social-link"><i class="fab fa-facebook"></i></a>
@@ -130,7 +125,7 @@
     </header>
 
     <div class="breadcrumb container">
-        <p><a href="/" style="text-decoration:none; color:inherit;">Trang chủ</a> > <span id="bread-brand">Thương hiệu</span> > <span id="bread-title" style="color:#f57224">Chi tiết sản phẩm</span></p>
+        <p><a href="/" style="text-decoration:none; color:inherit;">Trang chủ</a> > <a href="javascript:history.back()" id="bread-brand" style="text-decoration:none; color:inherit; cursor:pointer;" title="Quay lại">Thương hiệu</a> > <span id="bread-title" style="color:#f57224">Chi tiết sản phẩm</span></p>
     </div>
 
     <div class="main-layout container">
@@ -160,23 +155,20 @@
         </main>
     </div>
 
-    <!-- KHUNG GIAO DIỆN GIỎ HÀNG (Sẽ trượt từ bên phải ra) -->
+    <!-- KHUNG GIAO DIỆN GIỎ HÀNG -->
     <div class="cart-overlay" id="cart-overlay" onclick="toggleCart()"></div>
     <div class="cart-drawer" id="cart-drawer">
         <div class="cart-header">
             <h2>Giỏ hàng</h2>
             <button onclick="toggleCart()"><i class="fas fa-times"></i></button>
         </div>
-        <div class="cart-items" id="cart-items">
-            <!-- Sản phẩm được render từ file cart.js -->
-        </div>
+        <div class="cart-items" id="cart-items"></div>
         <div class="cart-footer">
             <div class="cart-total"><span>Tổng cộng:</span> <span id="cart-total-price">0 đ</span></div>
             <button class="btn-checkout" onclick="openCheckoutModal()">TIẾN HÀNH THANH TOÁN</button>
         </div>
     </div>
 
-    <!-- KHAI BÁO JS: Thêm cart.js -->
     <script src="cart.js"></script>
 
     <script>
@@ -184,7 +176,6 @@
         const urlParams = new URLSearchParams(window.location.search);
         const productId = urlParams.get('id');
 
-        // Khai báo 2 biến để nhớ khách hàng đang xem Món nào và Chọn màu/size gì
         let currentProduct = null;
         let currentVariant = null;
 
@@ -192,9 +183,32 @@
             return Number(val || 0).toLocaleString('vi-VN') + ' đ';
         }
 
+        // Tự động phân tích đoạn văn bản Admin nhập thành cấu trúc Bảng (Hasaki style)
+        function renderSpecsTable(text) {
+            if (!text) return '<p style="color:#999; font-style:italic;">Đang cập nhật...</p>';
+            const lines = text.split('\\n').join('\\n').split('\n'); // Bắt cả 2 loại ngắt dòng
+            let html = '<table class="specs-table">';
+            let hasValidData = false;
+            
+            lines.forEach(line => {
+                const parts = line.split(':');
+                if (parts.length >= 2) {
+                    const key = parts.shift().trim();
+                    const val = parts.join(':').trim();
+                    html += `<tr><td>${key}</td><td>${val}</td></tr>`;
+                    hasValidData = true;
+                } else if (line.trim()) {
+                    html += `<tr><td colspan="2">${line.trim()}</td></tr>`;
+                    hasValidData = true;
+                }
+            });
+            
+            html += '</table>';
+            return hasValidData ? html : '<p style="color:#999; font-style:italic;">Đang cập nhật...</p>';
+        }
+
         async function initDetail() {
             const root = document.getElementById('product-detail-root');
-            
             if (!productId) {
                 root.innerHTML = `<div style="background: white; padding: 50px; text-align: center; border-radius: 4px;">Không tìm thấy mã sản phẩm. <a href="/">Quay về trang chủ</a></div>`;
                 return;
@@ -211,7 +225,7 @@
                     return;
                 }
 
-                currentProduct = product; // Lưu thông tin gốc của sản phẩm
+                currentProduct = product; 
                 renderProductDetail(product);
             } catch (error) {
                 root.innerHTML = `<div style="background: white; padding: 50px; text-align: center; border-radius: 4px; color:red;">Lỗi kết nối máy chủ. Vui lòng thử lại.</div>`;
@@ -232,10 +246,10 @@
             });
 
             // Tiền xử lý 4 Tab văn bản để cho phép xuống dòng
-            let safeDescription = (p.description || 'Đang cập nhật...').replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n|\n/g, '<br>');
-            let safeSpecs = (p.specifications || 'Đang cập nhật...').replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n|\n/g, '<br>');
-            let safeIngr = (p.ingredients || 'Đang cập nhật...').replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n|\n/g, '<br>');
-            let safeUsage = (p.usage_manual || 'Đang cập nhật...').replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n|\n/g, '<br>');
+            let safeDescription = (p.description || 'Đang cập nhật...').replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n|\\n/g, '<br>').replace(/\\n/g, '<br>');
+            let safeIngr = (p.ingredients || 'Đang cập nhật...').replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n|\\n/g, '<br>').replace(/\\n/g, '<br>');
+            let safeUsage = (p.usage_manual || 'Đang cập nhật...').replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n|\\n/g, '<br>').replace(/\\n/g, '<br>');
+            let specsHTML = renderSpecsTable(p.specifications);
 
             let html = `
                 <div class="pd-wrapper">
@@ -286,18 +300,34 @@
                     </div>
                 </div>
 
-                <!-- BỘ TABS MÔ TẢ THEO PHONG CÁCH HASAKI -->
+                <!-- BỘ TABS CUỘN VÀ NỘI DUNG (PHONG CÁCH HASAKI) -->
                 <div class="pd-desc-container">
-                    <div class="pd-desc-tabs">
-                        <span class="pd-tab-btn active" onclick="switchTabContent('desc', this)">Mô tả</span>
-                        <span class="pd-tab-btn" onclick="switchTabContent('spec', this)">Thông số</span>
-                        <span class="pd-tab-btn" onclick="switchTabContent('ingr', this)">Thành phần</span>
-                        <span class="pd-tab-btn" onclick="switchTabContent('usage', this)">HDSD</span>
+                    <div class="pd-desc-tabs" id="pd-tabs-nav">
+                        <a href="#sec-desc" class="pd-tab-link active">Mô tả sản phẩm</a>
+                        <a href="#sec-spec" class="pd-tab-link">Thông số</a>
+                        <a href="#sec-ingr" class="pd-tab-link">Thành phần</a>
+                        <a href="#sec-usage" class="pd-tab-link">HDSD</a>
                     </div>
-                    <div id="tab-content-desc" class="pd-desc-content pd-content-view" style="display:block;">${safeDescription}</div>
-                    <div id="tab-content-spec" class="pd-desc-content pd-content-view" style="display:none;">${safeSpecs}</div>
-                    <div id="tab-content-ingr" class="pd-desc-content pd-content-view" style="display:none;">${safeIngr}</div>
-                    <div id="tab-content-usage" class="pd-desc-content pd-content-view" style="display:none;">${safeUsage}</div>
+                    
+                    <div id="sec-desc" class="pd-section-block">
+                        <h3>Mô tả sản phẩm</h3>
+                        <div class="pd-section-content">${safeDescription}</div>
+                    </div>
+
+                    <div id="sec-spec" class="pd-section-block">
+                        <h3>Thông số sản phẩm</h3>
+                        <div class="pd-section-content">${specsHTML}</div>
+                    </div>
+
+                    <div id="sec-ingr" class="pd-section-block">
+                        <h3>Thành phần sản phẩm</h3>
+                        <div class="pd-section-content">${safeIngr}</div>
+                    </div>
+
+                    <div id="sec-usage" class="pd-section-block">
+                        <h3>Hướng dẫn sử dụng</h3>
+                        <div class="pd-section-content">${safeUsage}</div>
+                    </div>
                 </div>
             `;
 
@@ -310,22 +340,56 @@
                 currentVariant = null;
                 updateVariantStatus({ status: 'instock', stock: 10 });
             }
+
+            // Gắn hiệu ứng cuộn trang khi click vào thanh Tab
+            bindTabScroll();
         }
 
-        // HÀM: ĐIỀU KHIỂN CHUYỂN TAB THÔNG TIN
-        function switchTabContent(tabId, element) {
-            // Ẩn tất cả nội dung
-            document.querySelectorAll('.pd-content-view').forEach(div => {
-                div.style.display = 'none';
-            });
-            // Tắt active ở tất cả các nút
-            document.querySelectorAll('.pd-tab-btn').forEach(btn => {
-                btn.classList.remove('active');
+        // HIỆU ỨNG CUỘN TRANG HASAKI
+        function bindTabScroll() {
+            const links = document.querySelectorAll('.pd-tab-link');
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    links.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const targetId = this.getAttribute('href');
+                    const targetEl = document.querySelector(targetId);
+                    
+                    if (targetEl) {
+                        const offset = 60; // Khoảng cách chừa cho thanh Tab dính ở trên
+                        const bodyRect = document.body.getBoundingClientRect().top;
+                        const elementRect = targetEl.getBoundingClientRect().top;
+                        const elementPosition = elementRect - bodyRect;
+                        
+                        window.scrollTo({
+                            top: elementPosition - offset,
+                            behavior: "smooth"
+                        });
+                    }
+                });
             });
 
-            // Bật nội dung và nút được chọn
-            document.getElementById(`tab-content-${tabId}`).style.display = 'block';
-            element.classList.add('active');
+            // Lắng nghe sự kiện scroll để đổi màu Tab tương ứng
+            window.addEventListener('scroll', () => {
+                let current = '';
+                const sections = document.querySelectorAll('.pd-section-block');
+                
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 150) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                links.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
         }
 
         // HÀM: XỬ LÝ KHI BẤM THÊM VÀO GIỎ HÀNG
