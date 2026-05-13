@@ -68,6 +68,27 @@
 
         .hover-text-orange:hover { color: #f57224 !important; }
 
+        /* ========================================================
+           SKELETON LOADING (HIỆU ỨNG KHUNG XƯƠNG TẢI TRANG)
+           ======================================================== */
+        .skeleton {
+            background: #f6f7f8;
+            background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
+            border-radius: 4px;
+            background-size: 200% 100%;
+            animation: 1.5s shine linear infinite;
+        }
+        @keyframes shine {
+            to { background-position-x: -200%; }
+        }
+        .skel-img { width: 100%; height: 400px; }
+        .skel-thumb { width: 65px; height: 65px; }
+        .skel-title { width: 80%; height: 28px; margin-bottom: 15px; }
+        .skel-text { width: 40%; height: 16px; margin-bottom: 10px; }
+        .skel-price { width: 50%; height: 40px; margin-bottom: 25px; }
+        .skel-box { width: 100%; height: 80px; margin-bottom: 20px; }
+        .skel-btn { width: 100%; height: 50px; }
+
         @media (max-width: 768px) {
             .pd-wrapper { flex-direction: column; }
             .pd-gallery { width: 100%; }
@@ -147,10 +168,30 @@
         <!-- KHU VỰC HIỂN THỊ CHI TIẾT SẢN PHẨM -->
         <main class="content" style="background: transparent; padding: 0;">
             <div id="product-detail-root">
-                <div style="background: white; padding: 50px; text-align: center; border-radius: 4px;">
-                    <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: #f57224; margin-bottom: 15px;"></i>
-                    <p>Đang tải thông tin sản phẩm...</p>
+                
+                <!-- GIAO DIỆN KHUNG XƯƠNG TẢI TRANG (SKELETON) TRÔNG CỰC KỲ CHUYÊN NGHIỆP -->
+                <div class="pd-wrapper">
+                    <div class="pd-gallery">
+                        <div class="skeleton skel-img"></div>
+                        <div class="pd-thumbs" style="margin-top: 10px;">
+                            <div class="skeleton skel-thumb"></div>
+                            <div class="skeleton skel-thumb"></div>
+                            <div class="skeleton skel-thumb"></div>
+                        </div>
+                    </div>
+                    <div class="pd-info">
+                        <div class="skeleton skel-text" style="width: 20%;"></div>
+                        <div class="skeleton skel-title"></div>
+                        <div class="skeleton skel-text" style="width: 60%; margin-bottom: 20px;"></div>
+                        <div class="skeleton skel-price"></div>
+                        <div class="skeleton skel-box"></div>
+                        <div style="display: flex; gap: 15px;">
+                            <div class="skeleton skel-btn" style="flex: 1;"></div>
+                            <div class="skeleton skel-btn" style="flex: 1;"></div>
+                        </div>
+                    </div>
                 </div>
+                
             </div>
         </main>
     </div>
@@ -214,10 +255,32 @@
                 return;
             }
 
+            // 1. KIỂM TRA BỘ NHỚ ĐỆM (CACHE) 
+            // Giúp khi bấm lần 2, trang load lên tức thì không cần quay loading
+            const cacheKey = 'morachi_products_cache';
+            const cachedData = sessionStorage.getItem(cacheKey);
+            
+            if (cachedData) {
+                try {
+                    const products = JSON.parse(cachedData);
+                    const product = products.find(p => p.id === productId);
+                    if (product) {
+                        currentProduct = product; 
+                        renderProductDetail(product);
+                        return; // Đã load từ cache thì thoát hàm luôn, không fetch máy chủ nữa
+                    }
+                } catch(e) {}
+            }
+
+            // 2. NẾU CHƯA CÓ CACHE (HOẶC VÀO TRỰC TIẾP), MỚI LẤY TỪ MÁY CHỦ
             try {
                 const response = await fetch(API_URL);
                 if (!response.ok) throw new Error("API Error");
                 const products = await response.json();
+                
+                // LƯU VÀO CACHE ĐỂ LẦN SAU VÀO WEB TRẢI NGHIỆM SIÊU NHANH
+                sessionStorage.setItem(cacheKey, JSON.stringify(products));
+
                 const product = products.find(p => p.id === productId);
 
                 if (!product) {
