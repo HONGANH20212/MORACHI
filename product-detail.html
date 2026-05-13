@@ -57,7 +57,7 @@
         .pd-tab-link:hover:not(.active) { color: #f57224; }
 
         /* SECTION BOXES HASAKI STYLE */
-        .pd-section-block { background: white; border-radius: 8px; padding: 25px; margin-top: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .pd-section-block { background: white; border-radius: 8px; padding: 25px; margin-top: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); scroll-margin-top: 70px;}
         .pd-section-block h3 { font-size: 18px; margin-top: 0; margin-bottom: 15px; color: #333; font-weight: bold; }
         .pd-section-content { font-size: 14px; line-height: 1.8; color: #444; white-space: pre-wrap; font-family: 'Segoe UI', Arial, sans-serif; }
 
@@ -99,11 +99,7 @@
             .header-actions { width: 100%; justify-content: center; flex-wrap: wrap; gap: 15px 25px; }
             .social-icons { width: 100%; justify-content: center; border-left: none; padding-left: 0; margin-top: 5px; }
             .announcement p { font-size: 11px; padding: 0 10px; line-height: 1.4; }
-
-            /* 2. Breadcrumb */
             .breadcrumb { font-size: 12px; overflow-x: auto; white-space: nowrap; padding: 10px 15px; }
-
-            /* 3. Chi tiết sản phẩm */
             .pd-wrapper { flex-direction: column; padding: 15px; gap: 20px; }
             .pd-gallery { width: 100%; }
             .pd-main-img { height: 320px; }
@@ -111,15 +107,11 @@
             .pd-price-now { font-size: 26px; }
             .pd-actions { flex-direction: row; gap: 10px; }
             .pd-btn-cart, .pd-btn-buy { padding: 12px 5px; font-size: 12px; flex: 1; text-align: center; }
-
-            /* 4. Tabs Cuộn ngang */
             .pd-desc-container { margin-top: 20px; }
             .pd-desc-tabs { border-radius: 0; margin: 0 -15px; padding: 0 15px; -webkit-overflow-scrolling: touch; }
             .pd-tab-link { padding: 12px 15px; font-size: 14px; }
             .pd-section-block { padding: 20px 15px; margin-top: 15px; }
             .specs-table td { padding: 10px; font-size: 13px; }
-            
-            /* CSS Skeleton Mobile */
             .skel-img { height: 320px; }
         }
     </style>
@@ -129,7 +121,6 @@
 
     <header class="header">
         <div class="header-top container">
-            
             <div class="logo">
                 <a href="/">
                     <img src="images/icon-logo.png" alt="MORACHI JAPAN BEAUTY" class="logo-icon">
@@ -139,12 +130,10 @@
                     </div>
                 </a>
             </div>
-
             <div class="search-bar" style="flex: 1; max-width: 500px; margin: 0 40px;">
                 <input type="text" placeholder="Tìm sản phẩm, thương hiệu bạn mong muốn...">
                 <button><i class="fas fa-search"></i></button>
             </div>
-
             <div class="header-actions">
                 <a href="tracking.html" class="action-item hover-text-orange" style="text-decoration: none; font-weight: bold; transition: 0.2s;">
                     <i class="fas fa-map-marker-alt" style="color:#f57224; font-size: 16px;"></i> Tra cứu đơn
@@ -194,7 +183,7 @@
         <main class="content" style="background: transparent; padding: 0;">
             <div id="product-detail-root">
                 
-                <!-- GIAO DIỆN KHUNG XƯƠNG TẢI TRANG (SKELETON) TRÔNG CỰC KỲ CHUYÊN NGHIỆP -->
+                <!-- GIAO DIỆN KHUNG XƯƠNG TẢI TRANG (SKELETON) -->
                 <div class="pd-wrapper">
                     <div class="pd-gallery">
                         <div class="skeleton skel-img"></div>
@@ -249,10 +238,9 @@
             return Number(val || 0).toLocaleString('vi-VN') + ' đ';
         }
 
-        // Tự động phân tích đoạn văn bản Admin nhập thành cấu trúc Bảng (Hasaki style)
         function renderSpecsTable(text) {
             if (!text) return '<p style="color:#999; font-style:italic;">Đang cập nhật...</p>';
-            const lines = text.split('\\n').join('\\n').split('\n'); // Bắt cả 2 loại ngắt dòng
+            const lines = text.split('\\n').join('\\n').split('\n'); 
             let html = '<table class="specs-table">';
             let hasValidData = false;
             
@@ -280,8 +268,6 @@
                 return;
             }
 
-            // 1. KIỂM TRA BỘ NHỚ ĐỆM (CACHE) 
-            // Giúp khi bấm lần 2, trang load lên tức thì không cần quay loading
             const cacheKey = 'morachi_products_cache';
             const cachedData = sessionStorage.getItem(cacheKey);
             
@@ -292,18 +278,16 @@
                     if (product) {
                         currentProduct = product; 
                         renderProductDetail(product);
-                        return; // Đã load từ cache thì thoát hàm luôn, không fetch máy chủ nữa
+                        return; 
                     }
                 } catch(e) {}
             }
 
-            // 2. NẾU CHƯA CÓ CACHE (HOẶC VÀO TRỰC TIẾP), MỚI LẤY TỪ MÁY CHỦ
             try {
                 const response = await fetch(API_URL);
                 if (!response.ok) throw new Error("API Error");
                 const products = await response.json();
                 
-                // LƯU VÀO CACHE ĐỂ LẦN SAU VÀO WEB TRẢI NGHIỆM SIÊU NHANH
                 sessionStorage.setItem(cacheKey, JSON.stringify(products));
 
                 const product = products.find(p => p.id === productId);
@@ -333,12 +317,12 @@
                 }
             });
 
-            // Tiền xử lý 4 Tab văn bản để cho phép xuống dòng
             let safeDescription = (p.description || 'Đang cập nhật...').replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n|\\n/g, '<br>').replace(/\\n/g, '<br>');
             let safeIngr = (p.ingredients || 'Đang cập nhật...').replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n|\\n/g, '<br>').replace(/\\n/g, '<br>');
             let safeUsage = (p.usage_manual || 'Đang cập nhật...').replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n|\\n/g, '<br>').replace(/\\n/g, '<br>');
             let specsHTML = renderSpecsTable(p.specifications);
 
+            // BẢN FIX LỖI: Ở nút button pd-btn-cart chỉ gọi handleAddToCart()
             let html = `
                 <div class="pd-wrapper">
                     <div class="pd-gallery">
@@ -382,13 +366,13 @@
                         <div class="pd-status" id="pd-status-view"></div>
 
                         <div class="pd-actions">
-                            <button class="pd-btn-cart" onclick="handleAddToCart(); toggleCart();"><i class="fas fa-cart-plus"></i> THÊM GIỎ HÀNG</button>
+                            <button class="pd-btn-cart" onclick="handleAddToCart()"><i class="fas fa-cart-plus"></i> THÊM GIỎ HÀNG</button>
                             <button class="pd-btn-buy" onclick="handleBuyNow()">MUA NGAY</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- BỘ TABS CUỘN VÀ NỘI DUNG (PHONG CÁCH HASAKI) -->
+                <!-- BỘ TABS CUỘN VÀ NỘI DUNG -->
                 <div class="pd-desc-container">
                     <div class="pd-desc-tabs" id="pd-tabs-nav">
                         <a href="#sec-desc" class="pd-tab-link active">Mô tả sản phẩm</a>
@@ -429,11 +413,9 @@
                 updateVariantStatus({ status: 'instock', stock: 10 });
             }
 
-            // Gắn hiệu ứng cuộn trang khi click vào thanh Tab
             bindTabScroll();
         }
 
-        // HIỆU ỨNG CUỘN TRANG HASAKI
         function bindTabScroll() {
             const links = document.querySelectorAll('.pd-tab-link');
             links.forEach(link => {
@@ -446,7 +428,7 @@
                     const targetEl = document.querySelector(targetId);
                     
                     if (targetEl) {
-                        const offset = 60; // Khoảng cách chừa cho thanh Tab dính ở trên
+                        const offset = 60; 
                         const bodyRect = document.body.getBoundingClientRect().top;
                         const elementRect = targetEl.getBoundingClientRect().top;
                         const elementPosition = elementRect - bodyRect;
@@ -459,7 +441,6 @@
                 });
             });
 
-            // Lắng nghe sự kiện scroll để đổi màu Tab tương ứng
             window.addEventListener('scroll', () => {
                 let current = '';
                 const sections = document.querySelectorAll('.pd-section-block');
@@ -480,7 +461,6 @@
             });
         }
 
-        // HÀM: XỬ LÝ KHI BẤM THÊM VÀO GIỎ HÀNG
         function handleAddToCart() {
             if (!currentProduct) return;
             const v = currentVariant || {};
@@ -494,6 +474,7 @@
                 price: v.price || currentProduct.current_price
             };
             
+            // Hàm addToCart trong file cart.js đã chứa sẵn lệnh openCart()
             if(typeof addToCart === 'function') {
                 addToCart(cartItem);
             } else {
@@ -501,10 +482,8 @@
             }
         }
 
-        // HÀM MỚI: XỬ LÝ KHI BẤM MUA NGAY (Mở thẳng form thanh toán)
         function handleBuyNow() {
             handleAddToCart(); 
-            
             if (typeof openCheckoutModal === 'function') {
                 openCheckoutModal();
             } else {
