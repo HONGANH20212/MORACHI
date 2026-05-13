@@ -12,7 +12,8 @@ window.loadAdminProducts = async function() {
     tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; padding: 40px;'>Đang tải dữ liệu...</td></tr>";
 
     try {
-        const response = await fetch(`${API_BASE_URL}/products`);
+        // THÊM ?t=... ĐỂ CHỐNG LƯU CACHE CỦA TRÌNH DUYỆT
+        const response = await fetch(`${API_BASE_URL}/products?t=${new Date().getTime()}`);
         const products = await response.json();
         
         allProductsData = Array.isArray(products) ? products : [];
@@ -37,7 +38,6 @@ window.renderTable = function(products) {
             ? variants.map(v => `<span style="background:#f5f5f5; color:#555; padding:2px 6px; border-radius:4px; font-size:11px; margin-right:4px; display:inline-block; margin-bottom:2px;">${v.name} (SL: ${v.stock || 0})</span>`).join("")
             : `<small style="color:#aaa;">Chưa có biến thể</small>`;
 
-        // Hỗ trợ hiển thị Nhãn ở bảng Quản trị
         const badgeHtml = p.discount ? `<span style="background:#f57224; color:white; padding:2px 6px; border-radius:4px; font-size:10px; margin-left:6px; vertical-align: middle;">${p.discount}</span>` : '';
 
         return `
@@ -136,11 +136,9 @@ window.editProduct = async function(id) {
             document.getElementById("brand").value = p.brand || "";
             document.getElementById("current_price").value = p.current_price || "";
             
-            // ĐIỀN CÁC TRƯỜNG MỚI VÀO FORM
             if (document.getElementById("old_price")) document.getElementById("old_price").value = p.old_price || "";
             if (document.getElementById("discount")) document.getElementById("discount").value = p.discount || "";
             
-            // 4 TRƯỜNG TAB THÔNG TIN
             if (document.getElementById("description")) document.getElementById("description").value = p.description || "";
             if (document.getElementById("specifications")) document.getElementById("specifications").value = p.specifications || "";
             if (document.getElementById("ingredients")) document.getElementById("ingredients").value = p.ingredients || "";
@@ -252,7 +250,6 @@ if (form) {
                 });
             }
 
-            // --- LƯU 4 TRƯỜNG THÔNG TIN TAB VÀO DB ---
             const productData = {
                 title: document.getElementById("title").value.trim(),
                 brand: document.getElementById("brand").value.trim(),
@@ -327,7 +324,8 @@ window.loadOrders = async function() {
     tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; padding: 40px;'>Đang tải đơn hàng từ máy chủ...</td></tr>";
 
     try {
-        const response = await fetch(`${API_BASE_URL}/orders`);
+        // THÊM ?t=... ĐỂ CHỐNG LƯU CACHE CỦA TRÌNH DUYỆT BẢO ĐẢM DỮ LIỆU LUÔN TƯƠI MỚI
+        const response = await fetch(`${API_BASE_URL}/orders?t=${new Date().getTime()}`);
         if (!response.ok) throw new Error("API lỗi");
         const orders = await response.json();
         
@@ -402,7 +400,6 @@ window.applyBulkStatus = async function() {
         return;
     }
 
-    // Lấy thông tin các đơn hàng đang được tích chọn
     const selectedOrders = Array.from(checkboxes).map(cb => ({
         id: cb.value,
         orderId: cb.getAttribute('data-orderid')
@@ -416,15 +413,15 @@ window.applyBulkStatus = async function() {
         for (let order of selectedOrders) {
             let spxCode = prompt(`NHẬP MÃ VẬN ĐƠN SPX cho đơn hàng [ ${order.orderId} ]:\n(Bắt buộc để khách hàng có thể tra cứu)`, "");
             
-            if (spxCode === null || spxCode.trim() === "") {
-                alert(`Đã hủy thao tác! Đơn hàng ${order.orderId} chưa được nhập mã SPX.`);
-                return; 
+            // Xử lý Hủy nhập SPX thông minh: Chỉ bỏ qua đơn chưa nhập, các đơn khác vẫn được lưu
+            if (spxCode !== null && spxCode.trim() !== "") {
+                updatePayloads.push({
+                    id: order.id,
+                    body: { status: selectedStatus, spx_tracking_code: spxCode.trim() }
+                });
+            } else {
+                alert(`Bỏ qua đơn hàng ${order.orderId} vì bạn chưa nhập mã SPX.`);
             }
-            
-            updatePayloads.push({
-                id: order.id,
-                body: { status: selectedStatus, spx_tracking_code: spxCode.trim() }
-            });
         }
     } else {
         for (let order of selectedOrders) {
@@ -435,30 +432,43 @@ window.applyBulkStatus = async function() {
         }
     }
 
-    const btn = document.querySelector('button[onclick="window.applyBulkStatus()"]');
-    const originalText = btn.innerText;
-    btn.innerText = "Đang lưu...";
-    btn.disabled = true;
+    if (updatePayloads.length === 0) {
+        alert("Không có đơn hàng nào được chọn cập nhật!");
+        return;
+    }
+
+    // Fix lỗi khóa nút bấm 
+    const btn = document.querySelector('button[onclick="applyBulkStatus()"]') || document.querySelector('button[onclick="window.applyBulkStatus()"]');
+    let originalText = "Cập nhật";
+    if (btn) {
+        originalText = btn.innerText;
+        btn.innerText = "Đang lưu...";
+        btn.disabled = true;
+    }
 
     try {
-        const updatePromises = updatePayloads.map(payload => {
-            return fetch(`${API_BASE_URL}/orders/${payload.id}`, {
+        const updatePromises = updatePayloads.map(async payload => {
+            const res = await fetch(`${API_BASE_URL}/orders/${payload.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload.body)
             });
+            if (!res.ok) throw new Error("Cập nhật thất bại");
+            return res;
         });
 
         await Promise.all(updatePromises);
         
-        alert(`Đã cập nhật trạng thái thành công cho ${selectedOrders.length} đơn hàng!`);
-        window.loadOrders(); 
+        alert(`Đã cập nhật trạng thái thành công cho ${updatePayloads.length} đơn hàng!`);
+        window.loadOrders(); // Tải lại bảng ngay lập tức với dữ liệu chống cache
     } catch (err) {
         console.error("Lỗi cập nhật hàng loạt:", err);
-        alert("Có lỗi xảy ra trong quá trình cập nhật! Hãy kiểm tra lại.");
+        alert("Có lỗi xảy ra trong quá trình kết nối API máy chủ! Hãy kiểm tra lại.");
     } finally {
-        btn.innerText = originalText;
-        btn.disabled = false;
+        if (btn) {
+            btn.innerText = originalText;
+            btn.disabled = false;
+        }
     }
 }
 
@@ -567,13 +577,11 @@ window.exportSPX = function() {
     document.body.removeChild(link);
 }
 
-// Khởi chạy mặc định khi trang load
 document.addEventListener("DOMContentLoaded", () => {
     window.loadAdminProducts();
     window.bindAdminSearch();
 });
 
-// Đóng modal khi click nền xám
 window.onclick = function(event) {
     const modal = document.getElementById("productModal");
     if (event.target == modal) window.closeModal();
