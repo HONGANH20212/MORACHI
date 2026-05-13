@@ -136,10 +136,15 @@ window.editProduct = async function(id) {
             document.getElementById("brand").value = p.brand || "";
             document.getElementById("current_price").value = p.current_price || "";
             
-            // ĐIỀN CÁC TRƯỜNG MỚI VÀO FORM (Bao gồm Mô tả)
+            // ĐIỀN CÁC TRƯỜNG MỚI VÀO FORM
             if (document.getElementById("old_price")) document.getElementById("old_price").value = p.old_price || "";
             if (document.getElementById("discount")) document.getElementById("discount").value = p.discount || "";
+            
+            // 4 TRƯỜNG TAB THÔNG TIN
             if (document.getElementById("description")) document.getElementById("description").value = p.description || "";
+            if (document.getElementById("specifications")) document.getElementById("specifications").value = p.specifications || "";
+            if (document.getElementById("ingredients")) document.getElementById("ingredients").value = p.ingredients || "";
+            if (document.getElementById("usage_manual")) document.getElementById("usage_manual").value = p.usage_manual || "";
             
             const container = document.getElementById("variants-container");
             if (container) {
@@ -247,14 +252,19 @@ if (form) {
                 });
             }
 
-            // --- LƯU CÁC TRƯỜNG THÔNG TIN MỚI VÀO DB (Gồm cả Description) ---
+            // --- LƯU 4 TRƯỜNG THÔNG TIN TAB VÀO DB ---
             const productData = {
                 title: document.getElementById("title").value.trim(),
                 brand: document.getElementById("brand").value.trim(),
                 current_price: document.getElementById("current_price").value.trim(),
                 old_price: document.getElementById("old_price") ? document.getElementById("old_price").value.trim() : "",
                 discount: document.getElementById("discount") ? document.getElementById("discount").value.trim() : "",
+                
                 description: document.getElementById("description") ? document.getElementById("description").value.trim() : "",
+                specifications: document.getElementById("specifications") ? document.getElementById("specifications").value.trim() : "",
+                ingredients: document.getElementById("ingredients") ? document.getElementById("ingredients").value.trim() : "",
+                usage_manual: document.getElementById("usage_manual") ? document.getElementById("usage_manual").value.trim() : "",
+                
                 status: "active",
                 variants: variantsArray
             };
@@ -345,7 +355,6 @@ window.loadOrders = async function() {
                 ? `<div style="margin-top:5px; color:#27ae60; font-size:11px;"><i class="fas fa-truck"></i> SPX: <b>${o.spx_tracking_code}</b></div>` 
                 : `<div style="margin-top:5px; color:#aaa; font-size:11px;">Chưa có mã vận đơn</div>`;
 
-            // Lưu order_id vào thuộc tính data-orderid để tái sử dụng lúc nhắc nhập SPX
             return `
                 <tr>
                     <td style="text-align: center;"><input type="checkbox" class="order-checkbox" value="${o.id}" data-orderid="${o.order_id || 'N/A'}"></td>
@@ -375,9 +384,6 @@ window.loadOrders = async function() {
     }
 }
 
-// -------------------------------------------------------------
-// CHỌN TẤT CẢ VÀ CẬP NHẬT TRẠNG THÁI HÀNG LOẠT (CÓ ÉP NHẬP SPX)
-// -------------------------------------------------------------
 window.toggleAllOrders = function(source) {
     const checkboxes = document.querySelectorAll('.order-checkbox');
     checkboxes.forEach(cb => cb.checked = source.checked);
@@ -404,14 +410,12 @@ window.applyBulkStatus = async function() {
 
     if (!confirm(`Bạn có chắc chắn muốn chuyển đồng loạt ${selectedOrders.length} đơn hàng sang trạng thái "${selectedStatus}"?`)) return;
 
-    // --- LOGIC MỚI: NẾU LÀ "ĐANG GIAO HÀNG" THÌ ÉP NHẬP MÃ SPX ---
     const updatePayloads = [];
     
     if (selectedStatus === 'Đang giao hàng') {
         for (let order of selectedOrders) {
             let spxCode = prompt(`NHẬP MÃ VẬN ĐƠN SPX cho đơn hàng [ ${order.orderId} ]:\n(Bắt buộc để khách hàng có thể tra cứu)`, "");
             
-            // Nếu admin ấn Hủy (Cancel) hoặc không nhập gì -> Dừng toàn bộ tiến trình
             if (spxCode === null || spxCode.trim() === "") {
                 alert(`Đã hủy thao tác! Đơn hàng ${order.orderId} chưa được nhập mã SPX.`);
                 return; 
@@ -423,7 +427,6 @@ window.applyBulkStatus = async function() {
             });
         }
     } else {
-        // Nếu là trạng thái khác thì không cần nhập mã SPX, chỉ cập nhật trạng thái
         for (let order of selectedOrders) {
             updatePayloads.push({
                 id: order.id,
@@ -438,7 +441,6 @@ window.applyBulkStatus = async function() {
     btn.disabled = true;
 
     try {
-        // Gửi lệnh cập nhật cho tất cả ID được chọn
         const updatePromises = updatePayloads.map(payload => {
             return fetch(`${API_BASE_URL}/orders/${payload.id}`, {
                 method: 'PUT',

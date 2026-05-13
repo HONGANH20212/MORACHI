@@ -72,6 +72,9 @@ def normalize_product(data, existing=None):
         "rating": str(data.get("rating") or existing.get("rating") or "4.9").strip(),
         "sold_text": str(data.get("sold_text") or existing.get("sold_text") or "1k/tháng").strip(),
         "description": str(data.get("description") or existing.get("description") or "").strip(),
+        "specifications": str(data.get("specifications") or existing.get("specifications") or "").strip(),
+        "ingredients": str(data.get("ingredients") or existing.get("ingredients") or "").strip(),
+        "usage_manual": str(data.get("usage_manual") or existing.get("usage_manual") or "").strip(),
         "status": (data.get("status") or existing.get("status") or "active").strip(),
         "variants": data.get("variants") if "variants" in data else existing.get("variants", [])
     }
@@ -196,7 +199,10 @@ def products(req: func.HttpRequest) -> func.HttpResponse:
                 "discount": product["discount"],
                 "rating": product["rating"],
                 "sold_text": product["sold_text"],
-                "description": product.get("description", ""),
+                "description": product["description"],
+                "specifications": product["specifications"],
+                "ingredients": product["ingredients"],
+                "usage_manual": product["usage_manual"],
                 "status": product["status"],
                 "variants": product.get("variants", []),
                 "created_at": now,
@@ -251,7 +257,10 @@ def product_by_id(req: func.HttpRequest) -> func.HttpResponse:
             existing["discount"] = updated["discount"]
             existing["rating"] = updated["rating"]
             existing["sold_text"] = updated["sold_text"]
-            existing["description"] = updated.get("description", "")
+            existing["description"] = updated["description"]
+            existing["specifications"] = updated["specifications"]
+            existing["ingredients"] = updated["ingredients"]
+            existing["usage_manual"] = updated["usage_manual"]
             existing["status"] = updated["status"]
             existing["variants"] = updated.get("variants", [])
             existing["updated_at"] = datetime.utcnow().isoformat() + "Z"
@@ -315,7 +324,6 @@ def orders_api(req: func.HttpRequest) -> func.HttpResponse:
         container = get_cosmos_container()
 
         if req.method == "GET":
-            # API lấy danh sách đơn hàng cho Admin
             query = "SELECT * FROM c WHERE c.type = 'order'"
             items = list(container.query_items(
                 query=query,
@@ -325,13 +333,12 @@ def orders_api(req: func.HttpRequest) -> func.HttpResponse:
             return json_response(items)
 
         if req.method == "POST":
-            # API lưu đơn hàng mới từ Website
             body = req.get_json()
             now = datetime.utcnow().isoformat() + "Z"
             
             order_item = {
                 "id": str(uuid.uuid4()),
-                "brand": "ORDER", # Partition Key bắt buộc
+                "brand": "ORDER", 
                 "type": "order",
                 "order_id": body.get("order_id"),
                 "customer_info": body.get("customer_info", {}),
@@ -399,7 +406,6 @@ def track_order(req: func.HttpRequest) -> func.HttpResponse:
             return json_response({"error": "Thiếu số điện thoại"}, 400)
 
         container = get_cosmos_container()
-        # Tra cứu trạng thái đơn dựa trên số điện thoại
         query = "SELECT * FROM c WHERE c.type = 'order' AND c.customer_info.phone = @phone"
         
         items = list(container.query_items(

@@ -231,9 +231,11 @@
                 }
             });
 
-            // Thay thế \n bằng thẻ <br> để xuống dòng hiển thị đẹp
-            let rawDescription = p.description ? p.description : 'Đang cập nhật thông tin mô tả chi tiết cho sản phẩm này...';
-            let safeDescription = rawDescription.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n|\n/g, '<br>');
+            // Tiền xử lý 4 Tab văn bản để cho phép xuống dòng
+            let safeDescription = (p.description || 'Đang cập nhật...').replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n|\n/g, '<br>');
+            let safeSpecs = (p.specifications || 'Đang cập nhật...').replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n|\n/g, '<br>');
+            let safeIngr = (p.ingredients || 'Đang cập nhật...').replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n|\n/g, '<br>');
+            let safeUsage = (p.usage_manual || 'Đang cập nhật...').replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n|\n/g, '<br>');
 
             let html = `
                 <div class="pd-wrapper">
@@ -287,14 +289,15 @@
                 <!-- BỘ TABS MÔ TẢ THEO PHONG CÁCH HASAKI -->
                 <div class="pd-desc-container">
                     <div class="pd-desc-tabs">
-                        <span class="active">Mô tả</span>
-                        <span>Thông số</span>
-                        <span>Thành phần</span>
-                        <span>HDSD</span>
-                        <span>Đánh giá</span>
-                        <span>Hỏi đáp</span>
+                        <span class="pd-tab-btn active" onclick="switchTabContent('desc', this)">Mô tả</span>
+                        <span class="pd-tab-btn" onclick="switchTabContent('spec', this)">Thông số</span>
+                        <span class="pd-tab-btn" onclick="switchTabContent('ingr', this)">Thành phần</span>
+                        <span class="pd-tab-btn" onclick="switchTabContent('usage', this)">HDSD</span>
                     </div>
-                    <div class="pd-desc-content">${safeDescription}</div>
+                    <div id="tab-content-desc" class="pd-desc-content pd-content-view" style="display:block;">${safeDescription}</div>
+                    <div id="tab-content-spec" class="pd-desc-content pd-content-view" style="display:none;">${safeSpecs}</div>
+                    <div id="tab-content-ingr" class="pd-desc-content pd-content-view" style="display:none;">${safeIngr}</div>
+                    <div id="tab-content-usage" class="pd-desc-content pd-content-view" style="display:none;">${safeUsage}</div>
                 </div>
             `;
 
@@ -307,6 +310,22 @@
                 currentVariant = null;
                 updateVariantStatus({ status: 'instock', stock: 10 });
             }
+        }
+
+        // HÀM: ĐIỀU KHIỂN CHUYỂN TAB THÔNG TIN
+        function switchTabContent(tabId, element) {
+            // Ẩn tất cả nội dung
+            document.querySelectorAll('.pd-content-view').forEach(div => {
+                div.style.display = 'none';
+            });
+            // Tắt active ở tất cả các nút
+            document.querySelectorAll('.pd-tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Bật nội dung và nút được chọn
+            document.getElementById(`tab-content-${tabId}`).style.display = 'block';
+            element.classList.add('active');
         }
 
         // HÀM: XỬ LÝ KHI BẤM THÊM VÀO GIỎ HÀNG
