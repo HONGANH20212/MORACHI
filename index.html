@@ -3,139 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MORACHI - Cửa hàng trực tuyến</title>
-
+    <title>MORACHI - Modern Japanese Beauty</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        /* Hiệu ứng mượt mà bổ sung cho các phím chức năng */
-        .hover-text-orange:hover { color: #f57224 !important; }
-
-        /* ========================================================
-           TỐI ƯU HÓA HIỂN THỊ TRÊN ĐIỆN THOẠI (RESPONSIVE CHUẨN)
-           ======================================================== */
-        @media (max-width: 768px) {
-            /* 1. Header */
-            .header-top { flex-direction: column; gap: 15px !important; padding: 15px !important; }
-            .search-bar { width: 100% !important; max-width: 100% !important; margin: 0 !important; }
-            .header-actions { width: 100%; justify-content: center; flex-wrap: wrap; gap: 15px 25px; }
-            .social-icons { width: 100%; justify-content: center; border-left: none; padding-left: 0; margin-top: 5px; }
-            .announcement p { font-size: 11px; padding: 0 10px; line-height: 1.4; }
-
-            /* 2. Breadcrumb */
-            .breadcrumb { font-size: 12px; overflow-x: auto; white-space: nowrap; padding: 10px 15px; }
-            
-            /* 3. Lưới sản phẩm & Nút bấm trên mobile */
-            .product-grid { gap: 10px; }
-            .product-card { padding: 8px; }
-            .product-title { font-size: 12px; }
-            .current-price { font-size: 14px; }
-        }
-
-        /* ========================================================
-           SKELETON LOADING (HIỆU ỨNG KHUNG XƯƠNG TẢI TRANG)
-           ======================================================== */
-        .skeleton {
-            background: #f6f7f8;
-            background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
-            border-radius: 4px;
-            background-size: 200% 100%;
-            animation: 1.5s shine linear infinite;
-        }
-        @keyframes shine {
-            to { background-position-x: -200%; }
-        }
-        .skel-card { border: 1px solid #eee; border-radius: 4px; padding: 10px; display: flex; flex-direction: column; gap: 10px; height: 100%; }
-        .skel-img-home { width: 100%; height: 200px; }
-        .skel-line { width: 100%; height: 14px; }
-        .skel-line.short { width: 60%; }
-        .skel-price-home { width: 50%; height: 20px; margin-top: auto; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-
-    <header class="header">
-        <div class="header-top container">
-            
-            <!-- LOGO -->
-            <div class="logo">
-                <a href="/">
-                    <img src="images/icon-logo.png" alt="MORACHI JAPAN BEAUTY" class="logo-icon">
-                    <div class="logo-text">
-                        <h1>MORACHI</h1>
-                        <p>JAPAN BEAUTY</p>
-                    </div>
-                </a>
-            </div>
-
-            <!-- THANH TÌM KIẾM (Căn giữa) -->
-            <div class="search-bar" style="flex: 1; max-width: 500px; margin: 0 40px;">
-                <input type="text" placeholder="Tìm sản phẩm, thương hiệu bạn mong muốn...">
-                <button><i class="fas fa-search"></i></button>
-            </div>
-
-            <!-- CỤM CHỨC NĂNG BÊN PHẢI -->
-            <div class="header-actions">
-                
-                <!-- NÚT TRA CỨU ĐƠN HÀNG -->
-                <a href="tracking.html" class="action-item hover-text-orange" style="text-decoration: none; font-weight: bold; transition: 0.2s;">
-                    <i class="fas fa-map-marker-alt" style="color:#f57224; font-size: 16px;"></i> Tra cứu đơn
-                </a>
-
-                <!-- SỐ ĐIỆN THOẠI -->
-                <div class="action-item phone-number">
-                    <i class="fas fa-phone"></i> 0123456789
-                </div>
-                
-                <!-- ICON GIỎ HÀNG -->
-                <div class="action-item cart-icon-wrap" onclick="toggleCart()">
-                    <i class="fas fa-shopping-bag"></i>
-                    <span class="cart-count" id="cart-count">0</span>
-                </div>
-
-                <!-- MẠNG XÃ HỘI -->
-                <div class="social-icons">
-                    <a href="https://www.tiktok.com/@chuyendong24h" target="_blank" class="social-link"><i class="fab fa-tiktok"></i></a>
-                    <a href="https://www.facebook.com/chuyendong24h" target="_blank" class="social-link"><i class="fab fa-facebook"></i></a>
-                </div>
-            </div>
-        </div>
+    <header class="modern-header">
         
-        <div class="announcement">
-            <div class="container">
-                <p>CHUYÊN BÁN MỸ PHẨM NHẬT BẢN CHÍNH HÃNG & NHẬN ORDER HÀNG NHẬT BẢN 10-15 DAY</p>
+        <div class="top-header">
+            <div class="container top-header-inner">
+                <div class="top-header-left">
+                    <div class="top-header-item">
+                        <i class="fa-regular fa-shield-check"></i> 100% Hàng chính hãng Nhật Bản
+                    </div>
+                    <div class="top-header-item">
+                        <i class="fa-solid fa-box-open"></i> Order nhanh 10 - 15 ngày
+                    </div>
+                    <div class="top-header-item">
+                        <i class="fa-solid fa-headset"></i> Hỗ trợ khách hàng 24/7
+                    </div>
+                </div>
+                <div class="top-header-right">
+                    <div class="phone-icon-circle"><i class="fa-solid fa-phone-volume"></i></div>
+                    <div class="phone-text">
+                        <strong>1900 1234</strong>
+                        <span>8:00 - 22:00 (T2 - CN)</span>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <div class="main-header">
+            <div class="container main-header-inner">
+                
+                <div class="logo-area">
+                    <a href="/">
+                        <div style="background:var(--primary-red); color:white; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px;">
+                            <i class="fa-brands fa-pagelines"></i>
+                        </div>
+                        <div class="logo-text">
+                            <h1>MORACHI</h1>
+                            <p>Japan Beauty</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="search-bar">
+                    <input type="text" placeholder="Tìm sản phẩm, thương hiệu bạn mong muốn...">
+                    <button><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+
+                <div class="header-actions">
+                    <a href="tracking.html" class="action-item">
+                        <div class="action-icon"><i class="fa-solid fa-location-dot"></i></div>
+                        <div class="action-text">
+                            <strong>Tra cứu đơn</strong>
+                            <span>Kiểm tra đơn hàng</span>
+                        </div>
+                    </a>
+                    
+                    <div class="action-item" onclick="toggleCart()">
+                        <div class="action-icon">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                            <span class="cart-count" id="cart-count">0</span>
+                        </div>
+                        <div class="action-text">
+                            <strong>Giỏ hàng</strong>
+                            <span>Sản phẩm</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="red-banner">
+            <div class="container">
+                <i class="fa-solid fa-truck-fast"></i> CHUYÊN BÁN MỸ PHẨM NHẬT BẢN CHÍNH HÃNG & NHẬN ORDER HÀNG NHẬT BẢN 10-15 DAY
+            </div>
+        </div>
+
     </header>
 
     <div class="breadcrumb container">
-        <p><a href="/" style="text-decoration:none; color:inherit;">Trang chủ</a> > <span style="color:#f57224">Sản Phẩm Bán Chạy</span></p>
+        <a href="/">Trang chủ</a> <i class="fa-solid fa-chevron-right" style="font-size: 9px; margin: 0 5px;"></i> <span>Sản Phẩm Bán Chạy</span>
     </div>
 
     <div class="main-layout container">
-
+        
         <aside class="sidebar">
             <div class="filter-section">
-                <h3>KHOẢNG GIÁ</h3>
+                <h3>Khoảng giá</h3>
+                
                 <div class="price-inputs">
-                    <input type="text" placeholder="đ TỪ"> -
-                    <input type="text" placeholder="đ ĐẾN">
+                    <div class="input-wrap">
+                        <i class="fa-regular fa-calendar"></i>
+                        <input type="text" placeholder="TỪ">
+                    </div>
+                    <span class="price-divider">-</span>
+                    <div class="input-wrap">
+                        <i class="fa-regular fa-calendar"></i>
+                        <input type="text" placeholder="ĐẾN">
+                    </div>
                 </div>
-                <button class="btn-apply">ÁP DỤNG</button>
-            </div>
 
-            <div class="filter-section">
-                <h3>THƯƠNG HIỆU</h3>
-                <!-- Được Render Tự Động Từ Javascript -->
-            </div>
+                <button class="btn-apply">
+                    <i class="fa-solid fa-filter"></i> ÁP DỤNG
+                </button>
+                
+                <div class="filter-divider"><i class="fa-solid fa-tag"></i></div>
+                
+                <h3>Thương hiệu</h3>
+                </div>
         </aside>
 
         <main class="content">
             <div class="content-header">
                 <h2>Sản Phẩm Bán Chạy <span>(Danh sách từ Admin)</span></h2>
+                
                 <div class="sort-tabs">
                     <span>Mới nhất</span>
                     <span class="active">Bán chạy</span>
@@ -145,36 +132,29 @@
             </div>
 
             <div id="product-list" class="product-grid">
-                <!-- Hiệu ứng khung xương nhấp nháy trong lúc chờ load -->
-                <div class="skel-card"><div class="skeleton skel-img-home"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line short"></div><div class="skeleton skel-price-home" style="margin-top:20px;"></div></div>
-                <div class="skel-card"><div class="skeleton skel-img-home"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line short"></div><div class="skeleton skel-price-home" style="margin-top:20px;"></div></div>
-                <div class="skel-card"><div class="skeleton skel-img-home"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line short"></div><div class="skeleton skel-price-home" style="margin-top:20px;"></div></div>
-                <div class="skel-card"><div class="skeleton skel-img-home"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line short"></div><div class="skeleton skel-price-home" style="margin-top:20px;"></div></div>
-                <div class="skel-card"><div class="skeleton skel-img-home"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line short"></div><div class="skeleton skel-price-home" style="margin-top:20px;"></div></div>
-                <div class="skel-card"><div class="skeleton skel-img-home"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line short"></div><div class="skeleton skel-price-home" style="margin-top:20px;"></div></div>
-                <div class="skel-card"><div class="skeleton skel-img-home"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line short"></div><div class="skeleton skel-price-home" style="margin-top:20px;"></div></div>
-                <div class="skel-card"><div class="skeleton skel-img-home"></div><div class="skeleton skel-line"></div><div class="skeleton skel-line short"></div><div class="skeleton skel-price-home" style="margin-top:20px;"></div></div>
+                <div class="skel-card"><div class="skel-img-home"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-price-home"></div></div>
+                <div class="skel-card"><div class="skel-img-home"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-price-home"></div></div>
+                <div class="skel-card"><div class="skel-img-home"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-price-home"></div></div>
+                <div class="skel-card"><div class="skel-img-home"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-price-home"></div></div>
             </div>
         </main>
+
     </div>
 
-    <!-- KHUNG GIAO DIỆN GIỎ HÀNG TRƯỢT RA TỪ TRANG CHỦ -->
     <div class="cart-overlay" id="cart-overlay" onclick="toggleCart()"></div>
     <div class="cart-drawer" id="cart-drawer">
         <div class="cart-header">
             <h2>Giỏ hàng</h2>
-            <button onclick="toggleCart()"><i class="fas fa-times"></i></button>
+            <button onclick="toggleCart()"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="cart-items" id="cart-items">
-            <!-- Sản phẩm được render từ file cart.js -->
-        </div>
+            </div>
         <div class="cart-footer">
             <div class="cart-total"><span>Tổng cộng:</span> <span id="cart-total-price">0 đ</span></div>
-            <button class="btn-checkout" onclick="alert('Tính năng thanh toán đang được nâng cấp!')">TIẾN HÀNH THANH TOÁN</button>
+            <button class="btn-checkout" onclick="openCheckoutModal()">TIẾN HÀNH THANH TOÁN</button>
         </div>
     </div>
 
-    <!-- CHÈN THÊM FILE JS GIỎ HÀNG -->
     <script src="cart.js"></script>
     <script src="script.js"></script>
 </body>

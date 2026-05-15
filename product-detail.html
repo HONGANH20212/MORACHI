@@ -11,179 +11,214 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        .pd-wrapper { display: flex; gap: 30px; background: #fff; padding: 25px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        /* =============================================================
+           BIẾN MÀU SẮC ĐỒNG BỘ VỚI TRANG CHỦ
+           ============================================================= */
+        :root {
+            --primary-red: #ba1a1a;
+            --primary-red-hover: #9c1515;
+            --bg-body: #f8f9fa;
+            --bg-surface: #ffffff;
+            --text-main: #333333;
+            --text-muted: #888888;
+            --border-color: #eeeeee;
+            --icon-bg: #fce8e8;
+            --radius-md: 8px;
+            --radius-pill: 50px;
+            --shadow-card: 0 2px 15px rgba(0,0,0,0.03);
+        }
+
+        body { background-color: var(--bg-body); color: var(--text-main); font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; }
+
+        /* =============================================================
+           CHI TIẾT SẢN PHẨM STYLES
+           ============================================================= */
+        .pd-wrapper { display: flex; gap: 40px; background: var(--bg-surface); padding: 30px; border-radius: var(--radius-md); box-shadow: var(--shadow-card); }
         .pd-gallery { width: 45%; flex-shrink: 0; }
         .pd-info { flex: 1; }
         
-        .pd-main-img { border: 1px solid #f0f0f0; border-radius: 4px; margin-bottom: 10px; padding: 10px; display: flex; justify-content: center; align-items: center; height: 400px;}
+        .pd-main-img { border: 1px solid var(--border-color); border-radius: var(--radius-md); margin-bottom: 15px; padding: 15px; display: flex; justify-content: center; align-items: center; height: 450px;}
         .pd-main-img img { width: 100%; height: 100%; object-fit: contain; }
         
-        .pd-thumbs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
-        .pd-thumb { width: 65px; height: 65px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; object-fit: contain; padding: 2px; }
-        .pd-thumb.active { border-color: #f57224; border-width: 2px; }
+        .pd-thumbs { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 5px; }
+        .pd-thumb { width: 70px; height: 70px; border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer; object-fit: contain; padding: 4px; transition: 0.2s;}
+        .pd-thumb.active { border-color: var(--primary-red); border-width: 2px; }
 
-        .pd-brand { color: #2980b9; font-weight: bold; font-size: 13px; text-transform: uppercase; margin-bottom: 8px; }
-        .pd-title { font-size: 22px; color: #333; line-height: 1.4; margin-bottom: 15px; }
+        .pd-brand { color: var(--text-muted); font-weight: bold; font-size: 12px; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 1px;}
+        .pd-title { font-size: 24px; color: var(--text-main); line-height: 1.4; margin-bottom: 15px; font-weight: bold;}
         
-        .pd-rating { font-size: 13px; color: #666; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        .pd-rating i { color: #f1c40f; }
+        .pd-rating { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+        .pd-rating i { color: #f5c518; }
 
-        .pd-price-box { background: #fafafa; padding: 20px; border: 1px dashed #eee; border-radius: 4px; margin-bottom: 20px; }
-        .pd-price-now { color: #f57224; font-size: 32px; font-weight: bold; }
-        .pd-price-old { text-decoration: line-through; color: #999; font-size: 16px; margin-left: 15px; }
+        .pd-price-box { background: var(--bg-body); padding: 20px; border: 1px dashed #ddd; border-radius: var(--radius-md); margin-bottom: 25px; }
+        .pd-price-now { color: var(--primary-red); font-size: 34px; font-weight: bold; }
+        .pd-price-old { text-decoration: line-through; color: var(--text-muted); font-size: 16px; margin-left: 15px; }
 
-        .pd-variants { margin-bottom: 20px; }
-        .pd-variant-label { font-weight: bold; font-size: 14px; display: block; margin-bottom: 10px; }
+        .pd-variants { margin-bottom: 25px; }
+        .pd-variant-label { font-weight: bold; font-size: 14px; display: block; margin-bottom: 12px; color: var(--text-main);}
         .pd-variant-list { display: flex; gap: 10px; flex-wrap: wrap; }
-        .pd-btn-v { border: 1px solid #ddd; background: white; padding: 8px 15px; border-radius: 4px; cursor: pointer; transition: 0.2s; color: #333; font-size: 14px; }
-        .pd-btn-v:hover { border-color: #f57224; }
-        .pd-btn-v.active { border-color: #f57224; color: #f57224; background: #fff5f0; font-weight: bold; }
+        .pd-btn-v { border: 1px solid var(--border-color); background: var(--bg-surface); padding: 10px 18px; border-radius: var(--radius-md); cursor: pointer; transition: 0.2s; color: var(--text-main); font-size: 14px; }
+        .pd-btn-v:hover { border-color: var(--primary-red); }
+        .pd-btn-v.active { border-color: var(--primary-red); color: var(--primary-red); background: var(--icon-bg); font-weight: bold; }
 
-        .pd-status { padding: 15px; background: #f9f9f9; border: 1px solid #eee; border-radius: 4px; margin-bottom: 25px; font-size: 14px; line-height: 1.6; }
+        .pd-status { padding: 15px; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: var(--radius-md); margin-bottom: 25px; font-size: 14px; line-height: 1.6; }
         .pd-text-green { color: #27ae60; font-weight: bold; }
-        .pd-text-red { color: #e74c3c; font-weight: bold; }
+        .pd-text-red { color: var(--primary-red); font-weight: bold; }
 
         .pd-actions { display: flex; gap: 15px; }
-        .pd-btn-cart { flex: 1; padding: 15px; border: 1px solid #f57224; color: #f57224; background: #fff5f0; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 14px; transition: 0.2s;}
-        .pd-btn-cart:hover { background: #f57224; color: white;}
-        .pd-btn-buy { flex: 1; padding: 15px; background: #f57224; color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 14px; transition: 0.2s;}
-        .pd-btn-buy:hover { background: #111; }
+        .pd-btn-cart { flex: 1; padding: 16px; border: 1px solid var(--primary-red); color: var(--primary-red); background: var(--icon-bg); font-weight: bold; cursor: pointer; border-radius: var(--radius-md); font-size: 15px; transition: 0.2s;}
+        .pd-btn-cart:hover { background: var(--primary-red); color: white;}
+        .pd-btn-buy { flex: 1; padding: 16px; background: var(--primary-red); color: white; border: none; font-weight: bold; cursor: pointer; border-radius: var(--radius-md); font-size: 15px; transition: 0.2s;}
+        .pd-btn-buy:hover { background: var(--primary-red-hover); }
 
-        /* TAB BAR STICKY HASAKI STYLE */
+        /* TABS */
         .pd-desc-container { margin-top: 30px; }
-        .pd-desc-tabs { display: flex; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow-x: auto; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #eee; }
-        .pd-tab-link { flex: 1; text-align: center; font-size: 15px; color: #555; padding: 18px 20px; cursor: pointer; font-weight: 500; text-decoration: none; white-space: nowrap; border-bottom: 3px solid transparent; transition: 0.2s; }
-        .pd-tab-link.active { color: #f57224; border-bottom: 3px solid #f57224; font-weight: bold; }
-        .pd-tab-link:hover:not(.active) { color: #f57224; }
+        .pd-desc-tabs { display: flex; background: var(--bg-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-card); overflow-x: auto; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border-color); }
+        .pd-tab-link { flex: 1; text-align: center; font-size: 15px; color: var(--text-main); padding: 18px 20px; cursor: pointer; font-weight: 500; text-decoration: none; white-space: nowrap; border-bottom: 3px solid transparent; transition: 0.2s; }
+        .pd-tab-link.active { color: var(--primary-red); border-bottom: 3px solid var(--primary-red); font-weight: bold; }
+        .pd-tab-link:hover:not(.active) { color: var(--primary-red); }
 
-        /* SECTION BOXES HASAKI STYLE */
-        .pd-section-block { background: white; border-radius: 8px; padding: 25px; margin-top: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); scroll-margin-top: 70px;}
-        .pd-section-block h3 { font-size: 18px; margin-top: 0; margin-bottom: 15px; color: #333; font-weight: bold; }
+        /* SECTIONS */
+        .pd-section-block { background: var(--bg-surface); border-radius: var(--radius-md); padding: 30px; margin-top: 25px; box-shadow: var(--shadow-card); scroll-margin-top: 70px;}
+        .pd-section-block h3 { font-size: 18px; margin-top: 0; margin-bottom: 20px; color: var(--text-main); font-weight: bold; display: flex; align-items: center; gap: 10px;}
+        .pd-section-block h3::before { content: ''; display: inline-block; width: 4px; height: 18px; background: var(--primary-red); }
         .pd-section-content { font-size: 14px; line-height: 1.8; color: #444; white-space: pre-wrap; font-family: 'Segoe UI', Arial, sans-serif; }
 
-        /* Bảng Thông Số */
         .specs-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .specs-table td { padding: 12px 15px; border: 1px solid #eee; font-size: 14px; }
-        .specs-table tr td:first-child { width: 30%; background: #fafafa; color: #555; font-weight: bold; }
+        .specs-table td { padding: 12px 15px; border: 1px solid var(--border-color); font-size: 14px; }
+        .specs-table tr td:first-child { width: 30%; background: var(--bg-body); color: var(--text-main); font-weight: bold; }
 
-        .hover-text-orange:hover { color: #f57224 !important; }
-
-        /* ========================================================
-           SKELETON LOADING (HIỆU ỨNG KHUNG XƯƠNG TẢI TRANG)
-           ======================================================== */
-        .skeleton {
-            background: #f6f7f8;
-            background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%);
-            border-radius: 4px;
-            background-size: 200% 100%;
-            animation: 1.5s shine linear infinite;
-        }
-        @keyframes shine {
-            to { background-position-x: -200%; }
-        }
-        .skel-img { width: 100%; height: 400px; }
-        .skel-thumb { width: 65px; height: 65px; }
-        .skel-title { width: 80%; height: 28px; margin-bottom: 15px; }
+        /* SKELETON */
+        .skeleton { background: #f6f7f8; background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%); border-radius: var(--radius-md); background-size: 200% 100%; animation: 1.5s shine linear infinite; }
+        @keyframes shine { to { background-position-x: -200%; } }
+        .skel-img { width: 100%; height: 450px; }
+        .skel-thumb { width: 70px; height: 70px; }
+        .skel-title { width: 80%; height: 32px; margin-bottom: 15px; }
         .skel-text { width: 40%; height: 16px; margin-bottom: 10px; }
-        .skel-price { width: 50%; height: 40px; margin-bottom: 25px; }
-        .skel-box { width: 100%; height: 80px; margin-bottom: 20px; }
-        .skel-btn { width: 100%; height: 50px; }
+        .skel-price { width: 50%; height: 45px; margin-bottom: 25px; }
+        .skel-box { width: 100%; height: 80px; margin-bottom: 25px; }
+        .skel-btn { width: 100%; height: 55px; }
 
-        /* ========================================================
-           TỐI ƯU HÓA HIỂN THỊ TRÊN ĐIỆN THOẠI (RESPONSIVE CHUẨN)
-           ======================================================== */
+        /* RESPONSIVE */
         @media (max-width: 768px) {
-            /* 1. Header */
-            .header-top { flex-direction: column; gap: 15px !important; padding: 15px !important; }
-            .search-bar { width: 100% !important; max-width: 100% !important; margin: 0 !important; }
-            .header-actions { width: 100%; justify-content: center; flex-wrap: wrap; gap: 15px 25px; }
-            .social-icons { width: 100%; justify-content: center; border-left: none; padding-left: 0; margin-top: 5px; }
-            .announcement p { font-size: 11px; padding: 0 10px; line-height: 1.4; }
-            .breadcrumb { font-size: 12px; overflow-x: auto; white-space: nowrap; padding: 10px 15px; }
-            .pd-wrapper { flex-direction: column; padding: 15px; gap: 20px; }
+            .pd-wrapper { flex-direction: column; padding: 20px; gap: 20px; }
             .pd-gallery { width: 100%; }
-            .pd-main-img { height: 320px; }
-            .pd-title { font-size: 20px; }
-            .pd-price-now { font-size: 26px; }
+            .pd-main-img { height: 350px; }
+            .pd-title { font-size: 22px; }
+            .pd-price-now { font-size: 28px; }
             .pd-actions { flex-direction: row; gap: 10px; }
-            .pd-btn-cart, .pd-btn-buy { padding: 12px 5px; font-size: 12px; flex: 1; text-align: center; }
+            .pd-btn-cart, .pd-btn-buy { padding: 14px 5px; font-size: 13px; flex: 1; text-align: center; }
             .pd-desc-container { margin-top: 20px; }
             .pd-desc-tabs { border-radius: 0; margin: 0 -15px; padding: 0 15px; -webkit-overflow-scrolling: touch; }
-            .pd-tab-link { padding: 12px 15px; font-size: 14px; }
+            .pd-tab-link { padding: 15px; font-size: 14px; }
             .pd-section-block { padding: 20px 15px; margin-top: 15px; }
             .specs-table td { padding: 10px; font-size: 13px; }
-            .skel-img { height: 320px; }
+            .skel-img { height: 350px; }
         }
     </style>
 </head>
 
 <body>
 
-    <header class="header">
-        <div class="header-top container">
-            <div class="logo">
-                <a href="/">
-                    <img src="images/icon-logo.png" alt="MORACHI JAPAN BEAUTY" class="logo-icon">
-                    <div class="logo-text">
-                        <h1>MORACHI</h1>
-                        <p>JAPAN BEAUTY</p>
+    <header class="modern-header">
+        <div class="top-header">
+            <div class="container top-header-inner">
+                <div class="top-header-left">
+                    <div class="top-header-item">
+                        <i class="fa-regular fa-shield-check"></i> 100% Hàng chính hãng Nhật Bản
                     </div>
-                </a>
-            </div>
-            <div class="search-bar" style="flex: 1; max-width: 500px; margin: 0 40px;">
-                <input type="text" placeholder="Tìm sản phẩm, thương hiệu bạn mong muốn...">
-                <button><i class="fas fa-search"></i></button>
-            </div>
-            <div class="header-actions">
-                <a href="tracking.html" class="action-item hover-text-orange" style="text-decoration: none; font-weight: bold; transition: 0.2s;">
-                    <i class="fas fa-map-marker-alt" style="color:#f57224; font-size: 16px;"></i> Tra cứu đơn
-                </a>
-                <div class="action-item phone-number">
-                    <i class="fas fa-phone"></i> 0123456789
+                    <div class="top-header-item">
+                        <i class="fa-solid fa-box-open"></i> Order nhanh 10 - 15 ngày
+                    </div>
+                    <div class="top-header-item">
+                        <i class="fa-solid fa-headset"></i> Hỗ trợ khách hàng 24/7
+                    </div>
                 </div>
-                <div class="action-item cart-icon-wrap" onclick="toggleCart()">
-                    <i class="fas fa-shopping-bag"></i>
-                    <span class="cart-count" id="cart-count">0</span>
-                </div>
-                <div class="social-icons">
-                    <a href="https://www.tiktok.com/@chuyendong24h" target="_blank" class="social-link"><i class="fab fa-tiktok"></i></a>
-                    <a href="https://www.facebook.com/chuyendong24h" target="_blank" class="social-link"><i class="fab fa-facebook"></i></a>
+                <div class="top-header-right">
+                    <div class="phone-icon-circle"><i class="fa-solid fa-phone-volume"></i></div>
+                    <div class="phone-text">
+                        <strong>1900 1234</strong>
+                        <span>8:00 - 22:00 (T2 - CN)</span>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="announcement">
+
+        <div class="main-header">
+            <div class="container main-header-inner">
+                <div class="logo-area">
+                    <a href="/">
+                        <div style="background:var(--primary-red); color:white; width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px;">
+                            <i class="fa-brands fa-pagelines"></i>
+                        </div>
+                        <div class="logo-text">
+                            <h1>MORACHI</h1>
+                            <p>Japan Beauty</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="search-bar">
+                    <input type="text" placeholder="Tìm sản phẩm, thương hiệu bạn mong muốn...">
+                    <button><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+
+                <div class="header-actions">
+                    <a href="tracking.html" class="action-item">
+                        <div class="action-icon"><i class="fa-solid fa-location-dot"></i></div>
+                        <div class="action-text">
+                            <strong>Tra cứu đơn</strong>
+                            <span>Kiểm tra đơn hàng</span>
+                        </div>
+                    </a>
+                    
+                    <div class="action-item" onclick="toggleCart()">
+                        <div class="action-icon">
+                            <i class="fa-solid fa-cart-shopping"></i>
+                            <span class="cart-count" id="cart-count">0</span>
+                        </div>
+                        <div class="action-text">
+                            <strong>Giỏ hàng</strong>
+                            <span>Sản phẩm</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="red-banner">
             <div class="container">
-                <p>CHUYÊN BÁN MỸ PHẨM NHẬT BẢN CHÍNH HÃNG & NHẬN ORDER HÀNG NHẬT BẢN 10-15 DAY</p>
+                <i class="fa-solid fa-truck-fast"></i> CHUYÊN BÁN MỸ PHẨM NHẬT BẢN CHÍNH HÃNG & NHẬN ORDER HÀNG NHẬT BẢN 10-15 DAY
             </div>
         </div>
     </header>
 
     <div class="breadcrumb container">
-        <p><a href="/" style="text-decoration:none; color:inherit;">Trang chủ</a> > <a href="javascript:history.back()" id="bread-brand" style="text-decoration:none; color:inherit; cursor:pointer;" title="Quay lại">Thương hiệu</a> > <span id="bread-title" style="color:#f57224">Chi tiết sản phẩm</span></p>
+        <a href="/">Trang chủ</a> <i class="fa-solid fa-chevron-right" style="font-size: 9px; margin: 0 5px;"></i> 
+        <a href="javascript:history.back()" id="bread-brand" style="cursor:pointer;" title="Quay lại">Thương hiệu</a> <i class="fa-solid fa-chevron-right" style="font-size: 9px; margin: 0 5px;"></i> 
+        <span id="bread-title" style="color:var(--primary-red); font-weight: bold;">Chi tiết sản phẩm</span>
     </div>
 
     <div class="main-layout container">
+        
         <aside class="sidebar">
             <div class="filter-section">
                 <h3>THÔNG TIN GIAO HÀNG</h3>
-                <div style="font-size: 13px; color: #444; line-height: 2.2; margin-top: 10px;">
-                    <div><i class="fas fa-truck" style="color: #27ae60; width: 20px;"></i> Giao Nhanh Miễn Phí 2H</div>
-                    <div><i class="fas fa-box" style="color: #f57224; width: 20px;"></i> Đền bù 100% nếu phát hiện giả</div>
-                    <div><i class="fas fa-undo" style="color: #2980b9; width: 20px;"></i> Đổi trả trong 30 ngày</div>
+                <div style="font-size: 13px; color: var(--text-main); line-height: 2.4; margin-top: 15px;">
+                    <div style="display: flex; gap: 10px; align-items: center;"><i class="fas fa-truck" style="color: #27ae60; font-size: 16px;"></i> Giao Nhanh Miễn Phí 2H</div>
+                    <div style="display: flex; gap: 10px; align-items: center;"><i class="fas fa-box" style="color: var(--primary-red); font-size: 16px;"></i> Đền bù 100% nếu phát hiện giả</div>
+                    <div style="display: flex; gap: 10px; align-items: center;"><i class="fas fa-undo" style="color: #2980b9; font-size: 16px;"></i> Đổi trả trong 30 ngày</div>
                 </div>
             </div>
             <div class="filter-section">
                 <h3>MÔ TẢ NGẮN</h3>
-                <p style="font-size: 13px; color: #666; line-height: 1.6;">Sản phẩm cam kết chính hãng. Vui lòng chọn đúng phân loại hoặc dung tích trước khi thêm vào giỏ hàng.</p>
+                <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-top: 10px;">Sản phẩm cam kết chính hãng. Vui lòng chọn đúng phân loại hoặc dung tích trước khi thêm vào giỏ hàng để được phục vụ tốt nhất.</p>
             </div>
         </aside>
 
-        <!-- KHU VỰC HIỂN THỊ CHI TIẾT SẢN PHẨM -->
-        <main class="content" style="background: transparent; padding: 0;">
+        <main class="content" style="background: transparent; padding: 0; box-shadow: none;">
             <div id="product-detail-root">
                 
-                <!-- GIAO DIỆN KHUNG XƯƠNG TẢI TRANG (SKELETON) -->
                 <div class="pd-wrapper">
                     <div class="pd-gallery">
                         <div class="skeleton skel-img"></div>
@@ -210,17 +245,19 @@
         </main>
     </div>
 
-    <!-- KHUNG GIAO DIỆN GIỎ HÀNG -->
     <div class="cart-overlay" id="cart-overlay" onclick="toggleCart()"></div>
     <div class="cart-drawer" id="cart-drawer">
-        <div class="cart-header">
-            <h2>Giỏ hàng</h2>
-            <button onclick="toggleCart()"><i class="fas fa-times"></i></button>
+        <div class="cart-header" style="padding: 25px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="font-size: 18px; text-transform: uppercase;">Giỏ hàng</h2>
+            <button onclick="toggleCart()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);"><i class="fas fa-times"></i></button>
         </div>
-        <div class="cart-items" id="cart-items"></div>
-        <div class="cart-footer">
-            <div class="cart-total"><span>Tổng cộng:</span> <span id="cart-total-price">0 đ</span></div>
-            <button class="btn-checkout" onclick="openCheckoutModal()">TIẾN HÀNH THANH TOÁN</button>
+        <div class="cart-items" id="cart-items" style="flex: 1; overflow-y: auto; padding: 20px;"></div>
+        <div class="cart-footer" style="padding: 25px; border-top: 1px solid var(--border-color); background: var(--bg-body);">
+            <div class="cart-total" style="display: flex; justify-content: space-between; font-size: 16px; font-weight: bold; margin-bottom: 15px;">
+                <span>Tổng cộng:</span> 
+                <span id="cart-total-price" style="color: var(--primary-red); font-size: 20px;">0 đ</span>
+            </div>
+            <button class="btn-checkout" onclick="openCheckoutModal()" style="width: 100%; padding: 15px; background: var(--primary-red); color: white; border: none; border-radius: var(--radius-md); font-weight: bold; cursor: pointer;">TIẾN HÀNH THANH TOÁN</button>
         </div>
     </div>
 
@@ -264,7 +301,7 @@
         async function initDetail() {
             const root = document.getElementById('product-detail-root');
             if (!productId) {
-                root.innerHTML = `<div style="background: white; padding: 50px; text-align: center; border-radius: 4px;">Không tìm thấy mã sản phẩm. <a href="/">Quay về trang chủ</a></div>`;
+                root.innerHTML = `<div style="background: white; padding: 50px; text-align: center; border-radius: 8px;">Không tìm thấy mã sản phẩm. <a href="/" style="color: var(--primary-red); font-weight:bold;">Quay về trang chủ</a></div>`;
                 return;
             }
 
@@ -293,14 +330,14 @@
                 const product = products.find(p => p.id === productId);
 
                 if (!product) {
-                    root.innerHTML = `<div style="background: white; padding: 50px; text-align: center; border-radius: 4px;">Sản phẩm không tồn tại hoặc đã bị xóa.</div>`;
+                    root.innerHTML = `<div style="background: white; padding: 50px; text-align: center; border-radius: 8px;">Sản phẩm không tồn tại hoặc đã bị xóa.</div>`;
                     return;
                 }
 
                 currentProduct = product; 
                 renderProductDetail(product);
             } catch (error) {
-                root.innerHTML = `<div style="background: white; padding: 50px; text-align: center; border-radius: 4px; color:red;">Lỗi kết nối máy chủ. Vui lòng thử lại.</div>`;
+                root.innerHTML = `<div style="background: white; padding: 50px; text-align: center; border-radius: 8px; color:var(--primary-red);">Lỗi kết nối máy chủ. Vui lòng thử lại.</div>`;
             }
         }
 
@@ -371,7 +408,6 @@
                     </div>
                 </div>
 
-                <!-- BỘ TABS CUỘN VÀ NỘI DUNG -->
                 <div class="pd-desc-container">
                     <div class="pd-desc-tabs" id="pd-tabs-nav">
                         <a href="#sec-desc" class="pd-tab-link active">Mô tả sản phẩm</a>
@@ -476,7 +512,6 @@
             if(typeof addToCart === 'function') {
                 addToCart(cartItem);
                 
-                // Hiệu ứng nháy màu xanh trên nút Thêm Giỏ Hàng báo thành công
                 const btn = document.querySelector('.pd-btn-cart');
                 const originalHtml = btn.innerHTML;
                 btn.innerHTML = '<i class="fas fa-check"></i> ĐÃ THÊM';
