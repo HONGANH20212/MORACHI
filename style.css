@@ -116,16 +116,28 @@ a { text-decoration: none; color: inherit; }
    SIDEBAR (Giữ class cho JS)
    ========================================= */
 .sidebar { width: 280px; flex-shrink: 0; }
-.filter-section {
-    background: var(--bg-surface); padding: 25px;
-    border-radius: var(--radius-md); box-shadow: var(--shadow-card);
-    margin-bottom: 20px;
+
+/* Tạo khối trắng bọc ngoài cho toàn bộ sidebar */
+.sidebar-wrapper {
+    background: var(--bg-surface); 
+    padding: 25px;
+    border-radius: var(--radius-md); 
+    box-shadow: var(--shadow-card);
 }
+
+/* Bỏ background của từng section nhỏ để chúng hòa vào khối wrapper */
+.filter-section {
+    margin-bottom: 0; 
+}
+
 .filter-section h3 {
     font-size: 14px; margin-bottom: 20px; text-transform: uppercase;
-    display: flex; align-items: center; gap: 10px;
+    display: flex; align-items: center; gap: 10px; color: var(--text-main);
 }
-.filter-section h3::before { content: ''; display: inline-block; width: 4px; height: 16px; background: var(--primary-red); }
+
+.filter-section h3::before { 
+    content: ''; display: inline-block; width: 4px; height: 16px; background: var(--primary-red); 
+}
 
 /* Price Inputs */
 .price-inputs { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
@@ -151,7 +163,15 @@ a { text-decoration: none; color: inherit; }
 .filter-divider::before { content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: var(--border-color); z-index: 1; }
 .filter-divider i { position: relative; z-index: 2; background: var(--bg-surface); padding: 0 10px; color: var(--primary-red); transform: rotate(45deg); display: inline-block; }
 
-.filter-section label { display: flex; align-items: center; gap: 10px; font-size: 13px; margin-bottom: 12px; cursor: pointer; color: var(--text-main); }
+/* Checkbox Thương Hiệu */
+.filter-section label { 
+    display: flex; align-items: center; gap: 10px; 
+    font-size: 14px; margin-bottom: 12px; cursor: pointer; color: var(--text-main); 
+}
+.filter-section label input[type="checkbox"] {
+    accent-color: var(--primary-red);
+    width: 16px; height: 16px; cursor: pointer;
+}
 
 /* =========================================
    MAIN CONTENT
