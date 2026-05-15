@@ -241,3 +241,16 @@ a { text-decoration: none; color: inherit; }
     .action-text { display: none; } /* Chỉ hiện icon trên mobile cho gọn */
     .cart-drawer { width: 100%; right: -100%; }
 }
+/* =========================================
+   ẨN ĐÁNH GIÁ & LƯỢT BÁN (Yêu cầu tùy chỉnh)
+   ========================================= */
+
+/* 1. Ẩn ở thẻ sản phẩm (Trang chủ) */
+.product-rating {
+    display: none !important;
+}
+
+/* 2. Ẩn ở trang Chi tiết sản phẩm (product-detail.html) */
+.pd-rating {
+    display: none !important;
+}
