@@ -31,8 +31,13 @@ a { text-decoration: none; color: inherit; }
 /* =========================================
    HEADER STYLES
    ========================================= */
-.modern-header { background: var(--bg-surface); }
-
+.modern-header { 
+    background: var(--bg-surface); 
+    position: sticky;  /* Giữ header dính chặt vào màn hình */
+    top: 0;            /* Vị trí dính là sát mép trên cùng */
+    z-index: 1000;     /* Đảm bảo header luôn nổi lên trên các nội dung khác */
+    box-shadow: 0 2px 15px rgba(0,0,0,0.05); /* Đổ bóng nhẹ để tách biệt với nội dung khi cuộn */
+}
 /* 1. Top Bar */
 .top-header { border-bottom: 1px solid var(--border-color); padding: 10px 0; font-size: 13px; color: var(--text-main); }
 .top-header-inner { display: flex; justify-content: space-between; align-items: center; }
@@ -159,9 +164,10 @@ a { text-decoration: none; color: inherit; }
 .btn-apply:hover { background: var(--primary-red-hover); }
 
 /* Divider Tag */
-.filter-divider { text-align: center; margin: 25px 0; position: relative; }
-.filter-divider::before { content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: var(--border-color); z-index: 1; }
-.filter-divider i { position: relative; z-index: 2; background: var(--bg-surface); padding: 0 10px; color: var(--primary-red); transform: rotate(45deg); display: inline-block; }
+.filter-divider { 
+    margin: 25px 0; 
+    border-top: 1px solid var(--border-color); 
+}
 
 /* Checkbox Thương Hiệu */
 .filter-section label { 
@@ -227,18 +233,74 @@ a { text-decoration: none; color: inherit; }
 /* =========================================
    RESPONSIVE
    ========================================= */
-@media (max-width: 992px) {
-    .main-layout { flex-direction: column; }
-    .sidebar { width: 100%; }
-    .product-grid { grid-template-columns: repeat(3, 1fr); }
-    .main-header-inner { flex-wrap: wrap; }
-    .search-bar { order: 3; max-width: 100%; }
-    .top-header-left { display: none; }
+/* =========================================
+   TỐI ƯU SORT TABS (Cho phép vuốt ngang trên Mobile)
+   ========================================= */
+.sort-tabs { 
+    display: flex; 
+    gap: 30px; 
+    border-bottom: 1px solid var(--border-color); 
+    margin-bottom: 25px; 
+    /* Thêm 3 dòng dưới để lướt ngang trên điện thoại */
+    overflow-x: auto; 
+    white-space: nowrap; 
+    -webkit-overflow-scrolling: touch; 
+    scrollbar-width: none; /* Ẩn thanh cuộn Firefox */
 }
+.sort-tabs::-webkit-scrollbar { display: none; } /* Ẩn thanh cuộn Chrome/Safari */
+
+
+/* =========================================
+   RESPONSIVE (TỐI ƯU MOBILE & IPAD)
+   ========================================= */
+@media (max-width: 992px) {
+    /* Đẩy Sidebar (Bộ lọc) lên trên lưới sản phẩm, chia cột dọc */
+    .main-layout { flex-direction: column; padding: 20px 0; gap: 20px; }
+    .sidebar { width: 100%; }
+}
+
+@media (max-width: 768px) {
+    /* 1. Xử lý Header: Chia làm 2 dòng cho thoáng */
+    .top-header { display: none; } /* Ẩn topbar để tiết kiệm không gian */
+    .main-header-inner { flex-wrap: wrap; padding: 15px 0; gap: 15px; }
+    
+    /* Logo bên trái */
+    .logo-area { flex: 1; }
+    .logo-icon { height: 40px; }
+    .logo-text h1 { font-size: 22px; }
+    .logo-text p { font-size: 9px; letter-spacing: 2px; }
+
+    /* Icons (Tra cứu, Giỏ hàng) bên phải */
+    .header-actions { flex: 1; justify-content: flex-end; gap: 20px; }
+    .action-text { display: none; } /* Ẩn chữ, chỉ giữ lại Icon cho gọn */
+    .action-icon { width: 38px; height: 38px; font-size: 16px; }
+    
+    /* Search Bar đẩy xuống dòng dưới cùng, full 100% width */
+    .search-bar { width: 100%; order: 3; max-width: 100%; }
+    .search-bar input { padding: 10px 15px; }
+
+    /* 2. Thu nhỏ cụm nút liên hệ nổi để không đè nội dung */
+    .floating-contact { 
+        transform: scale(0.75); 
+        transform-origin: bottom right; 
+        right: 15px !important; 
+        bottom: 15px !important; 
+    }
+}
+
 @media (max-width: 576px) {
-    .product-grid { grid-template-columns: repeat(2, 1fr); }
-    .header-actions { gap: 15px; }
-    .action-text { display: none; } /* Chỉ hiện icon trên mobile cho gọn */
+    /* 3. Lưới sản phẩm: Hiển thị 2 cột vừa vặn */
+    .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .product-card { padding: 10px; }
+    .product-img { height: 150px; margin-bottom: 8px; }
+    
+    /* Chữ và giá sản phẩm thu nhỏ lại cho cân đối */
+    .product-title { font-size: 12px; height: 36px; margin-bottom: 5px; }
+    .current-price { font-size: 15px; }
+    .old-price { font-size: 11px; }
+    .discount-badge { font-size: 10px; padding: 3px 6px; }
+
+    /* Giỏ hàng kéo ra trọn màn hình điện thoại */
     .cart-drawer { width: 100%; right: -100%; }
 }
 /* =========================================

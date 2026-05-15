@@ -465,4 +465,35 @@ document.addEventListener("DOMContentLoaded", () => {
     bindPriceFilter();
     loadProducts();
     initFloatingContact(); // Gọi hàm tạo nút liên hệ nổi
+ // ==============================================================
+// TÙY CHỈNH UX BỘ LỌC GIÁ (TỰ ĐỘNG THÊM 3 SỐ 0)
+// ==============================================================
+document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll('.price-inputs input').forEach(input => {
+        // Tự động format khi click chuột ra ngoài
+        input.addEventListener('blur', function() {
+            let val = this.value.replace(/[^\d]/g, ''); // Lọc lấy số
+            if (val) {
+                let num = parseInt(val, 10);
+                
+                // Nếu nhập dưới 1000, tự nhân lên 1000
+                if (num > 0 && num < 1000) {
+                    num = num * 1000;
+                }
+                
+                // Trả lại format hiển thị
+                this.value = num.toLocaleString('vi-VN');
+            }
+        });
+
+        // Gõ Enter tự động chạy luôn lọc giá
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                this.blur(); // Chạy hàm format ở trên
+                const applyBtn = document.querySelector('.btn-apply');
+                if (applyBtn) applyBtn.click(); // Kích hoạt nút Áp Dụng
+            }
+        });
+    });
+});   
 });
