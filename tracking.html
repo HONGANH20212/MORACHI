@@ -4,68 +4,259 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tra Cứu Đơn Hàng | MORACHI</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        .track-container { max-width: 600px; margin: 50px auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .track-title { text-align: center; font-family: 'Playfair Display', serif; font-size: 24px; margin-bottom: 20px; color: #111; }
-        .track-input-group { display: flex; gap: 10px; margin-bottom: 30px; }
-        .track-input-group input { flex: 1; padding: 12px 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 15px; outline: none; }
-        .track-input-group input:focus { border-color: #f57224; }
-        .track-input-group button { padding: 0 25px; background: #111; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .track-input-group button:hover { background: #f57224; }
+        /* =========================================
+           TRACKING PAGE - CENTERED LAYOUT
+           ========================================= */
+        :root {
+            --primary-red: #c51622;
+            --primary-red-hover: #a3101b;
+            --bg-page: #faf9f7;
+            --text-dark: #222222;
+            --text-muted: #777777;
+            --border-color: #eaeaea;
+            --card-radius: 20px;
+        }
 
-        .order-card { border: 1px solid #eee; border-radius: 6px; padding: 20px; margin-bottom: 15px; }
-        .order-header { display: flex; justify-content: space-between; border-bottom: 1px dashed #ddd; padding-bottom: 10px; margin-bottom: 10px; }
-        .order-id { font-weight: bold; color: #f57224; font-size: 16px; }
-        .order-date { font-size: 12px; color: #888; }
-        
-        .order-status { display: inline-block; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-bottom: 15px; }
-        .status-pending { background: #fef5e7; color: #f39c12; }
-        .status-delivering { background: #e8f8f0; color: #27ae60; }
-        
-        .spx-box { background: #e3f2fd; border: 1px dashed #3498db; padding: 10px 15px; border-radius: 4px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;}
-        .spx-code { font-size: 18px; font-weight: bold; color: #2980b9; letter-spacing: 1px; margin-top: 5px; }
-        .spx-link { background: #3498db; color: white; text-decoration: none; padding: 8px 15px; border-radius: 4px; font-size: 12px; font-weight: bold; transition: 0.2s; text-align: center; }
-        .spx-link:hover { background: #2980b9; }
+        body { 
+            background-color: var(--bg-page); 
+            font-family: 'Inter', sans-serif;
+            color: var(--text-dark);
+            margin: 0;
+            padding: 0;
+            /* Flexbox để ép footer luôn nằm dưới cùng màn hình */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
 
-        .order-items { font-size: 13px; color: #555; line-height: 1.6; }
-        .order-total { border-top: 1px dashed #ddd; padding-top: 10px; margin-top: 10px; font-weight: bold; text-align: right; font-size: 15px; color: #111; }
+        /* --- HEADER --- */
+        .track-header {
+            background: #fff;
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 0;
+        }
+        .track-header-inner {
+            display: flex; justify-content: space-between; align-items: center; 
+            max-width: 1200px; margin: 0 auto; padding: 0 20px;
+        }
+        .track-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .track-logo img { height: 40px; width: auto; }
+        .track-logo h1 { 
+            font-family: 'Playfair Display', serif; 
+            font-size: 22px; color: #111; line-height: 1; letter-spacing: 1px; margin: 0;
+        }
+        .track-logo p { 
+            font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #999; margin-top: 4px; 
+        }
+        
+        .track-nav { display: flex; gap: 30px; }
+        .track-nav a { 
+            text-decoration: none; color: var(--text-dark); font-size: 14px; font-weight: 500; 
+            display: flex; align-items: center; gap: 8px; transition: 0.2s; 
+        }
+        .track-nav a:hover, .track-nav a:hover i { color: var(--primary-red); }
+        .track-nav a i { color: var(--primary-red); font-size: 15px; transition: 0.2s; }
+
+        /* --- MAIN WRAPPER --- */
+        .track-wrapper {
+            flex: 1; /* Chiếm hết phần không gian trống để đẩy footer xuống */
+            width: 100%;
+            max-width: 1100px;
+            margin: 50px auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* --- CENTER CARD (FORM TRA CỨU) --- */
+        .center-card {
+            background: #fff;
+            border-radius: var(--card-radius);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.04);
+            width: 100%;
+            max-width: 700px; /* Độ rộng vừa phải để form không bị bành trướng */
+            padding: 60px 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .icon-circle-lg {
+            width: 56px; height: 56px; background: #fdf2f2; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--primary-red); font-size: 22px; margin-bottom: 20px;
+        }
+
+        .track-title { 
+            font-family: 'Playfair Display', serif; font-size: 30px; 
+            color: #111; margin-bottom: 10px; font-weight: 700; 
+        }
+        
+        .title-divider { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 15px; }
+        .title-divider span { width: 25px; height: 1px; background: #ddd; }
+        .title-divider i { color: var(--primary-red); font-size: 5px; }
+
+        .track-desc { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 30px; max-width: 450px; }
+        .track-desc strong { color: var(--primary-red); }
+
+        /* Form Area */
+        .track-form-area {
+            width: 100%;
+            max-width: 450px; 
+        }
+
+        .input-wrapper {
+            position: relative; width: 100%; margin-bottom: 15px;
+        }
+        .input-wrapper i {
+            position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+            color: #aaa; font-size: 16px;
+        }
+        .input-wrapper input {
+            width: 100%; padding: 14px 20px 14px 45px; border: 1px solid #e2e2e2;
+            border-radius: 8px; font-size: 14px; outline: none; transition: 0.3s;
+            font-family: 'Inter', sans-serif;
+            box-sizing: border-box;
+        }
+        .input-wrapper input:focus { 
+            border-color: var(--primary-red); 
+            box-shadow: 0 0 0 3px rgba(197, 22, 34, 0.08); 
+        }
+
+        .btn-track {
+            width: 100%; padding: 15px; background: var(--primary-red); color: white;
+            border: none; border-radius: 8px; font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;
+            font-family: 'Inter', sans-serif;
+            box-sizing: border-box;
+        }
+        .btn-track:hover { 
+            background: var(--primary-red-hover); 
+            box-shadow: 0 4px 12px rgba(197, 22, 34, 0.2); 
+        }
+
+        .security-note { 
+            font-size: 12px; color: #888; margin-top: 15px; 
+            display: flex; align-items: center; justify-content: center; gap: 6px; 
+        }
+        .security-note i { color: #27ae60; }
+
+        /* --- KẾT QUẢ TRA CỨU --- */
+        #results-container { width: 100%; text-align: left; margin-top: 30px; }
+        .order-card { border: 1px solid #eee; border-radius: 12px; padding: 25px; margin-bottom: 20px; text-align: left; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.02);}
+        .spx-box { background: #fdfdfd; border: 1px dashed #ddd; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;}
+
+        /* --- FOOTER (TÍNH NĂNG BẢO MẬT) --- */
+        .track-footer {
+            background: #fff;
+            border-top: 1px solid var(--border-color);
+            padding: 40px 0;
+            margin-top: 20px;
+        }
+        .features-row {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px;
+            max-width: 1100px; margin: 0 auto; padding: 0 20px;
+        }
+        .feature-box { display: flex; gap: 15px; align-items: flex-start; }
+        .feat-icon {
+            width: 42px; height: 42px; background: #fdf2f2; border-radius: 50%; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; color: var(--primary-red); font-size: 16px;
+        }
+        .feat-text h4 { font-size: 14px; color: #111; margin: 0 0 4px 0; font-weight: 600; }
+        .feat-text p { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin: 0; }
+
+        /* --- RESPONSIVE MOBILE --- */
+        @media (max-width: 768px) {
+            .center-card { padding: 40px 20px; }
+            .features-row { grid-template-columns: 1fr; gap: 25px; max-width: 400px; }
+            .track-header-inner { flex-direction: column; gap: 15px; }
+        }
     </style>
 </head>
-<body style="background: #f4f4f4;">
-    <header class="header">
-        <div class="header-top container">
-            <div class="logo">
-                <a href="/">
-                    <img src="images/icon-logo.png" alt="MORACHI" class="logo-icon">
-                    <div class="logo-text">
-                        <h1>MORACHI</h1>
-                        <p>JAPAN BEAUTY</p>
-                    </div>
-                </a>
-            </div>
-            <div class="header-actions">
-                <a href="/" style="color:white; text-decoration:none; font-weight:bold; font-size: 16px;"><i class="fas fa-home"></i> Trở về Trang chủ</a>
+<body>
+
+    <header class="track-header">
+        <div class="track-header-inner">
+            <a href="/" class="track-logo">
+                <img src="images/morachi_logo.png" alt="MORACHI" onerror="this.src='images/icon-logo.png'">
+                <div>
+                    <h1>MORACHI</h1>
+                    <p>JAPAN BEAUTY</p>
+                </div>
+            </a>
+            <div class="track-nav">
+                <a href="/"><i class="fa-solid fa-house"></i> Trang chủ</a>
+                <a href="https://www.facebook.com/profile.php?id=61572066442519" target="_blank"><i class="fa-regular fa-comment-dots"></i> Mess</a>
             </div>
         </div>
     </header>
 
-    <div class="container">
-        <div class="track-container">
-            <h2 class="track-title">Tra Cứu Đơn Hàng</h2>
-            <p style="text-align: center; color: #666; font-size: 14px; margin-bottom: 25px;">Vui lòng nhập <b style="color:#111;">Số điện thoại</b> lúc đặt hàng để kiểm tra quá trình xử lý & xem mã vận đơn Shopee Xpress.</p>
+    <div class="track-wrapper">
+        <div class="center-card">
             
-            <div class="track-input-group">
-                <input type="tel" id="search-phone" placeholder="Nhập số điện thoại của bạn..." onkeydown="if(event.key === 'Enter') fetchOrders()">
-                <button onclick="fetchOrders()">TRA CỨU</button>
+            <div class="icon-circle-lg"><i class="fa-solid fa-box-open"></i></div>
+            <h2 class="track-title">Tra Cứu Đơn Hàng</h2>
+            
+            <div class="title-divider">
+                <span></span><i class="fa-solid fa-circle"></i><span></span>
+            </div>
+            
+            <p class="track-desc">Vui lòng nhập <strong>Số điện thoại</strong> lúc đặt hàng<br>để kiểm tra quá trình xử lý và xem mã vận đơn Shopee Express.</p>
+            
+            <div class="track-form-area">
+                <div class="input-wrapper">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                    <input type="tel" id="search-phone" placeholder="Nhập số điện thoại đặt hàng" onkeydown="if(event.key === 'Enter') fetchOrders()">
+                </div>
+
+                <button class="btn-track" onclick="fetchOrders()">
+                    <i class="fa-solid fa-magnifying-glass"></i> TRA CỨU
+                </button>
+
+                <div class="security-note">
+                    <i class="fa-solid fa-shield-halved"></i> Thông tin của bạn được bảo mật tuyệt đối
+                </div>
             </div>
 
-            <div id="loading" style="display:none; text-align:center; padding:20px; color:#f57224;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
+            <div id="loading" style="display:none; text-align:center; padding:20px; margin-top:20px; color:var(--primary-red);">
+                <i class="fas fa-spinner fa-spin fa-2x"></i>
+            </div>
             <div id="results-container"></div>
+
         </div>
     </div>
+
+    <footer class="track-footer">
+        <div class="features-row">
+            <div class="feature-box">
+                <div class="feat-icon"><i class="fa-solid fa-lock"></i></div>
+                <div class="feat-text">
+                    <h4>Bảo mật thông tin</h4>
+                    <p>Cam kết bảo mật tuyệt đối mọi thông tin của khách hàng.</p>
+                </div>
+            </div>
+            <div class="feature-box">
+                <div class="feat-icon"><i class="fa-solid fa-rotate"></i></div>
+                <div class="feat-text">
+                    <h4>Cập nhật liên tục</h4>
+                    <p>Thông tin đơn hàng được cập nhật liên tục, nhanh chóng và chính xác.</p>
+                </div>
+            </div>
+            <div class="feature-box">
+                <div class="feat-icon"><i class="fa-solid fa-truck-fast"></i></div>
+                <div class="feat-text">
+                    <h4>Giao hàng an toàn</h4>
+                    <p>Đơn hàng được vận chuyển an toàn đến tận tay bạn.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
 
     <script>
         async function fetchOrders() {
@@ -89,7 +280,7 @@
                 loadingDiv.style.display = "none";
 
                 if (!response.ok || !orders || orders.length === 0) {
-                    resultsDiv.innerHTML = `<div style="text-align:center; color:#e74c3c; font-weight:bold; padding: 20px; background: #fdedec; border-radius: 4px;"><i class="fas fa-exclamation-circle"></i> Không tìm thấy đơn hàng nào thuộc về số điện thoại này!</div>`;
+                    resultsDiv.innerHTML = `<div style="text-align:center; color:var(--primary-red); font-weight:bold; padding: 20px; background: #fdf2f2; border-radius: 8px;"><i class="fas fa-exclamation-circle"></i> Không tìm thấy đơn hàng nào thuộc về số điện thoại này!</div>`;
                     return;
                 }
 
@@ -106,9 +297,9 @@
                             <div class="spx-box">
                                 <div>
                                     <div style="font-size:12px; color:#555;">Đơn vị: <b>Shopee Xpress (SPX)</b></div>
-                                    <div class="spx-code">${o.spx_tracking_code}</div>
+                                    <div class="spx-code" style="font-size: 16px; font-weight: bold; color: #111;">${o.spx_tracking_code}</div>
                                 </div>
-                                <a href="https://spx.vn" target="_blank" class="spx-link"><i class="fas fa-search-location"></i> Kiểm tra trên SPX</a>
+                                <a href="https://spx.vn" target="_blank" style="background: var(--primary-red); color: white; text-decoration: none; padding: 8px 15px; border-radius: 6px; font-size: 12px; font-weight: bold;"><i class="fas fa-search-location"></i> SPX</a>
                             </div>
                         `;
                     }
@@ -117,20 +308,21 @@
 
                     return `
                         <div class="order-card">
-                            <div class="order-header">
-                                <span class="order-id">Mã đơn: ${o.order_id || 'N/A'}</span>
-                                <span class="order-date">${dateStr}</span>
+                            <div class="order-header" style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee; padding-bottom: 10px; margin-bottom: 15px;">
+                                <span class="order-id" style="font-weight: bold; color: var(--primary-red); font-size: 14px;">Mã: ${o.order_id || 'N/A'}</span>
+                                <span class="order-date" style="font-size: 12px; color: #888;">${dateStr}</span>
                             </div>
-                            <div class="order-status ${statusClass}"><i class="fas ${isDelivering ? 'fa-truck' : 'fa-box'}"></i> Trạng thái: ${o.status}</div>
+                            
+                            <div style="display: inline-block; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-bottom: 15px; background: ${isDelivering ? '#e8f8f0' : '#fdf2f2'}; color: ${isDelivering ? '#27ae60' : 'var(--primary-red)'};"><i class="fas ${isDelivering ? 'fa-truck' : 'fa-box'}"></i> Trạng thái: ${o.status}</div>
                             
                             ${spxHtml}
                             
-                            <div class="order-items">
-                                <strong style="margin-bottom:5px; display:block;">Sản phẩm đã mua:</strong>
+                            <div class="order-items" style="font-size: 13px; color: #444; line-height: 1.6;">
+                                <strong style="margin-bottom:5px; display:block; color: #111;">Sản phẩm đã mua:</strong>
                                 ${itemsHtml}
                             </div>
-                            <div class="order-total">
-                                Tổng cộng: <span style="color:#f57224;">${Number(o.total_amount).toLocaleString('vi-VN')} đ</span>
+                            <div class="order-total" style="border-top: 1px dashed #eee; padding-top: 15px; margin-top: 15px; font-weight: bold; text-align: right; font-size: 15px; color: #111;">
+                                Tổng: <span style="color:var(--primary-red); font-size: 18px; margin-left: 5px;">${Number(o.total_amount).toLocaleString('vi-VN')} đ</span>
                             </div>
                         </div>
                     `;
@@ -138,7 +330,7 @@
 
             } catch (err) {
                 loadingDiv.style.display = "none";
-                resultsDiv.innerHTML = `<div style="text-align:center; color:red;">Lỗi kết nối máy chủ! Vui lòng thử lại sau.</div>`;
+                resultsDiv.innerHTML = `<div style="text-align:center; color:var(--primary-red);">Lỗi kết nối máy chủ! Vui lòng thử lại sau.</div>`;
             }
         }
     </script>

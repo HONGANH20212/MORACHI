@@ -438,21 +438,21 @@ function initFloatingContact() {
     const container = document.createElement('div');
     container.className = 'floating-contact';
     container.innerHTML = `
-        <a href="https://m.me/chuyendong24h" target="_blank" class="float-btn btn-messenger">
+        <a href="https://www.facebook.com/profile.php?id=61572066442519" target="_blank" class="float-btn btn-messenger">
             <i class="fab fa-facebook-messenger"></i>
             <span class="tooltip">Chat Messenger</span>
         </a>
-        <a href="https://www.facebook.com/chuyendong24h" target="_blank" class="float-btn btn-facebook">
+        <a href="https://www.facebook.com/profile.php?id=61572066442519" target="_blank" class="float-btn btn-facebook">
             <i class="fab fa-facebook-f"></i>
             <span class="tooltip">Facebook Fanpage</span>
         </a>
-        <a href="https://www.tiktok.com/@chuyendong24h" target="_blank" class="float-btn btn-tiktok1">
+        <a href="https://www.tiktok.com/@donhatnoidia2026" target="_blank" class="float-btn btn-tiktok1">
             <i class="fab fa-tiktok"></i>
-            <span class="tooltip">TikTok Shop 1</span>
+            <span class="tooltip">Tiệm đồ nhật nội địa</span>
         </a>
-        <a href="https://www.tiktok.com/@chuyendong24h_2" target="_blank" class="float-btn btn-tiktok2">
+        <a href="https://www.tiktok.com/@morachijanpan" target="_blank" class="float-btn btn-tiktok2">
             <i class="fab fa-tiktok"></i>
-            <span class="tooltip">TikTok Shop 2</span>
+            <span class="tooltip">Morachi</span>
         </a>
     `;
     document.body.appendChild(container);
