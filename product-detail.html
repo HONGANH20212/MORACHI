@@ -71,11 +71,47 @@
         .pd-btn-buy { flex: 1; padding: 16px; background: var(--primary-red); color: white; border: none; font-weight: bold; cursor: pointer; border-radius: var(--radius-md); font-size: 15px; transition: 0.2s;}
         .pd-btn-buy:hover { background: var(--primary-red-hover); }
 
-        /* TABS */
+        /* TABS - ĐÃ FIX LỖI GẠCH ĐỎ */
         .pd-desc-container { margin-top: 30px; }
         .pd-desc-tabs { display: flex; background: var(--bg-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-card); overflow-x: auto; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border-color); }
-        .pd-tab-link { flex: 1; text-align: center; font-size: 15px; color: var(--text-main); padding: 18px 20px; cursor: pointer; font-weight: 500; text-decoration: none; white-space: nowrap; border-bottom: 3px solid transparent; transition: 0.2s; }
-        .pd-tab-link.active { color: var(--primary-red); border-bottom: 3px solid var(--primary-red); font-weight: bold; }
+        
+        .pd-tab-link { 
+            flex: 1; 
+            text-align: center; 
+            font-size: 15px; 
+            color: var(--text-main); 
+            padding: 18px 20px; 
+            cursor: pointer; 
+            font-weight: 500; 
+            text-decoration: none; 
+            white-space: nowrap; 
+            position: relative; 
+            transition: 0.2s; 
+        }
+        
+        .pd-tab-link.active { 
+            color: var(--primary-red); 
+            font-weight: bold; 
+        }
+        
+        /* Tạo đường gạch đỏ ẩn ôm khít dưới chữ */
+        .pd-tab-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 3px;
+            background-color: var(--primary-red);
+            transition: width 0.3s ease;
+        }
+        
+        /* Khi tab kích hoạt, bung đường gạch ra vừa chuẩn độ dài của chữ */
+        .pd-tab-link.active::after {
+            width: 65%; 
+        }
+
         .pd-tab-link:hover:not(.active) { color: var(--primary-red); }
 
         /* SECTIONS */
@@ -111,6 +147,7 @@
             .pd-desc-container { margin-top: 20px; }
             .pd-desc-tabs { border-radius: 0; margin: 0 -15px; padding: 0 15px; -webkit-overflow-scrolling: touch; }
             .pd-tab-link { padding: 15px; font-size: 14px; }
+            .pd-tab-link.active::after { width: 80%; } /* Bung rộng hơn trên mobile để cân xứng */
             .pd-section-block { padding: 20px 15px; margin-top: 15px; }
             .specs-table td { padding: 10px; font-size: 13px; }
             .skel-img { height: 350px; }
@@ -481,7 +518,7 @@
                 
                 sections.forEach(section => {
                     const sectionTop = section.offsetTop;
-                    if (pageYOffset >= sectionTop - 150) {
+                    if (window.scrollY >= sectionTop - 150) {
                         current = section.getAttribute('id');
                     }
                 });

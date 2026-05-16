@@ -259,6 +259,9 @@ let vnProvinces = [];
 
             const s2Script = document.createElement('script');
             s2Script.src = "https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js";
+            s2Script.onload = () => {
+                applySelect2();
+            };
             document.head.appendChild(s2Script);
         };
         document.head.appendChild(script);
@@ -292,8 +295,8 @@ function applySelect2() {
     $('#chk-district').select2({ width: '100%', placeholder: 'Quận/Huyện' });
     $('#chk-ward').select2({ width: '100%', placeholder: 'Phường/Xã' });
 
-    $('#chk-province').on('change', window.loadDistricts);
-    $('#chk-district').on('change', window.loadWards);
+    $('#chk-province').off('change').on('change', window.loadDistricts);
+    $('#chk-district').off('change').on('change', window.loadWards);
 
     $(document).on('select2:open', () => {
         setTimeout(() => {
