@@ -1,9 +1,13 @@
 {
   "routes": [
     {
-      "route": "/*",
-      "redirect": "https://www.morachi.com.vn/{*path}",
+      "route": "/",
+      "redirect": "https://www.morachi.com.vn/",
       "statusCode": 301
+    },
+    {
+      "route": "/*",
+      "serve": "/index.html"
     }
   ]
 }
