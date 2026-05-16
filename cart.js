@@ -1,13 +1,16 @@
 // === HỆ THỐNG GIỎ HÀNG BẰNG LOCALSTORAGE ===
 
+// 1. Khởi tạo giỏ hàng từ bộ nhớ trình duyệt
 let cart = JSON.parse(localStorage.getItem('morachi_cart')) || [];
 let currentCheckoutOrderId = ""; 
 
+// 2. Lưu giỏ hàng
 function saveCart() {
     localStorage.setItem('morachi_cart', JSON.stringify(cart));
     updateCartUI(); 
 }
 
+// 3. Mở giỏ hàng (Luôn trượt ra)
 function openCart() {
     const drawer = document.getElementById('cart-drawer');
     const overlay = document.getElementById('cart-overlay');
@@ -18,6 +21,7 @@ function openCart() {
     }
 }
 
+// 3.1 Mở / Đóng giao diện giỏ hàng linh hoạt (Toggle)
 function toggleCart() {
     const drawer = document.getElementById('cart-drawer');
     const overlay = document.getElementById('cart-overlay');
@@ -29,6 +33,7 @@ function toggleCart() {
     }
 }
 
+// 4. Thêm sản phẩm vào giỏ hàng
 function addToCart(product) {
     const existingItem = cart.find(item => item.id === product.id && item.variant === product.variant);
     
@@ -39,8 +44,10 @@ function addToCart(product) {
     }
     
     saveCart(); 
+    // Đã xóa lệnh tự trượt giỏ hàng ra ở đây!
 }
 
+// 5. Cập nhật giao diện giỏ hàng
 function updateCartUI() {
     const countElements = document.querySelectorAll('.cart-count');
     const totalQty = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -68,14 +75,11 @@ function updateCartUI() {
         const itemTotal = Number(item.price) * item.quantity;
         totalPrice += itemTotal;
         
-        // ĐỔI LINK THÀNH /product/slug CHO CHUYÊN NGHIỆP TRONG GIỎ HÀNG
-        const productUrl = item.slug ? `/product/${item.slug}` : `/product-detail.html?id=${item.id}`;
-        
         return `
             <div class="cart-item" style="display: flex; gap: 15px; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px dashed #eee; position: relative;">
-                <a href="${productUrl}"><img src="${item.image}" alt="${item.title}" onerror="this.src='images/icon-logo.png'" style="width: 80px; height: 80px; object-fit: contain; border: 1px solid #eee; border-radius: 8px; padding: 2px;"></a>
+                <img src="${item.image}" alt="${item.title}" onerror="this.src='images/icon-logo.png'" style="width: 80px; height: 80px; object-fit: contain; border: 1px solid #eee; border-radius: 8px; padding: 2px;">
                 <div class="cart-item-info" style="flex: 1; padding-right: 25px;">
-                    <a href="${productUrl}" style="text-decoration:none;"><div class="cart-item-title" style="font-weight: bold; font-size: 14px; margin-bottom: 5px; color: #333; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${item.title}</div></a>
+                    <div class="cart-item-title" style="font-weight: bold; font-size: 14px; margin-bottom: 5px; color: #333; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${item.title}</div>
                     <div class="cart-item-variant" style="font-size: 12px; color: #888; margin-bottom: 5px;">Phân loại: ${item.variant}</div>
                     <div class="cart-item-price" style="color: #f57224; font-weight: bold; margin-bottom: 10px; font-size: 15px;">${Number(item.price).toLocaleString('vi-VN')} đ</div>
                     <div class="cart-item-qty" style="display: flex; align-items: center; border: 1px solid #ddd; width: fit-content; border-radius: 4px; overflow: hidden;">
@@ -120,6 +124,7 @@ function openCheckoutModal() {
         return;
     }
     
+    // Đóng giỏ hàng trượt tạm thời
     const drawer = document.getElementById('cart-drawer');
     const overlay = document.getElementById('cart-overlay');
     if(drawer) drawer.classList.remove('active');
@@ -132,6 +137,7 @@ function openCheckoutModal() {
     const nextOrderCount = parseInt(localStorage.getItem('morachi_order_count') || '0') + 1;
     currentCheckoutOrderId = 'MO' + String(nextOrderCount).padStart(4, '0');
 
+    // THÔNG TIN NGÂN HÀNG
     const BANK_ID = "VCB"; 
     const BANK_ACCOUNT = "1234567890"; 
     const ACCOUNT_NAME = "NGUYEN VAN A"; 
@@ -186,7 +192,7 @@ function openCheckoutModal() {
                                     <strong>Số tài khoản:</strong> ${BANK_ACCOUNT}<br>
                                     <strong>Số tiền:</strong> <span id="chk-qr-amount" style="color: #e74c3c; font-weight:bold; font-size:15px;">${total.toLocaleString('vi-VN')} đ</span><br>
                                     <strong>Nội dung CK:</strong> <span id="chk-qr-content" style="color: #e74c3c; font-weight:bold; font-size:15px;">${currentCheckoutOrderId}</span><br>
-                                    <small style="color: #666; margin-top: 10px; display: block;">* Mở App Ngân hàng quét mã QR bên cạnh để điền tự động thông tin.</small>
+                                    <small style="color: #666; margin-top: 10px; display: block;">* Mở App Ngân hàng quét mã QR bên cạnh để điền tự động thông tin. Hệ thống sẽ xác nhận tự động sau 1-3 phút.</small>
                                 </div>
                                 <div style="text-align: center; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
                                     <img id="chk-qr-img" src="${qrUrl}" alt="VietQR" style="width: 150px; height: 150px; border-radius: 4px;">
@@ -236,6 +242,9 @@ window.toggleBankInfo = function() {
     box.style.display = method === 'bank' ? 'block' : 'none';
 }
 
+// ==========================================
+// TÍCH HỢP TÌM KIẾM ĐỊA CHỈ (SELECT2 LIBRARIES)
+// ==========================================
 let vnProvinces = [];
 
 (function preloadLibraries() {
@@ -342,6 +351,9 @@ window.loadWards = function() {
     wSelect.trigger('change');
 }
 
+// ==========================================
+// TÍNH NĂNG GỢI Ý ĐỊA CHỈ (AUTOCOMPLETE) 
+// ==========================================
 let searchTimeout;
 window.setupAddressAutocomplete = function() {
     const addressInput = document.getElementById('chk-address');
@@ -403,6 +415,7 @@ window.setupAddressAutocomplete = function() {
     });
 }
 
+// XỬ LÝ ĐẶT HÀNG VÀ BẮN API VÀO DATABASE
 window.submitOrder = async function() {
     const btn = document.querySelector('.btn-checkout-confirm');
     btn.innerText = "Đang xử lý...";
@@ -461,9 +474,9 @@ window.submitOrder = async function() {
         localStorage.setItem('morachi_order_count', orderCount);
 
         if (method === 'bank') {
-            alert(`Cảm ơn ${name} đã đặt hàng!\n\nMã đơn hàng của bạn là: ${orderId}\n\nVui lòng chuyển khoản để hệ thống tự động duyệt.`);
+            alert(`Cảm ơn ${name} đã đặt hàng!\n\nMã đơn hàng của bạn là: ${orderId}\n\nVui lòng đảm bảo bạn đã quét mã QR để chuyển khoản. Hệ thống Admin đã ghi nhận đơn hàng.`);
         } else {
-            alert(`Cảm ơn ${name} đã đặt hàng!\n\nMã đơn hàng của bạn là: ${orderId}\n\nChúng tôi sẽ đóng gói và thu tiền mặt COD.`);
+            alert(`Cảm ơn ${name} đã đặt hàng!\n\nMã đơn hàng của bạn là: ${orderId}\n\nChúng tôi sẽ đóng gói và thu tiền mặt (COD) tận nhà cho bạn.`);
         }
 
         cart = [];
@@ -485,44 +498,61 @@ checkoutStyle.innerHTML = `
     .checkout-header h2 { margin: 0; font-size: 16px; text-transform: uppercase;}
     .checkout-header button { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
     .checkout-body { padding: 20px; overflow-y: auto; }
+    
     .checkout-form input[type="text"], .checkout-form input[type="tel"], .checkout-form select { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 14px; outline: none;}
     .checkout-form input:focus { border-color: #f57224; }
+    
     .select2-container--default .select2-selection--single { height: 43px; border: 1px solid #ddd; border-radius: 6px; outline: none; }
     .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 43px; padding-left: 12px; color: #333; font-size: 14px;}
     .select2-container--default .select2-selection--single .select2-selection__arrow { height: 40px; }
+    
     .select2-container--open { z-index: 999999 !important; }
     .select2-dropdown { border-color: #f57224; border-radius: 6px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); z-index: 999999 !important; }
-    .select2-container--default .select2-results__option--highlighted[aria-selected] { background-color: #f57224 !important; color: white !important;}
+    
+    .select2-container--default .select2-results__option--highlighted[aria-selected], .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable { background-color: #f57224 !important; color: white !important;}
+    .select2-container--default .select2-search--dropdown .select2-search__field { border-radius: 4px; padding: 6px 10px; border: 1px solid #ddd; outline: none;}
+    .select2-container--default .select2-search--dropdown .select2-search__field:focus { border-color: #f57224; }
+    .select2-container--default .select2-selection--single:focus { border-color: #f57224; }
+
     .payment-methods label { display: flex; align-items: center; padding: 12px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; cursor: pointer; background: #fafafa; font-size: 14px;}
     .payment-methods input { width: auto; margin-right: 10px; transform: scale(1.2); accent-color: #f57224;}
     .checkout-summary { background: #fff5f0; padding: 15px; border-radius: 8px; margin-top: 10px; border: 1px dashed #f57224;}
     .checkout-summary p { display: flex; justify-content: space-between; margin: 5px 0; color: #555; font-size: 14px;}
     .checkout-footer { padding: 15px 20px; background: #f9f9f9; border-top: 1px solid #eee; }
     .btn-checkout-confirm { width: 100%; padding: 15px; background: #f57224; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn-checkout-confirm:hover { background: #d35400; }
+
+    /* Scrollbar cho ô Gợi ý địa chỉ */
     #address-suggestions::-webkit-scrollbar { width: 6px; }
+    #address-suggestions::-webkit-scrollbar-track { background: #f1f1f1; }
     #address-suggestions::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
 `;
 document.head.appendChild(checkoutStyle);
 
+// ==============================================================
+// 10. TÍNH NĂNG NÚT LIÊN HỆ NỔI (FLOATING CONTACT) TỰ ĐỘNG
+// ==============================================================
 function initFloatingContact() {
     if (document.querySelector('.floating-contact')) return;
 
     const style = document.createElement('style');
     style.innerHTML = `
         .floating-contact { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; z-index: 9999; }
-        .float-btn { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 22px; text-decoration: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.2s, box-shadow 0.2s; position: relative; }
+        .float-btn { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 22px; text-decoration: none; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.2s ease, box-shadow 0.2s ease; position: relative; }
         .float-btn:hover { transform: translateY(-5px) scale(1.05); color: white; box-shadow: 0 6px 15px rgba(0,0,0,0.4); }
-        .float-btn .tooltip { position: absolute; right: 55px; background: rgba(0,0,0,0.8); color: white; padding: 5px 12px; border-radius: 6px; font-size: 13px; white-space: nowrap; opacity: 0; visibility: hidden; transition: 0.3s; pointer-events: none; font-weight: bold; }
+        .float-btn .tooltip { position: absolute; right: 55px; background: rgba(0,0,0,0.8); color: white; padding: 5px 12px; border-radius: 6px; font-size: 13px; white-space: nowrap; opacity: 0; visibility: hidden; transition: 0.3s ease; pointer-events: none; font-weight: bold; }
         .float-btn:hover .tooltip { opacity: 1; visibility: visible; right: 60px; }
         .btn-messenger { background: linear-gradient(45deg, #00C6FF, #0072FF); animation: pulse-ring 2s infinite; }
         .btn-facebook { background: #1877F2; }
         .btn-tiktok1 { background: #000000; border: 2px solid #fff; }
         .btn-tiktok2 { background: #000000; border: 2px solid #00f2fe; }
+
         @keyframes pulse-ring {
             0% { box-shadow: 0 0 0 0 rgba(0, 132, 255, 0.7); }
             70% { box-shadow: 0 0 0 10px rgba(0, 132, 255, 0); }
             100% { box-shadow: 0 0 0 0 rgba(0, 132, 255, 0); }
         }
+
         @media (max-width: 768px) {
             .floating-contact { bottom: 20px; right: 15px; transform: scale(0.9); transform-origin: bottom right; }
         }
@@ -532,10 +562,22 @@ function initFloatingContact() {
     const container = document.createElement('div');
     container.className = 'floating-contact';
     container.innerHTML = `
-        <a href="https://www.facebook.com/profile.php?id=61572066442519" target="_blank" class="float-btn btn-messenger"><i class="fab fa-facebook-messenger"></i><span class="tooltip">Chat Messenger</span></a>
-        <a href="https://www.facebook.com/profile.php?id=61572066442519" target="_blank" class="float-btn btn-facebook"><i class="fab fa-facebook-f"></i><span class="tooltip">Facebook Fanpage</span></a>
-        <a href="https://www.tiktok.com/@donhatnoidia2026" target="_blank" class="float-btn btn-tiktok1"><i class="fab fa-tiktok"></i><span class="tooltip">Tiệm đồ nhật nội địa</span></a>
-        <a href="https://www.tiktok.com/@morachijanpan" target="_blank" class="float-btn btn-tiktok2"><i class="fab fa-tiktok"></i><span class="tooltip">Morachi</span></a>
+        <a href="https://www.facebook.com/profile.php?id=61572066442519" target="_blank" class="float-btn btn-messenger">
+            <i class="fab fa-facebook-messenger"></i>
+            <span class="tooltip">Chat Messenger</span>
+        </a>
+        <a href="https://www.facebook.com/profile.php?id=61572066442519" target="_blank" class="float-btn btn-facebook">
+            <i class="fab fa-facebook-f"></i>
+            <span class="tooltip">Facebook Fanpage</span>
+        </a>
+        <a href="https://www.tiktok.com/@donhatnoidia2026" target="_blank" class="float-btn btn-tiktok1">
+            <i class="fab fa-tiktok"></i>
+            <span class="tooltip">Tiệm đồ nhật nội địa</span>
+        </a>
+        <a href="https://www.tiktok.com/@morachijanpan" target="_blank" class="float-btn btn-tiktok2">
+            <i class="fab fa-tiktok"></i>
+            <span class="tooltip">Morachi</span>
+        </a>
     `;
     document.body.appendChild(container);
 }
