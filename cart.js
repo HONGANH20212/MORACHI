@@ -44,7 +44,6 @@ function addToCart(product) {
     }
     
     saveCart(); 
-    // Đã xóa lệnh tự trượt giỏ hàng ra ở đây!
 }
 
 // 5. Cập nhật giao diện giỏ hàng
@@ -281,6 +280,9 @@ async function fetchProvinces() {
                 pSelect.add(opt);
             });
         }
+        if (typeof jQuery !== 'undefined' && jQuery.fn.select2) {
+            $('#chk-province').trigger('change.select2');
+        }
         applySelect2();
     } catch (e) { console.error("Lỗi API địa chỉ:", e); }
 }
@@ -316,8 +318,8 @@ window.loadDistricts = function() {
     wSelect.empty().append('<option value="">Phường/Xã</option>');
     
     if(!pCode) {
-        dSelect.trigger('change');
-        wSelect.trigger('change');
+        dSelect.trigger('change.select2');
+        wSelect.trigger('change.select2');
         return;
     }
     
@@ -327,8 +329,8 @@ window.loadDistricts = function() {
             dSelect.append(new Option(d.name, d.code));
         });
     }
-    dSelect.trigger('change');
-    wSelect.trigger('change');
+    dSelect.trigger('change.select2');
+    wSelect.trigger('change.select2');
 }
 
 window.loadWards = function() {
@@ -340,7 +342,7 @@ window.loadWards = function() {
     wSelect.empty().append('<option value="">Phường/Xã</option>');
     
     if(!pCode || !dCode) {
-        wSelect.trigger('change');
+        wSelect.trigger('change.select2');
         return;
     }
     
@@ -351,7 +353,7 @@ window.loadWards = function() {
             wSelect.append(new Option(w.name, w.code));
         });
     }
-    wSelect.trigger('change');
+    wSelect.trigger('change.select2');
 }
 
 // ==========================================
@@ -505,9 +507,9 @@ checkoutStyle.innerHTML = `
     .checkout-form input[type="text"], .checkout-form input[type="tel"], .checkout-form select { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-family: inherit; font-size: 14px; outline: none;}
     .checkout-form input:focus { border-color: #f57224; }
     
-    .select2-container--default .select2-selection--single { height: 43px; border: 1px solid #ddd; border-radius: 6px; outline: none; }
-    .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 43px; padding-left: 12px; color: #333; font-size: 14px;}
-    .select2-container--default .select2-selection--single .select2-selection__arrow { height: 40px; }
+    .select2-container--default .select2-selection--single { height: 43px !important; border: 1px solid #ddd !important; border-radius: 6px !important; outline: none; display: flex !important; align-items: center !important; }
+    .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: normal !important; padding-left: 12px !important; color: #333 !important; font-size: 14px !important; width: 100%; text-align: left;}
+    .select2-container--default .select2-selection--single .select2-selection__arrow { height: 41px !important; display: flex; align-items: center; }
     
     .select2-container--open { z-index: 999999 !important; }
     .select2-dropdown { border-color: #f57224; border-radius: 6px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.1); z-index: 999999 !important; }
@@ -525,7 +527,6 @@ checkoutStyle.innerHTML = `
     .btn-checkout-confirm { width: 100%; padding: 15px; background: #f57224; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
     .btn-checkout-confirm:hover { background: #d35400; }
 
-    /* Scrollbar cho ô Gợi ý địa chỉ */
     #address-suggestions::-webkit-scrollbar { width: 6px; }
     #address-suggestions::-webkit-scrollbar-track { background: #f1f1f1; }
     #address-suggestions::-webkit-scrollbar-thumb { background: #ccc; border-radius: 4px; }
@@ -577,7 +578,7 @@ function initFloatingContact() {
             <i class="fab fa-tiktok"></i>
             <span class="tooltip">Tiệm đồ nhật nội địa</span>
         </a>
-        <a href="https://www.tiktok.com/@morachijanpan" target="_blank" class="float-btn btn-tiktok2">
+        <a href="https://www.tiktok.com/@morachiijanpan" target="_blank" class="float-btn btn-tiktok2">
             <i class="fab fa-tiktok"></i>
             <span class="tooltip">Morachi</span>
         </a>
