@@ -12,6 +12,7 @@ from azure.storage.blob import BlobServiceClient, ContentSettings
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
+# --- CẤU HÌNH KẾT NỐI (Lấy từ Environment Variables của Azure) ---
 COSMOS_URL = os.environ.get("COSMOS_URL")
 COSMOS_KEY = os.environ.get("COSMOS_KEY")
 COSMOS_DB_NAME = os.environ.get("COSMOS_DB_NAME", "morachi-db")
@@ -20,16 +21,18 @@ COSMOS_CONTAINER_NAME = os.environ.get("COSMOS_CONTAINER_NAME", "products")
 BLOB_CONNECTION_STRING = os.environ.get("BLOB_CONNECTION_STRING")
 BLOB_CONTAINER_NAME = os.environ.get("BLOB_CONTAINER_NAME", "products")
 
+# --- HÀM TRỢ GIÚP (HELPER FUNCTIONS) ---
 
 def cors_headers():
+    """Tạo headers cho phép truy cập từ trình duyệt (CORS)"""
     return {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type"
     }
 
-
 def json_response(data, status_code=200):
+    """Trả về dữ liệu dạng JSON chuẩn"""
     return func.HttpResponse(
         json.dumps(data, ensure_ascii=False),
         mimetype="application/json",
@@ -37,31 +40,28 @@ def json_response(data, status_code=200):
         headers=cors_headers()
     )
 
-
 def options_response():
+    """Xử lý yêu cầu OPTIONS của trình duyệt"""
     return func.HttpResponse(status_code=200, headers=cors_headers())
 
-
 def get_cosmos_container():
+    """Khởi tạo kết nối tới cơ sở dữ liệu Cosmos DB"""
     if not COSMOS_URL or not COSMOS_KEY:
-        raise ValueError("Thiếu COSMOS_URL hoặc COSMOS_KEY trong cấu hình môi trường.")
-
+        raise ValueError("Thiếu cấu hình Azure Cosmos DB trong ứng dụng.")
     client = CosmosClient(COSMOS_URL, credential=COSMOS_KEY)
     database = client.get_database_client(COSMOS_DB_NAME)
     return database.get_container_client(COSMOS_CONTAINER_NAME)
 
-
 def get_blob_container_client():
+    """Khởi tạo kết nối tới Azure Blob Storage để lưu ảnh"""
     if not BLOB_CONNECTION_STRING:
-        raise ValueError("Thiếu BLOB_CONNECTION_STRING trong cấu hình môi trường.")
-
+        raise ValueError("Thiếu cấu hình Azure Blob Storage.")
     blob_service_client = BlobServiceClient.from_connection_string(BLOB_CONNECTION_STRING)
     return blob_service_client.get_container_client(BLOB_CONTAINER_NAME)
 
-
 def normalize_product(data, existing=None):
+    """Chuẩn hóa dữ liệu sản phẩm, đảm bảo không có trường nào bị trống (None)"""
     existing = existing or {}
-
     return {
         "title": (data.get("title") or existing.get("title") or "").strip(),
         "brand": (data.get("brand") or existing.get("brand") or "").strip(),
@@ -79,343 +79,235 @@ def normalize_product(data, existing=None):
         "variants": data.get("variants") if "variants" in data else existing.get("variants", [])
     }
 
-
-def validate_product(data):
-    errors = []
-
-    if not data["title"]:
-        errors.append("Thiếu title")
-    if not data["brand"]:
-        errors.append("Thiếu brand")
-    if not data["thumbnail"]:
-        errors.append("Thiếu thumbnail")
-    if not data["current_price"]:
-        errors.append("Thiếu current_price")
-
-    return errors
-
-
 def parse_multipart_file(req: func.HttpRequest):
+    """Phân tách dữ liệu file gửi từ trình duyệt (form-data)"""
     content_type = req.headers.get("content-type") or req.headers.get("Content-Type")
     if not content_type or "multipart/form-data" not in content_type:
-        raise ValueError("Request phải là multipart/form-data")
+        raise ValueError("Yêu cầu không đúng định dạng multipart/form-data")
 
     body = req.get_body()
-    raw = b"Content-Type: " + content_type.encode("utf-8") + b"\r\n\r\n" + body
-    msg = BytesParser(policy=default).parsebytes(raw)
+    raw_data = b"Content-Type: " + content_type.encode("utf-8") + b"\r\n\r\n" + body
+    msg = BytesParser(policy=default).parsebytes(raw_data)
 
     for part in msg.iter_parts():
         content_disposition = part.get("Content-Disposition", "")
         if "filename=" in content_disposition:
             filename = part.get_filename()
             file_bytes = part.get_payload(decode=True)
-            mime_type = part.get_content_type() or "application/octet-stream"
+            mime_type = part.get_content_type()
             return filename, file_bytes, mime_type
+    
+    raise ValueError("Không tìm thấy tệp tin ảnh trong dữ liệu gửi lên.")
 
-    raise ValueError("Không tìm thấy file trong request")
-
-
-def build_blob_name(filename: str) -> str:
-    ext = os.path.splitext(filename)[1].lower() or ".jpg"
-    safe_ext = ext if len(ext) <= 10 else ".jpg"
-    return f"products/{datetime.utcnow().strftime('%Y/%m')}/{uuid.uuid4().hex}{safe_ext}"
-
+# --- ROUTES SẢN PHẨM ---
 
 @app.route(route="upload-image", methods=["POST", "OPTIONS"])
 def upload_image(req: func.HttpRequest) -> func.HttpResponse:
-    if req.method == "OPTIONS":
-        return options_response()
-
+    if req.method == "OPTIONS": return options_response()
     try:
         filename, file_bytes, mime_type = parse_multipart_file(req)
-
-        if not file_bytes:
-            return json_response({"error": "File rỗng"}, 400)
-
-        if len(file_bytes) > 5 * 1024 * 1024:
-            return json_response({"error": "Ảnh vượt quá 5MB"}, 400)
-
-        allowed_types = {"image/jpeg", "image/png", "image/webp", "image/gif"}
-        guessed_type, _ = mimetypes.guess_type(filename)
-        final_type = mime_type if mime_type in allowed_types else (guessed_type or "application/octet-stream")
-
-        if final_type not in allowed_types:
-            return json_response({"error": "Chỉ cho phép jpg, png, webp, gif"}, 400)
-
+        if not file_bytes: return json_response({"error": "Dữ liệu tệp tin trống"}, 400)
+        
         container_client = get_blob_container_client()
-        blob_name = build_blob_name(filename)
+        ext = os.path.splitext(filename)[1].lower() or ".jpg"
+        # Tạo đường dẫn lưu ảnh theo Tháng/Năm để dễ quản lý
+        blob_name = f"products/{datetime.utcnow().strftime('%Y/%m')}/{uuid.uuid4().hex}{ext}"
         blob_client = container_client.get_blob_client(blob_name)
-
-        blob_client.upload_blob(
-            file_bytes,
-            overwrite=False,
-            content_settings=ContentSettings(content_type=final_type)
-        )
-
-        return json_response({
-            "message": "Upload ảnh thành công",
-            "url": blob_client.url,
-            "blob_name": blob_name
-        }, 201)
-
+        
+        blob_client.upload_blob(file_bytes, content_settings=ContentSettings(content_type=mime_type))
+        return json_response({"message": "Upload thành công", "url": blob_client.url}, 201)
     except Exception as e:
         return json_response({"error": str(e)}, 500)
 
-
 @app.route(route="products", methods=["GET", "POST", "OPTIONS"])
 def products(req: func.HttpRequest) -> func.HttpResponse:
-    if req.method == "OPTIONS":
-        return options_response()
-
+    if req.method == "OPTIONS": return options_response()
+    container = get_cosmos_container()
     try:
-        container = get_cosmos_container()
-
         if req.method == "GET":
-            query = "SELECT * FROM c WHERE c.status = 'active'"
-            items = list(container.query_items(
-                query=query,
-                enable_cross_partition_query=True
-            ))
-
+            # Lấy danh sách sản phẩm (Bỏ qua các bản ghi đơn hàng)
+            query = "SELECT * FROM c WHERE c.status = 'active' AND NOT IS_DEFINED(c.type)"
+            items = list(container.query_items(query=query, enable_cross_partition_query=True))
+            # Sắp xếp mới nhất lên đầu
             items.sort(key=lambda x: x.get("created_at", ""), reverse=True)
             return json_response(items)
 
         if req.method == "POST":
             body = req.get_json()
             product = normalize_product(body)
-            errors = validate_product(product)
-
-            if errors:
-                return json_response({"errors": errors}, 400)
-
             now = datetime.utcnow().isoformat() + "Z"
-            item = {
+            product.update({
                 "id": str(uuid.uuid4()),
-                "title": product["title"],
-                "brand": product["brand"],
-                "thumbnail": product["thumbnail"],
-                "current_price": product["current_price"],
-                "old_price": product["old_price"],
-                "discount": product["discount"],
-                "rating": product["rating"],
-                "sold_text": product["sold_text"],
-                "description": product["description"],
-                "specifications": product["specifications"],
-                "ingredients": product["ingredients"],
-                "usage_manual": product["usage_manual"],
-                "status": product["status"],
-                "variants": product.get("variants", []),
                 "created_at": now,
                 "updated_at": now
-            }
-
-            container.create_item(body=item)
-            return json_response({"message": "Tạo sản phẩm thành công", "item": item}, 201)
-
-        return json_response({"error": "Method not allowed"}, 405)
+            })
+            container.create_item(body=product)
+            return json_response({"message": "Tạo sản phẩm thành công", "item": product}, 201)
 
     except Exception as e:
         return json_response({"error": str(e)}, 500)
 
-
 @app.route(route="products/{id}", methods=["PUT", "DELETE", "OPTIONS"])
 def product_by_id(req: func.HttpRequest) -> func.HttpResponse:
-    if req.method == "OPTIONS":
-        return options_response()
-
+    if req.method == "OPTIONS": return options_response()
+    container = get_cosmos_container()
+    p_id = req.route_params.get("id")
     try:
-        container = get_cosmos_container()
-        product_id = req.route_params.get("id")
-
         query = "SELECT * FROM c WHERE c.id = @id"
-        items = list(container.query_items(
-            query=query,
-            parameters=[{"name": "@id", "value": product_id}],
-            enable_cross_partition_query=True
-        ))
-
-        if not items:
-            return json_response({"error": "Không tìm thấy sản phẩm"}, 404)
-
+        items = list(container.query_items(query=query, parameters=[{"name": "@id", "value": p_id}], enable_cross_partition_query=True))
+        if not items: return json_response({"error": "Không tìm thấy sản phẩm"}, 404)
+        
         existing = items[0]
+        old_brand = existing.get("brand")
 
         if req.method == "PUT":
             body = req.get_json()
             updated = normalize_product(body, existing)
-            errors = validate_product(updated)
-
-            if errors:
-                return json_response({"errors": errors}, 400)
-
-            old_brand = existing["brand"]
-
-            existing["title"] = updated["title"]
-            existing["brand"] = updated["brand"]
-            existing["thumbnail"] = updated["thumbnail"]
-            existing["current_price"] = updated["current_price"]
-            existing["old_price"] = updated["old_price"]
-            existing["discount"] = updated["discount"]
-            existing["rating"] = updated["rating"]
-            existing["sold_text"] = updated["sold_text"]
-            existing["description"] = updated["description"]
-            existing["specifications"] = updated["specifications"]
-            existing["ingredients"] = updated["ingredients"]
-            existing["usage_manual"] = updated["usage_manual"]
-            existing["status"] = updated["status"]
-            existing["variants"] = updated.get("variants", [])
-            existing["updated_at"] = datetime.utcnow().isoformat() + "Z"
-
-            if old_brand == existing["brand"]:
-                container.replace_item(item=existing, body=existing)
-            else:
-                container.delete_item(item=product_id, partition_key=old_brand)
-                container.create_item(body=existing)
-
-            return json_response({"message": "Cập nhật sản phẩm thành công", "item": existing})
-
-        if req.method == "DELETE":
-            container.delete_item(item=product_id, partition_key=existing["brand"])
-            return json_response({"message": "Xóa sản phẩm thành công"})
-
-        return json_response({"error": "Method not allowed"}, 405)
-
-    except Exception as e:
-        return json_response({"error": str(e)}, 500)
-
-
-@app.route(route="brands", methods=["GET", "OPTIONS"])
-def brands(req: func.HttpRequest) -> func.HttpResponse:
-    if req.method == "OPTIONS":
-        return options_response()
-
-    try:
-        container = get_cosmos_container()
-
-        query = "SELECT * FROM c WHERE c.status = 'active'"
-        items = list(container.query_items(
-            query=query,
-            enable_cross_partition_query=True
-        ))
-
-        brand_count = {}
-        for item in items:
-            brand = item.get("brand", "").strip()
-            if not brand:
-                continue
-            brand_count[brand] = brand_count.get(brand, 0) + 1
-
-        result = [
-            {"brand": brand, "count": count}
-            for brand, count in sorted(brand_count.items(), key=lambda x: x[0].lower())
-        ]
-
-        return json_response(result)
-
-    except Exception as e:
-        return json_response({"error": str(e)}, 500)
-
-
-@app.route(route="orders", methods=["GET", "POST", "OPTIONS"])
-def orders_api(req: func.HttpRequest) -> func.HttpResponse:
-    if req.method == "OPTIONS":
-        return options_response()
-
-    try:
-        container = get_cosmos_container()
-
-        if req.method == "GET":
-            query = "SELECT * FROM c WHERE c.type = 'order'"
-            items = list(container.query_items(
-                query=query,
-                enable_cross_partition_query=True
-            ))
-            items.sort(key=lambda x: x.get("created_at", ""), reverse=True)
-            return json_response(items)
-
-        if req.method == "POST":
-            body = req.get_json()
-            now = datetime.utcnow().isoformat() + "Z"
+            updated["id"] = p_id
+            updated["created_at"] = existing.get("created_at")
+            updated["updated_at"] = datetime.utcnow().isoformat() + "Z"
             
-            order_item = {
-                "id": str(uuid.uuid4()),
-                "brand": "ORDER", 
-                "type": "order",
-                "order_id": body.get("order_id"),
-                "customer_info": body.get("customer_info", {}),
-                "items": body.get("items", []),
-                "total_amount": body.get("total_amount", 0),
-                "payment_method": body.get("payment_method", "cod"),
-                "status": body.get("status", "Chờ xác nhận"),
-                "spx_tracking_code": "",
-                "created_at": now
-            }
-
-            container.create_item(body=order_item)
-            return json_response({"message": "Tạo đơn hàng thành công", "order": order_item}, 201)
-
-    except Exception as e:
-        return json_response({"error": str(e)}, 500)
-
-
-@app.route(route="orders/{id}", methods=["PUT", "DELETE", "OPTIONS"])
-def order_by_id(req: func.HttpRequest) -> func.HttpResponse:
-    if req.method == "OPTIONS":
-        return options_response()
-
-    try:
-        container = get_cosmos_container()
-        order_id = req.route_params.get("id")
-
-        query = "SELECT * FROM c WHERE c.id = @id AND c.type = 'order'"
-        items = list(container.query_items(
-            query=query,
-            parameters=[{"name": "@id", "value": order_id}],
-            enable_cross_partition_query=True
-        ))
-
-        if not items:
-            return json_response({"error": "Không tìm thấy đơn hàng"}, 404)
-
-        existing = items[0]
-
-        if req.method == "PUT":
-            body = req.get_json()
-            existing["status"] = body.get("status", existing.get("status"))
-            existing["spx_tracking_code"] = body.get("spx_tracking_code", existing.get("spx_tracking_code", ""))
-            existing["updated_at"] = datetime.utcnow().isoformat() + "Z"
-
-            container.replace_item(item=existing, body=existing)
-            return json_response({"message": "Cập nhật thành công", "item": existing})
+            # Logic quan trọng: Nếu đổi Brand (Partition Key), phải xóa cũ tạo mới
+            if updated["brand"] != old_brand:
+                container.delete_item(item=p_id, partition_key=old_brand)
+                container.create_item(body=updated)
+            else:
+                container.replace_item(item=p_id, body=updated)
+            return json_response({"message": "Cập nhật thành công", "item": updated})
 
         if req.method == "DELETE":
-            container.delete_item(item=order_id, partition_key="ORDER")
+            container.delete_item(item=p_id, partition_key=old_brand)
             return json_response({"message": "Xóa thành công"})
 
     except Exception as e:
         return json_response({"error": str(e)}, 500)
 
+@app.route(route="brands", methods=["GET", "OPTIONS"])
+def brands(req: func.HttpRequest) -> func.HttpResponse:
+    if req.method == "OPTIONS": return options_response()
+    try:
+        container = get_cosmos_container()
+        query = "SELECT c.brand FROM c WHERE c.status = 'active' AND NOT IS_DEFINED(c.type)"
+        items = list(container.query_items(query=query, enable_cross_partition_query=True))
+        
+        brand_count = {}
+        for i in items:
+            b = i.get("brand", "").strip()
+            if b: brand_count[b] = brand_count.get(b, 0) + 1
+            
+        result = [{"brand": k, "count": v} for k, v in sorted(brand_count.items())]
+        return json_response(result)
+    except Exception as e:
+        return json_response({"error": str(e)}, 500)
+
+# --- ROUTES ĐƠN HÀNG & TRỪ KHO ---
+
+@app.route(route="orders", methods=["GET", "POST", "OPTIONS"])
+def orders_api(req: func.HttpRequest) -> func.HttpResponse:
+    if req.method == "OPTIONS": return options_response()
+    container = get_cosmos_container()
+    try:
+        if req.method == "GET":
+            query = "SELECT * FROM c WHERE c.type = 'order'"
+            items = list(container.query_items(query=query, enable_cross_partition_query=True))
+            items.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+            return json_response(items)
+
+        if req.method == "POST":
+            body = req.get_json()
+            items_list = body.get("items", [])
+            
+            # --- LOGIC CẬP NHẬT KHO HÀNG (TRỪ STOCK) ---
+            for item in items_list:
+                p_id = item.get("id")
+                p_brand = item.get("brand") # Phải có brand để xác định Partition Key
+                v_name = item.get("variant")
+                ordered_qty = int(item.get("quantity", 0))
+
+                if p_id and p_brand:
+                    try:
+                        # Truy xuất sản phẩm để sửa
+                        product_doc = container.read_item(item=p_id, partition_key=p_brand)
+                        if "variants" in product_doc:
+                            updated = False
+                            for v in product_doc["variants"]:
+                                if v.get("name") == v_name:
+                                    # Thực hiện trừ số lượng
+                                    curr = int(v.get("stock", 0))
+                                    rem = max(0, curr - ordered_qty)
+                                    v["stock"] = rem
+                                    # Nếu hết hàng thì đổi trạng thái
+                                    if rem == 0: v["status"] = "out"
+                                    updated = True
+                                    break
+                            
+                            if updated:
+                                container.replace_item(item=p_id, body=product_doc)
+                    except Exception as ex:
+                        print(f"Lỗi trừ kho sản phẩm {p_id}: {str(ex)}")
+
+            # --- TẠO BẢN GHI ĐƠN HÀNG ---
+            now = datetime.utcnow().isoformat() + "Z"
+            order_data = {
+                "id": str(uuid.uuid4()),
+                "brand": "ORDER", # Gom tất cả đơn hàng vào 1 Partition Key để dễ truy vấn
+                "type": "order",
+                "order_id": body.get("order_id"),
+                "customer_info": body.get("customer_info", {}),
+                "items": items_list,
+                "total_amount": body.get("total_amount", 0),
+                "payment_method": body.get("payment_method", "cod"),
+                "status": body.get("status", "Chờ xác nhận"),
+                "spx_tracking_code": "",
+                "created_at": now,
+                "updated_at": now
+            }
+            container.create_item(body=order_data)
+            return json_response({"message": "Đặt hàng thành công", "order": order_data}, 201)
+
+    except Exception as e:
+        return json_response({"error": str(e)}, 500)
+
+@app.route(route="orders/{id}", methods=["PUT", "DELETE", "OPTIONS"])
+def order_by_id(req: func.HttpRequest) -> func.HttpResponse:
+    if req.method == "OPTIONS": return options_response()
+    container = get_cosmos_container()
+    o_id = req.route_params.get("id")
+    try:
+        # Đơn hàng luôn nằm trong partition ORDER
+        item = container.read_item(item=o_id, partition_key="ORDER")
+        
+        if req.method == "PUT":
+            body = req.get_json()
+            item["status"] = body.get("status", item.get("status"))
+            item["spx_tracking_code"] = body.get("spx_tracking_code", item.get("spx_tracking_code", ""))
+            item["updated_at"] = datetime.utcnow().isoformat() + "Z"
+            container.replace_item(item=o_id, body=item)
+            return json_response({"message": "Cập nhật đơn hàng thành công", "item": item})
+        
+        if req.method == "DELETE":
+            container.delete_item(item=o_id, partition_key="ORDER")
+            return json_response({"message": "Xóa đơn hàng thành công"})
+            
+    except Exception as e:
+        return json_response({"error": str(e)}, 500)
 
 @app.route(route="track", methods=["GET", "OPTIONS"])
 def track_order(req: func.HttpRequest) -> func.HttpResponse:
-    if req.method == "OPTIONS":
-        return options_response()
-
+    if req.method == "OPTIONS": return options_response()
+    phone = req.params.get("phone")
+    if not phone: return json_response({"error": "Thiếu số điện thoại"}, 400)
+    
     try:
-        phone = req.params.get("phone")
-        if not phone:
-            return json_response({"error": "Thiếu số điện thoại"}, 400)
-
         container = get_cosmos_container()
+        # Truy vấn tìm đơn hàng theo SĐT khách hàng
         query = "SELECT * FROM c WHERE c.type = 'order' AND c.customer_info.phone = @phone"
-        
         items = list(container.query_items(
-            query=query,
-            parameters=[{"name": "@phone", "value": phone}],
+            query=query, 
+            parameters=[{"name": "@phone", "value": phone}], 
             enable_cross_partition_query=True
         ))
-
         items.sort(key=lambda x: x.get("created_at", ""), reverse=True)
         return json_response(items)
-
     except Exception as e:
         return json_response({"error": str(e)}, 500)
