@@ -1,13 +1,17 @@
 {
-  "routes": [
-    {
-      "route": "/",
-      "redirect": "https://www.morachi.com.vn/",
-      "statusCode": 301
-    },
-    {
-      "route": "/*",
-      "serve": "/index.html"
-    }
-  ]
+  "navigationFallback": {
+    "rewrite": "/index.html"
+  },
+  "globalHeaders": {
+    "content-security-policy": "default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval';"
+  },
+  "hostingExtensions": {
+    "redirects": [
+      {
+        "forwardingProtocol": "http",
+        "redirect": "https://www.morachi.com.vn",
+        "statusCode": 301
+      }
+    ]
+  }
 }
