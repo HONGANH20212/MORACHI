@@ -2,6 +2,7 @@ import os
 import json
 import uuid
 import mimetypes
+import re  # THÊM THƯ VIỆN RE ĐỂ XỬ LÝ CHUỖI
 from datetime import datetime
 from email.parser import BytesParser
 from email.policy import default
@@ -24,7 +25,6 @@ BLOB_CONTAINER_NAME = os.environ.get("BLOB_CONTAINER_NAME", "products")
 # --- HÀM TRỢ GIÚP (HELPER FUNCTIONS) ---
 
 def cors_headers():
-    """Tạo headers cho phép truy cập từ trình duyệt (CORS)"""
     return {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
@@ -32,7 +32,6 @@ def cors_headers():
     }
 
 def json_response(data, status_code=200):
-    """Trả về dữ liệu dạng JSON chuẩn"""
     return func.HttpResponse(
         json.dumps(data, ensure_ascii=False),
         mimetype="application/json",
@@ -41,11 +40,9 @@ def json_response(data, status_code=200):
     )
 
 def options_response():
-    """Xử lý yêu cầu OPTIONS của trình duyệt"""
     return func.HttpResponse(status_code=200, headers=cors_headers())
 
 def get_cosmos_container():
-    """Khởi tạo kết nối tới cơ sở dữ liệu Cosmos DB"""
     if not COSMOS_URL or not COSMOS_KEY:
         raise ValueError("Thiếu cấu hình Azure Cosmos DB trong ứng dụng.")
     client = CosmosClient(COSMOS_URL, credential=COSMOS_KEY)
@@ -53,17 +50,41 @@ def get_cosmos_container():
     return database.get_container_client(COSMOS_CONTAINER_NAME)
 
 def get_blob_container_client():
-    """Khởi tạo kết nối tới Azure Blob Storage để lưu ảnh"""
     if not BLOB_CONNECTION_STRING:
-        raise ValueError("Thiếu cấu hình Azure Blob Storage.")
+        raise ValueError("Thiếu cấu hình Azure Storage.")
     blob_service_client = BlobServiceClient.from_connection_string(BLOB_CONNECTION_STRING)
     return blob_service_client.get_container_client(BLOB_CONTAINER_NAME)
 
+def generate_slug(text):
+    """Hàm chuyển đổi Tiếng Việt có dấu thành Slug không dấu chuyên nghiệp"""
+    if not text: return ""
+    text = text.lower()
+    # Thay thế các ký tự tiếng Việt nhóm a, o, e, u, i, d, y
+    text = re.sub(r'[àáạảãâầấậẩẫăằắặẳẵ]', 'a', text)
+    text = re.sub(r'[èéẹẻẽêềếệểễ]', 'e', text)
+    text = re.sub(r'[òóọỏõôồốộổỗơờớợởỡ]', 'o', text)
+    text = re.sub(r'[ùúụủũưừứựửữ]', 'u', text)
+    text = re.sub(r'[ìíịỉĩ]', 'i', text)
+    text = re.sub(r'[ỳýỵỷỹ]', 'y', text)
+    text = re.sub(r'[đ]', 'd', text)
+    # Xóa ký tự đặc biệt chỉ giữ lại chữ cái, số và khoảng trắng
+    text = re.sub(r'[^a-z0-9\s-]', '', text)
+    # Thay khoảng trắng liền nhau hoặc gạch ngang thành một dấu gạch ngang duy nhất
+    text = re.sub(r'[\s-]+', '-', text)
+    return text.strip('-')
+
 def normalize_product(data, existing=None):
-    """Chuẩn hóa dữ liệu sản phẩm, đảm bảo không có trường nào bị trống (None)"""
     existing = existing or {}
+    title = (data.get("title") or existing.get("title") or "").strip()
+    
+    # Tự động sinh slug dựa trên tiêu đề sản phẩm mới hoặc dùng lại slug cũ
+    slug = data.get("slug") or existing.get("slug") or generate_slug(title)
+    if data.get("title") and not data.get("slug"): 
+        slug = generate_slug(title) # Cập nhật lại slug nếu tiêu đề đổi
+
     return {
-        "title": (data.get("title") or existing.get("title") or "").strip(),
+        "title": title,
+        "slug": slug.strip(), # BỔ SUNG TRƯỜNG SLUG ĐỒNG BỘ XUỐNG DB
         "brand": (data.get("brand") or existing.get("brand") or "").strip(),
         "thumbnail": (data.get("thumbnail") or existing.get("thumbnail") or "").strip(),
         "current_price": str(data.get("current_price") or existing.get("current_price") or "").strip(),
@@ -80,7 +101,6 @@ def normalize_product(data, existing=None):
     }
 
 def parse_multipart_file(req: func.HttpRequest):
-    """Phân tách dữ liệu file gửi từ trình duyệt (form-data)"""
     content_type = req.headers.get("content-type") or req.headers.get("Content-Type")
     if not content_type or "multipart/form-data" not in content_type:
         raise ValueError("Yêu cầu không đúng định dạng multipart/form-data")
@@ -97,7 +117,7 @@ def parse_multipart_file(req: func.HttpRequest):
             mime_type = part.get_content_type()
             return filename, file_bytes, mime_type
     
-    raise ValueError("Không tìm thấy tệp tin ảnh trong dữ liệu gửi lên.")
+    raise ValueError("Không tìm thấy tệp tin ảnh.")
 
 # --- ROUTES SẢN PHẨM ---
 
@@ -110,7 +130,6 @@ def upload_image(req: func.HttpRequest) -> func.HttpResponse:
         
         container_client = get_blob_container_client()
         ext = os.path.splitext(filename)[1].lower() or ".jpg"
-        # Tạo đường dẫn lưu ảnh theo Tháng/Năm để dễ quản lý
         blob_name = f"products/{datetime.utcnow().strftime('%Y/%m')}/{uuid.uuid4().hex}{ext}"
         blob_client = container_client.get_blob_client(blob_name)
         
@@ -125,10 +144,8 @@ def products(req: func.HttpRequest) -> func.HttpResponse:
     container = get_cosmos_container()
     try:
         if req.method == "GET":
-            # Lấy danh sách sản phẩm (Bỏ qua các bản ghi đơn hàng)
             query = "SELECT * FROM c WHERE c.status = 'active' AND NOT IS_DEFINED(c.type)"
             items = list(container.query_items(query=query, enable_cross_partition_query=True))
-            # Sắp xếp mới nhất lên đầu
             items.sort(key=lambda x: x.get("created_at", ""), reverse=True)
             return json_response(items)
 
@@ -167,7 +184,6 @@ def product_by_id(req: func.HttpRequest) -> func.HttpResponse:
             updated["created_at"] = existing.get("created_at")
             updated["updated_at"] = datetime.utcnow().isoformat() + "Z"
             
-            # Logic quan trọng: Nếu đổi Brand (Partition Key), phải xóa cũ tạo mới
             if updated["brand"] != old_brand:
                 container.delete_item(item=p_id, partition_key=old_brand)
                 container.create_item(body=updated)
@@ -217,26 +233,22 @@ def orders_api(req: func.HttpRequest) -> func.HttpResponse:
             body = req.get_json()
             items_list = body.get("items", [])
             
-            # --- LOGIC CẬP NHẬT KHO HÀNG (TRỪ STOCK) ---
             for item in items_list:
                 p_id = item.get("id")
-                p_brand = item.get("brand") # Phải có brand để xác định Partition Key
+                p_brand = item.get("brand") 
                 v_name = item.get("variant")
                 ordered_qty = int(item.get("quantity", 0))
 
                 if p_id and p_brand:
                     try:
-                        # Truy xuất sản phẩm để sửa
                         product_doc = container.read_item(item=p_id, partition_key=p_brand)
                         if "variants" in product_doc:
                             updated = False
                             for v in product_doc["variants"]:
                                 if v.get("name") == v_name:
-                                    # Thực hiện trừ số lượng
                                     curr = int(v.get("stock", 0))
                                     rem = max(0, curr - ordered_qty)
                                     v["stock"] = rem
-                                    # Nếu hết hàng thì đổi trạng thái
                                     if rem == 0: v["status"] = "out"
                                     updated = True
                                     break
@@ -246,11 +258,10 @@ def orders_api(req: func.HttpRequest) -> func.HttpResponse:
                     except Exception as ex:
                         print(f"Lỗi trừ kho sản phẩm {p_id}: {str(ex)}")
 
-            # --- TẠO BẢN GHI ĐƠN HÀNG ---
             now = datetime.utcnow().isoformat() + "Z"
             order_data = {
                 "id": str(uuid.uuid4()),
-                "brand": "ORDER", # Gom tất cả đơn hàng vào 1 Partition Key để dễ truy vấn
+                "brand": "ORDER", 
                 "type": "order",
                 "order_id": body.get("order_id"),
                 "customer_info": body.get("customer_info", {}),
@@ -274,7 +285,6 @@ def order_by_id(req: func.HttpRequest) -> func.HttpResponse:
     container = get_cosmos_container()
     o_id = req.route_params.get("id")
     try:
-        # Đơn hàng luôn nằm trong partition ORDER
         item = container.read_item(item=o_id, partition_key="ORDER")
         
         if req.method == "PUT":
@@ -300,7 +310,6 @@ def track_order(req: func.HttpRequest) -> func.HttpResponse:
     
     try:
         container = get_cosmos_container()
-        # Truy vấn tìm đơn hàng theo SĐT khách hàng
         query = "SELECT * FROM c WHERE c.type = 'order' AND c.customer_info.phone = @phone"
         items = list(container.query_items(
             query=query, 
