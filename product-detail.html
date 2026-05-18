@@ -577,15 +577,20 @@
 
         function updateVariantStatus(v) {
             const box = document.getElementById('pd-status-view');
+            if (!box) return;
+
             if (v.status === 'instock') {
                 box.innerHTML = `
                     <div style="margin-bottom: 5px;"><i class="fas fa-check-circle pd-text-green"></i> Tình trạng: <span class="pd-text-green">Sẵn hàng tại kho</span></div>
                     <div>Số lượng: <strong>${v.stock || 0} sản phẩm</strong></div>
                 `;
-            } else if (v.status === 'order') {
+            } else if (v.status === 'order' || v.status === 'out') {
+                // Lấy ngày dự kiến từ API (hỗ trợ cả key 'date' hoặc 'expected_date')
+                const expectedDate = v.date || v.expected_date || 'Đang cập nhật';
+                
                 box.innerHTML = `
-                    <div style="margin-bottom: 5px;"><i class="fas fa-plane pd-text-red"></i> Tình trạng: <span class="pd-text-red">HÀNG ORDER (NULL)</span></div>
-                    <div>Dự kiến có hàng: <strong class="pd-text-red">${v.date || 'Đang cập nhật'}</strong></div>
+                    <div style="margin-bottom: 5px;"><i class="fas fa-plane pd-text-red"></i> Tình trạng: <span class="pd-text-red">HÀNG ORDER (Hết hàng tạm thời)</span></div>
+                    <div>Dự kiến có hàng lại: <strong class="pd-text-red">${expectedDate}</strong></div>
                 `;
             } else {
                 box.innerHTML = `<div><i class="fas fa-times-circle" style="color:#999;"></i> <strong>Hết hàng tạm thời</strong></div>`;
