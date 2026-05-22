@@ -142,7 +142,7 @@ function openCheckoutModal() {
     const BANK_ACCOUNT = "1234567890"; 
     const ACCOUNT_NAME = "NGUYEN VAN A"; 
     
-    const qrUrl = ``;
+    const qrUrl = `https://img.vietqr.io/image/${BANK_ID}-${BANK_ACCOUNT}-compact2.jpg?amount=${total}&addInfo=${currentCheckoutOrderId}&accountName=${ACCOUNT_NAME}`;
 
     let modal = document.getElementById('checkout-modal');
     if (!modal) {
@@ -195,7 +195,7 @@ function openCheckoutModal() {
                                     <small style="color: #666; margin-top: 10px; display: block;">* Mở App Ngân hàng quét mã QR bên cạnh để điền tự động thông tin. Hệ thống sẽ xác nhận tự động sau 1-3 phút.</small>
                                 </div>
                                 <div style="text-align: center; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                                    <img id="chk-qr-img" src="${qrUrl}" alt="VietQR" style="width: 150px; height: 150px; border-radius: 4px;">
+                                    <img id="chk-qr-img" src="images/Screenshot_222.png" alt="QR Ngân Hàng" style="width: 150px; height: 150px; border-radius: 4px; object-fit: contain;">
                                     <div style="font-size: 11px; margin-top: 5px; color: #555; font-weight:bold;">Quét mã thanh toán</div>
                                 </div>
                             </div>
