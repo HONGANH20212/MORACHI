@@ -138,9 +138,9 @@ function openCheckoutModal() {
     currentCheckoutOrderId = 'MO' + String(nextOrderCount).padStart(4, '0');
 
     // THÔNG TIN NGÂN HÀNG
-    const BANK_ID = "VCB"; 
-    const BANK_ACCOUNT = "1234567890"; 
-    const ACCOUNT_NAME = "NGUYEN VAN A"; 
+    const BANK_ID = "MB Quân Đội"; 
+    const BANK_ACCOUNT = "2470168848012"; 
+    const ACCOUNT_NAME = "VO THI HONG ANH"; 
     
     const qrUrl = `https://img.vietqr.io/image/${BANK_ID}-${BANK_ACCOUNT}-compact2.jpg?amount=${total}&addInfo=${currentCheckoutOrderId}&accountName=${ACCOUNT_NAME}`;
 
