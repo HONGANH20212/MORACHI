@@ -204,7 +204,7 @@ function openCheckoutModal() {
                     </div>
                     <div class="checkout-summary">
                         <p>Tạm tính: <span id="chk-subtotal">${subtotal.toLocaleString('vi-VN')} đ</span></p>
-                        <p>Phí giao hàng: <span>11.000 đ</span></p>
+                        <p>Phí giao hàng: <span>15.000 đ</span></p>
                         <p style="font-size: 11px; color: #e74c3c; margin-top: -3px; margin-bottom: 10px; font-style: italic;">* Phí ship đồng giá 15k toàn quốc</p>
                         <h3 style="border-top: 1px dashed #f57224; padding-top: 15px; margin-top: 10px; display: flex; justify-content: space-between; font-size: 18px;">
                             Tổng thanh toán: <span id="chk-total" style="color: #f57224;">${total.toLocaleString('vi-VN')} đ</span>
