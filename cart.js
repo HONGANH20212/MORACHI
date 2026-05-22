@@ -131,7 +131,7 @@ function openCheckoutModal() {
     if(overlay) overlay.classList.remove('active');
 
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const shippingFee = 11000;
+    const shippingFee = 15000;
     const total = subtotal + shippingFee;
 
     const nextOrderCount = parseInt(localStorage.getItem('morachi_order_count') || '0') + 1;
@@ -442,7 +442,7 @@ window.submitOrder = async function() {
 
     const orderId = currentCheckoutOrderId;
     const method = document.querySelector('input[name="chk-payment"]:checked').value;
-    const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) + 11000;
+    const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) + 15000;
     
     const orderData = {
         order_id: orderId,
