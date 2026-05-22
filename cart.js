@@ -192,7 +192,7 @@ function openCheckoutModal() {
                                     <strong>Số tài khoản:</strong> ${BANK_ACCOUNT}<br>
                                     <strong>Số tiền:</strong> <span id="chk-qr-amount" style="color: #e74c3c; font-weight:bold; font-size:15px;">${total.toLocaleString('vi-VN')} đ</span><br>
                                     <strong>Nội dung CK:</strong> <span id="chk-qr-content" style="color: #e74c3c; font-weight:bold; font-size:15px;">${currentCheckoutOrderId}</span><br>
-                                    <small style="color: #666; margin-top: 10px; display: block;">* Mở App Ngân hàng quét mã QR bên cạnh để điền tự động thông tin. Hệ thống sẽ xác nhận tự động sau 1-3 phút.</small>
+                                    <small style="color: #666; margin-top: 10px; display: block;">* Mở App Ngân hàng quét mã QR bên cạnh để điền tự động thông tin. Admin sẽ kiểm tra và xác nhận trong vòng 12h</small>
                                 </div>
                                 <div style="text-align: center; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
                                     <img id="chk-qr-img" src="images/Screenshot_222.png" alt="QR Ngân Hàng" style="width: 150px; height: 150px; border-radius: 4px; object-fit: contain;">
@@ -450,7 +450,7 @@ window.submitOrder = async function() {
         items: cart,
         total_amount: totalAmount,
         payment_method: method,
-        status: method === 'bank' ? 'Chờ chuyển khoản' : 'Chờ xác nhận COD'
+        status: method === 'bank' ? 'Chờ xác nhận đã chuyển khoản' : 'Xác nhận đặt đơn Shipcod thành công'
     };
 
     let allOrders = JSON.parse(localStorage.getItem('morachi_orders') || '[]');
