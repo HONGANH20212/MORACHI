@@ -142,7 +142,7 @@ function openCheckoutModal() {
     const BANK_ACCOUNT = "1234567890"; 
     const ACCOUNT_NAME = "NGUYEN VAN A"; 
     
-    const qrUrl = `https://img.vietqr.io/image/${BANK_ID}-${BANK_ACCOUNT}-compact2.jpg?amount=${total}&addInfo=${currentCheckoutOrderId}&accountName=${ACCOUNT_NAME}`;
+    const qrUrl = ``;
 
     let modal = document.getElementById('checkout-modal');
     if (!modal) {
