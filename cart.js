@@ -134,9 +134,9 @@ function openCheckoutModal() {
     const shippingFee = 15000;
     const total = subtotal + shippingFee;
 
-    const nextOrderCount = parseInt(localStorage.getItem('morachi_order_count') || '0') + 1;
-    currentCheckoutOrderId = 'MO' + String(nextOrderCount).padStart(4, '0');
-
+    const timestamp = new Date().getTime().toString();
+    const randomNum = Math.floor(10 + Math.random() * 90);
+    currentCheckoutOrderId = 'MO' + timestamp.slice(-4) + randomNum;
     // THÔNG TIN NGÂN HÀNG
     const BANK_ID = "MB Quân Đội"; 
     const BANK_ACCOUNT = "2470168848012"; 
