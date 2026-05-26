@@ -131,9 +131,10 @@ window.editProduct = async function(id) {
         const p = allProductsData.find(item => item.id === id);
         
         if (p) {
-            document.getElementById("product-id").value = p.id;
-            document.getElementById("title").value = p.title || "";
-            document.getElementById("brand").value = p.brand || "";
+                    document.getElementById("product-id").value = p.id;
+                    document.getElementById("product-thumbnail-old").value = p.thumbnail || ""; 
+                    document.getElementById("title").value = p.title || "";
+                    document.getElementById("brand").value = p.brand || "";
             document.getElementById("current_price").value = p.current_price || "";
             
             if (document.getElementById("old_price")) document.getElementById("old_price").value = p.old_price || "";
@@ -249,7 +250,7 @@ if (form) {
                     image: vImageUrl
                 });
             }
-
+            
             const productData = {
                 title: document.getElementById("title").value.trim(),
                 brand: document.getElementById("brand").value.trim(),
@@ -266,7 +267,14 @@ if (form) {
                 variants: variantsArray
             };
 
-            if (imageUrl) productData.thumbnail = imageUrl;
+// THAY THẾ ĐOẠN "if (imageUrl) productData.thumbnail = imageUrl;" BẰNG ĐOẠN CODE DƯỚI ĐÂY:
+if (imageUrl) {
+    // Nếu có upload ảnh mới thành công thì lấy ảnh mới
+    productData.thumbnail = imageUrl; 
+} else {
+    // Nếu không upload ảnh mới, giữ nguyên link ảnh cũ lấy từ input ẩn
+    productData.thumbnail = document.getElementById("product-thumbnail-old").value; 
+}
 
             const url = isEditing ? `${API_BASE_URL}/products/${id}` : `${API_BASE_URL}/products`;
             const method = isEditing ? "PUT" : "POST";
