@@ -515,11 +515,8 @@ async function executeOrderSubmit(btn, name, phone, address) {
         orderCount++;
         localStorage.setItem('morachi_order_count', orderCount);
 
-        if (method === 'bank') {
-            alert(`Cảm ơn ${name} đã đặt hàng!\n\nMã đơn hàng của bạn là: ${orderId}\n\nVui lòng đảm bảo bạn đã quét mã QR để chuyển khoản. Hệ thống Admin đã ghi nhận đơn hàng.`);
-        } else {
-            alert(`Cảm ơn ${name} đã đặt hàng!\n\nMã đơn hàng của bạn là: ${orderId}\n\nChúng tôi sẽ đóng gói và thu tiền mặt (COD) tận nhà cho bạn.`);
-        }
+        // Hiển thị Popup thành công thay vì alert()
+        showSuccessModal(name, orderId, method);
 
         cart = [];
         saveCart();
@@ -528,6 +525,97 @@ async function executeOrderSubmit(btn, name, phone, address) {
         btn.innerText = "HOÀN TẤT ĐẶT HÀNG";
         btn.disabled = false;
     }
+}
+
+// ==============================================================
+// HÀM TẠO GIAO DIỆN POPUP ĐẶT HÀNG THÀNH CÔNG ĐẸP MẮT
+// ==============================================================
+function showSuccessModal(name, orderId, method) {
+    let oldModal = document.getElementById('custom-success-modal');
+    if (oldModal) oldModal.remove();
+
+    let methodMsg = "";
+    if (method === 'bank') {
+        methodMsg = "Vui lòng đảm bảo bạn đã quét mã QR để chuyển khoản. Hệ thống Admin đã ghi nhận đơn hàng.";
+    } else {
+        methodMsg = "Chúng tôi sẽ đóng gói và thu tiền mặt (COD) tận nhà cho bạn.";
+    }
+
+    const modalHtml = `
+    <div id="custom-success-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+        <div style="background: white; width: 90%; max-width: 450px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; transform: translateY(-20px); transition: transform 0.3s ease; font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; text-align: center;">
+            
+            <div style="background: #e8f8f0; padding: 30px 20px 20px;">
+                <div style="width: 70px; height: 70px; background: #27ae60; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; margin: 0 auto 15px; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);">
+                    <i class="fas fa-check"></i>
+                </div>
+                <h3 style="margin: 0; color: #219653; font-size: 20px; font-weight: bold;">ĐẶT HÀNG THÀNH CÔNG!</h3>
+            </div>
+            
+            <div style="padding: 25px 20px;">
+                <p style="margin-top: 0; color: #333; font-size: 15px; line-height: 1.5; font-weight: 500;">
+                    Cảm ơn <strong style="color: #f57224;">${name}</strong> đã tin tưởng và mua sắm tại MORACHI!
+                </p>
+                
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px dashed #ddd; font-size: 14px; color: #555;">
+                    <div style="margin-bottom: 5px;">Mã đơn hàng của bạn là:</div>
+                    <div style="font-size: 22px; font-weight: bold; color: #f57224; letter-spacing: 1px;">${orderId}</div>
+                </div>
+                
+                <p style="margin-bottom: 0; color: #666; font-size: 14px; line-height: 1.6;">
+                    ${methodMsg}
+                </p>
+            </div>
+            
+            <div style="padding: 20px; background: #fafafa; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid #eee;">
+                <button id="btn-success-track" style="width: 100%; padding: 14px; border: none; background: #f57224; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(245, 114, 36, 0.3); font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <i class="fas fa-map-marker-alt"></i> TRA CỨU ĐƠN HÀNG
+                </button>
+                <button id="btn-success-close" style="width: 100%; padding: 12px; border: 1px solid #ddd; background: white; color: #555; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 13px;">
+                    TIẾP TỤC MUA SẮM
+                </button>
+            </div>
+            
+        </div>
+    </div>`;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    const modal = document.getElementById('custom-success-modal');
+    const box = modal.querySelector('div');
+
+    // Hiệu ứng Fade In
+    setTimeout(() => {
+        modal.style.opacity = '1';
+        box.style.transform = 'translateY(0)';
+    }, 10);
+
+    // Bắt sự kiện Hover cho các nút
+    const btnTrack = document.getElementById('btn-success-track');
+    const btnClose = document.getElementById('btn-success-close');
+    
+    btnTrack.onmouseover = () => btnTrack.style.background = '#d35400';
+    btnTrack.onmouseout = () => btnTrack.style.background = '#f57224';
+    btnClose.onmouseover = () => btnClose.style.background = '#f5f5f5';
+    btnClose.onmouseout = () => btnClose.style.background = 'white';
+
+    // Bắt sự kiện Click
+    btnClose.onclick = () => { 
+        closeCustomSuccessModal(modal, box); 
+    };
+    btnTrack.onclick = () => { 
+        closeCustomSuccessModal(modal, box);
+        // Chuyển hướng người dùng đến trang tra cứu (thay thế bằng URL trang tra cứu thực tế của bạn nếu khác)
+        window.location.href = "tracking.html"; 
+    };
+}
+
+function closeCustomSuccessModal(modal, box) {
+    modal.style.opacity = '0';
+    box.style.transform = 'translateY(-20px)';
+    setTimeout(() => {
+        modal.remove();
+    }, 300);
 }
 
 // ==============================================================
