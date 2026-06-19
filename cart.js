@@ -440,6 +440,32 @@ window.submitOrder = async function() {
         return;
     }
 
+    // ========================================================
+    //  KIỂM TRA HÀNG ORDER/HẾT HÀNG
+    // ========================================================
+    let hasOrderItems = false;
+    let orderDetails = [];
+    
+    cart.forEach(item => {
+        if (item.status === 'order' || item.status === 'out') {
+            hasOrderItems = true;
+            orderDetails.push(`- ${item.title} (${item.variant}): Dự kiến có lúc ${item.date || 'Đang cập nhật'}`);
+        }
+    });
+
+    if (hasOrderItems) {
+        const confirmMsg = "Trong đơn hàng của bạn có sản phẩm HÀNG ORDER/TẠM HẾT HÀNG:\n\n" + 
+                           orderDetails.join("\n") + 
+                           "\n\nBạn có đồng ý tiếp tục đặt hàng và chờ giao theo ngày dự kiến không?";
+                           
+        if (!confirm(confirmMsg)) {
+            // Nếu khách hàng ấn "Cancel" (Hủy) -> Dừng lại
+            btn.innerText = "HOÀN TẤT ĐẶT HÀNG";
+            btn.disabled = false;
+            return; 
+        }
+    }
+
     const orderId = currentCheckoutOrderId;
     const method = document.querySelector('input[name="chk-payment"]:checked').value;
     const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) + 15000;

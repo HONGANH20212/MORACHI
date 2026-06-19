@@ -505,7 +505,10 @@
                 brand: currentProduct.brand,
                 image: v.image || currentProduct.thumbnail,
                 variant: v.name || 'Mặc định',
-                price: v.price || currentProduct.current_price
+                price: v.price || currentProduct.current_price,
+                // THÊM 2 DÒNG NÀY ĐỂ LƯU TRẠNG THÁI VÀ NGÀY VÀO GIỎ HÀNG
+                status: v.status || 'instock', 
+                date: v.date || v.expected_date || 'Đang cập nhật'
             };
             
             if(typeof addToCart === 'function') {
@@ -539,7 +542,10 @@
                 brand: currentProduct.brand,
                 image: v.image || currentProduct.thumbnail,
                 variant: v.name || 'Mặc định',
-                price: v.price || currentProduct.current_price
+                price: v.price || currentProduct.current_price,
+                // THÊM 2 DÒNG NÀY
+                status: v.status || 'instock',
+                date: v.date || v.expected_date || 'Đang cập nhật'
             };
             if(typeof addToCart === 'function') {
                 addToCart(cartItem);
