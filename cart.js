@@ -415,7 +415,9 @@ window.setupAddressAutocomplete = function() {
     });
 }
 
+// ==============================================================
 // XỬ LÝ ĐẶT HÀNG VÀ BẮN API VÀO DATABASE
+// ==============================================================
 window.submitOrder = async function() {
     const btn = document.querySelector('.btn-checkout-confirm');
     btn.innerText = "Đang xử lý...";
@@ -425,6 +427,53 @@ window.submitOrder = async function() {
     const phone = document.getElementById('chk-phone').value.trim();
     const address = document.getElementById('chk-address').value.trim();
     
+    if (!name || !phone || !address || !document.getElementById('chk-province').value) {
+        alert("Vui lòng điền đầy đủ Thông tin giao hàng!");
+        btn.innerText = "HOÀN TẤT ĐẶT HÀNG";
+        btn.disabled = false;
+        return;
+    }
+
+    // Kiểm tra xem có hàng Order không
+    let hasOrderItems = false;
+    let orderDetails = [];
+    
+    cart.forEach(item => {
+        if (item.status === 'order' || item.status === 'out') {
+            hasOrderItems = true;
+            orderDetails.push(`
+                <li style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #ddd; text-align: left;">
+                    <div style="color: #333; font-weight: 600; font-size: 14px; margin-bottom: 4px;">${item.title}</div>
+                    <div style="font-size: 13px; color: #666;">
+                        Phân loại: <span style="color:#333;">${item.variant}</span><br>
+                        Dự kiến có hàng: <span style="color: #e74c3c; font-weight: bold;">${item.date || 'Đang cập nhật'}</span>
+                    </div>
+                </li>
+            `);
+        }
+    });
+
+    if (hasOrderItems) {
+        // Hiển thị Popup Custome thay vì confirm() mặc định
+        showCustomConfirmModal(orderDetails.join(''), 
+            function() {
+                // Nhấn ĐỒNG Ý
+                executeOrderSubmit(btn, name, phone, address);
+            }, 
+            function() {
+                // Nhấn XEM LẠI GIỎ HÀNG (Hủy)
+                btn.innerText = "HOÀN TẤT ĐẶT HÀNG";
+                btn.disabled = false;
+            }
+        );
+    } else {
+        // Nếu toàn hàng có sẵn, chạy thẳng
+        executeOrderSubmit(btn, name, phone, address);
+    }
+}
+
+// Hàm thực thi gọi API lưu đơn hàng (Tách ra để dùng chung)
+async function executeOrderSubmit(btn, name, phone, address) {
     const provEl = document.getElementById('chk-province');
     const distEl = document.getElementById('chk-district');
     const wardEl = document.getElementById('chk-ward');
@@ -433,12 +482,127 @@ window.submitOrder = async function() {
     const dist = distEl.options[distEl.selectedIndex] ? distEl.options[distEl.selectedIndex].text : '';
     const ward = wardEl.options[wardEl.selectedIndex] ? wardEl.options[wardEl.selectedIndex].text : '';
 
-    if (!name || !phone || !address || !document.getElementById('chk-province').value) {
-        alert("Vui lòng điền đầy đủ Thông tin giao hàng!");
+    const orderId = currentCheckoutOrderId;
+    const method = document.querySelector('input[name="chk-payment"]:checked').value;
+    const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) + 15000;
+    
+    const orderData = {
+        order_id: orderId,
+        customer_info: { name, phone, address, prov, dist, ward }, 
+        items: cart,
+        total_amount: totalAmount,
+        payment_method: method,
+        status: method === 'bank' ? 'Chờ xác nhận đã chuyển khoản' : 'Xác nhận đặt đơn Shipcod thành công'
+    };
+
+    let allOrders = JSON.parse(localStorage.getItem('morachi_orders') || '[]');
+    allOrders.unshift(orderData);
+    localStorage.setItem('morachi_orders', JSON.stringify(allOrders));
+
+    try {
+        const response = await fetch('/api/orders', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderData)
+        });
+
+        if (!response.ok) throw new Error("API lỗi");
+
+    } catch (error) {
+        console.error("Lỗi:", error);
+    } finally {
+        let orderCount = parseInt(localStorage.getItem('morachi_order_count') || '0');
+        orderCount++;
+        localStorage.setItem('morachi_order_count', orderCount);
+
+        if (method === 'bank') {
+            alert(`Cảm ơn ${name} đã đặt hàng!\n\nMã đơn hàng của bạn là: ${orderId}\n\nVui lòng đảm bảo bạn đã quét mã QR để chuyển khoản. Hệ thống Admin đã ghi nhận đơn hàng.`);
+        } else {
+            alert(`Cảm ơn ${name} đã đặt hàng!\n\nMã đơn hàng của bạn là: ${orderId}\n\nChúng tôi sẽ đóng gói và thu tiền mặt (COD) tận nhà cho bạn.`);
+        }
+
+        cart = [];
+        saveCart();
+        closeCheckoutModal();
+        
         btn.innerText = "HOÀN TẤT ĐẶT HÀNG";
         btn.disabled = false;
-        return;
     }
+}
+
+// ==============================================================
+// HÀM TẠO GIAO DIỆN POPUP CẢNH BÁO HÀNG ORDER ĐẸP MẮT
+// ==============================================================
+function showCustomConfirmModal(itemsHtml, onConfirm, onCancel) {
+    let oldModal = document.getElementById('custom-confirm-modal');
+    if (oldModal) oldModal.remove();
+
+    const modalHtml = `
+    <div id="custom-confirm-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
+        <div style="background: white; width: 90%; max-width: 450px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; transform: translateY(-20px); transition: transform 0.3s ease; font-family: 'Segoe UI', Tahoma, Geneva, sans-serif;">
+            
+            <div style="background: #fff5f0; padding: 20px; text-align: center; border-bottom: 1px solid #ffe0d2;">
+                <div style="width: 50px; height: 50px; background: #f57224; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; margin: 0 auto 10px;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3 style="margin: 0; color: #d35400; font-size: 16px; font-weight: bold;">LƯU Ý ĐƠN HÀNG</h3>
+            </div>
+            
+            <div style="padding: 20px;">
+                <p style="margin-top: 0; color: #333; font-size: 14px; line-height: 1.5; text-align: center;">
+                    Trong đơn hàng của bạn có chứa sản phẩm <strong style="color: #e74c3c;">HÀNG ORDER / TẠM HẾT HÀNG</strong>:
+                </p>
+                
+                <ul style="list-style: none; padding: 15px; margin: 15px 0; background: #f9f9f9; border-radius: 8px; max-height: 180px; overflow-y: auto; border: 1px solid #eee;">
+                    ${itemsHtml}
+                </ul>
+                
+                <p style="margin-bottom: 0; color: #333; font-size: 14px; text-align: center; font-weight: 500;">
+                    Bạn có đồng ý tiếp tục đặt hàng và chờ giao theo ngày dự kiến không?
+                </p>
+            </div>
+            
+            <div style="padding: 15px 20px; background: #fafafa; display: flex; gap: 10px; border-top: 1px solid #eee;">
+                <button id="btn-confirm-cancel" style="flex: 1; padding: 12px; border: 1px solid #ddd; background: white; color: #555; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 13px;">XEM LẠI GIỎ HÀNG</button>
+                <button id="btn-confirm-ok" style="flex: 1; padding: 12px; border: none; background: #f57224; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(245, 114, 36, 0.3); font-size: 13px;">ĐỒNG Ý ĐẶT HÀNG</button>
+            </div>
+            
+        </div>
+    </div>`;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    
+    const modal = document.getElementById('custom-confirm-modal');
+    const box = modal.querySelector('div');
+
+    // Hiệu ứng Fade In
+    setTimeout(() => {
+        modal.style.opacity = '1';
+        box.style.transform = 'translateY(0)';
+    }, 10);
+
+    // Bắt sự kiện Hover cho các nút
+    const btnCancel = document.getElementById('btn-confirm-cancel');
+    const btnOk = document.getElementById('btn-confirm-ok');
+    
+    btnCancel.onmouseover = () => btnCancel.style.background = '#f5f5f5';
+    btnCancel.onmouseout = () => btnCancel.style.background = 'white';
+    btnOk.onmouseover = () => btnOk.style.background = '#d35400';
+    btnOk.onmouseout = () => btnOk.style.background = '#f57224';
+
+    // Bắt sự kiện Click
+    btnCancel.onclick = () => { closeCustomConfirmModal(modal, box, onCancel); };
+    btnOk.onclick = () => { closeCustomConfirmModal(modal, box, onConfirm); };
+}
+
+function closeCustomConfirmModal(modal, box, callback) {
+    modal.style.opacity = '0';
+    box.style.transform = 'translateY(-20px)';
+    setTimeout(() => {
+        modal.remove();
+        if (callback) callback();
+    }, 300);
+}
 
     // ========================================================
     //  KIỂM TRA HÀNG ORDER/HẾT HÀNG
