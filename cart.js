@@ -44,7 +44,6 @@ function addToCart(product) {
     }
     
     saveCart(); 
-    // Đã xóa lệnh tự trượt giỏ hàng ra ở đây!
 }
 
 // 5. Cập nhật giao diện giỏ hàng
@@ -137,6 +136,7 @@ function openCheckoutModal() {
     const timestamp = new Date().getTime().toString();
     const randomNum = Math.floor(10 + Math.random() * 90);
     currentCheckoutOrderId = 'MO' + timestamp.slice(-4) + randomNum;
+    
     // THÔNG TIN NGÂN HÀNG
     const BANK_ID = "MB Quân Đội"; 
     const BANK_ACCOUNT = "2470168848012"; 
@@ -602,80 +602,6 @@ function closeCustomConfirmModal(modal, box, callback) {
         modal.remove();
         if (callback) callback();
     }, 300);
-}
-
-    // ========================================================
-    //  KIỂM TRA HÀNG ORDER/HẾT HÀNG
-    // ========================================================
-    let hasOrderItems = false;
-    let orderDetails = [];
-    
-    cart.forEach(item => {
-        if (item.status === 'order' || item.status === 'out') {
-            hasOrderItems = true;
-            orderDetails.push(`- ${item.title} (${item.variant}): Dự kiến có lúc ${item.date || 'Đang cập nhật'}`);
-        }
-    });
-
-    if (hasOrderItems) {
-        const confirmMsg = "Trong đơn hàng của bạn có sản phẩm HÀNG ORDER/TẠM HẾT HÀNG:\n\n" + 
-                           orderDetails.join("\n") + 
-                           "\n\nBạn có đồng ý tiếp tục đặt hàng và chờ giao theo ngày dự kiến không?";
-                           
-        if (!confirm(confirmMsg)) {
-            // Nếu khách hàng ấn "Cancel" (Hủy) -> Dừng lại
-            btn.innerText = "HOÀN TẤT ĐẶT HÀNG";
-            btn.disabled = false;
-            return; 
-        }
-    }
-
-    const orderId = currentCheckoutOrderId;
-    const method = document.querySelector('input[name="chk-payment"]:checked').value;
-    const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) + 15000;
-    
-    const orderData = {
-        order_id: orderId,
-        customer_info: { name, phone, address, prov, dist, ward }, 
-        items: cart,
-        total_amount: totalAmount,
-        payment_method: method,
-        status: method === 'bank' ? 'Chờ xác nhận đã chuyển khoản' : 'Xác nhận đặt đơn Shipcod thành công'
-    };
-
-    let allOrders = JSON.parse(localStorage.getItem('morachi_orders') || '[]');
-    allOrders.unshift(orderData);
-    localStorage.setItem('morachi_orders', JSON.stringify(allOrders));
-
-    try {
-        const response = await fetch('/api/orders', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(orderData)
-        });
-
-        if (!response.ok) throw new Error("API lỗi");
-
-    } catch (error) {
-        console.error("Lỗi:", error);
-    } finally {
-        let orderCount = parseInt(localStorage.getItem('morachi_order_count') || '0');
-        orderCount++;
-        localStorage.setItem('morachi_order_count', orderCount);
-
-        if (method === 'bank') {
-            alert(`Cảm ơn ${name} đã đặt hàng!\n\nMã đơn hàng của bạn là: ${orderId}\n\nVui lòng đảm bảo bạn đã quét mã QR để chuyển khoản. Hệ thống Admin đã ghi nhận đơn hàng.`);
-        } else {
-            alert(`Cảm ơn ${name} đã đặt hàng!\n\nMã đơn hàng của bạn là: ${orderId}\n\nChúng tôi sẽ đóng gói và thu tiền mặt (COD) tận nhà cho bạn.`);
-        }
-
-        cart = [];
-        saveCart();
-        closeCheckoutModal();
-        
-        btn.innerText = "HOÀN TẤT ĐẶT HÀNG";
-        btn.disabled = false;
-    }
 }
 
 const checkoutStyle = document.createElement('style');
