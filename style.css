@@ -40,7 +40,7 @@ a { text-decoration: none; color: inherit; }
 }
 /* 1. Top Bar */
 .top-header { 
-    background-color: #fffafb; /* Màu nền hồng rất nhạt giống mẫu */
+    background-color: #fdcdcd; /* Màu nền hồng rất nhạt giống mẫu */
     border-bottom: 1px solid #f5e6e6; 
     padding: 12px 0; 
 }
