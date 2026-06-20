@@ -441,18 +441,54 @@ window.toggleBankInfo = function() {
 })();
 
 // Hàm tải dữ liệu được gọi NGAY KHI VÀO TRANG, không chờ ấn thanh toán
+// TỐI ƯU TỐC ĐỘ: chỉ tải DANH SÁCH TÊN Tỉnh/Thành (depth=1) - rất nhẹ, hiện gần như ngay lập tức.
+// Quận/Huyện và Xã/Phường của từng tỉnh sẽ được tải riêng (on-demand) khi khách chọn tỉnh đó,
+// thay vì tải toàn bộ dữ liệu cả nước (depth=3) ngay từ đầu như trước (gây chậm 5-10s).
 async function preFetchProvinces() {
     if (vnProvinces.length > 0) return;
     try {
-        let cachedData = localStorage.getItem('morachi_vn_provinces');
+        let cachedData = localStorage.getItem('morachi_vn_provinces_light');
         if (cachedData) {
             vnProvinces = JSON.parse(cachedData);
         } else {
-            const res = await fetch('https://provinces.open-api.vn/api/?depth=3');
+            const res = await fetch('https://provinces.open-api.vn/api/?depth=1');
             vnProvinces = await res.json();
-            try { localStorage.setItem('morachi_vn_provinces', JSON.stringify(vnProvinces)); } catch(e){}
+            try { localStorage.setItem('morachi_vn_provinces_light', JSON.stringify(vnProvinces)); } catch(e){}
         }
+        // Xoá cache nặng kiểu cũ (toàn bộ cả nước) nếu trình duyệt khách còn lưu từ trước
+        try { localStorage.removeItem('morachi_vn_provinces'); } catch(e){}
     } catch (e) { console.error("Lỗi API địa chỉ:", e); }
+}
+
+// Tải Quận/Huyện + Phường/Xã CHỈ CHO 1 TỈNH cụ thể (on-demand), thay vì cả nước.
+// Có cache riêng từng tỉnh trong localStorage để lần sau chọn lại là có ngay, không cần gọi mạng nữa.
+async function ensureProvinceDetail(pCode) {
+    const idx = vnProvinces.findIndex(x => x.code == pCode);
+    if (idx === -1) return null;
+    let p = vnProvinces[idx];
+
+    if (p.districts && p.districts.length > 0) return p; // đã có sẵn trong bộ nhớ rồi
+
+    try {
+        const cached = localStorage.getItem('morachi_vn_p_' + pCode);
+        if (cached) {
+            const districts = JSON.parse(cached);
+            vnProvinces[idx] = { ...p, districts };
+            return vnProvinces[idx];
+        }
+    } catch (e) {}
+
+    try {
+        const res = await fetch(`https://provinces.open-api.vn/api/p/${pCode}?depth=3`);
+        const detail = await res.json();
+        const districts = detail.districts || [];
+        vnProvinces[idx] = { ...p, districts };
+        try { localStorage.setItem('morachi_vn_p_' + pCode, JSON.stringify(districts)); } catch(e){}
+        return vnProvinces[idx];
+    } catch (e) {
+        console.error('Lỗi tải Quận/Huyện cho tỉnh mã ' + pCode, e);
+        return p;
+    }
 }
 
 function applySelect2() {
@@ -485,29 +521,31 @@ function applySelect2() {
     });
 }
 
-window.loadDistricts = function() {
+window.loadDistricts = async function() {
     if (typeof jQuery === 'undefined') return;
     const pCode = $('#chk-province').val();
     const dSelect = $('#chk-district');
     const wSelect = $('#chk-ward');
-    
-    dSelect.empty().append('<option value="">Quận/Huyện</option>');
-    wSelect.empty().append('<option value="">Phường/Xã</option>');
-    
+
+    wSelect.empty().append('<option value="">Phường/Xã</option>').trigger('change');
+
     if(!pCode) {
-        dSelect.trigger('change');
-        wSelect.trigger('change');
+        dSelect.empty().append('<option value="">Quận/Huyện</option>').trigger('change');
         return;
     }
-    
-    const p = vnProvinces.find(x => x.code == pCode);
-    if(p && p.districts) {
+
+    // Hiện trạng thái đang tải trong lúc chờ dữ liệu của riêng tỉnh này
+    dSelect.prop('disabled', true).empty().append('<option value="">Đang tải...</option>').trigger('change');
+
+    const p = await ensureProvinceDetail(pCode);
+
+    dSelect.empty().append('<option value="">Quận/Huyện</option>');
+    if (p && p.districts) {
         p.districts.forEach(d => {
             dSelect.append(new Option(d.name, d.code));
         });
     }
-    dSelect.trigger('change');
-    wSelect.trigger('change');
+    dSelect.prop('disabled', false).trigger('change');
 };
 
 window.loadWards = function() {
@@ -524,7 +562,7 @@ window.loadWards = function() {
     }
     
     const p = vnProvinces.find(x => x.code == pCode);
-    const d = p.districts.find(x => x.code == dCode);
+    const d = (p && p.districts) ? p.districts.find(x => x.code == dCode) : null;
     if(d && d.wards) {
         d.wards.forEach(w => {
             wSelect.append(new Option(w.name, w.code));
