@@ -114,7 +114,7 @@ function removeCartItem(index) {
 }
 
 // ==============================================================
-// 9. GIAO DIỆN & TÍNH NĂNG THANH TOÁN (CHECKOUT) MỚI
+// 9. GIAO DIỆN & TÍNH NĂNG THANH TOÁN (CHECKOUT)
 // ==============================================================
 
 function openCheckoutModal() {
@@ -327,36 +327,11 @@ function openCheckoutModal() {
                                 <span>TỔNG CỘNG</span>
                                 <span class="total-price-big" id="chk-total">${total.toLocaleString('vi-VN')} đ</span>
                             </div>
-
-                            <div class="chk-alert-box alert-green">
-                                <i class="fas fa-shield-check"></i>
-                                <div>
-                                    <strong>Đảm bảo an toàn</strong>
-                                    <span>Thông tin thanh toán được mã hóa và bảo mật</span>
-                                </div>
-                            </div>
-
-                            <div class="chk-support-box">
-                                <div class="support-icon"><i class="fas fa-headset"></i></div>
-                                <div class="support-info">
-                                    <strong>Cần hỗ trợ?</strong>
-                                    <p>Liên hệ với chúng tôi qua:</p>
-                                    <p class="s-phone">0948313842</p>
-                                    <p>Thời gian: 18:00 - 00:00 (T2 - CN)</p>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="chk-footer-area">
-                    <div class="chk-features-row">
-                        <div class="feat-item"><i class="fas fa-truck-fast"></i><div><strong>Giao hàng nhanh</strong><span>Toàn quốc</span></div></div>
-                        <div class="feat-item"><i class="fas fa-lock"></i><div><strong>Bảo mật thông tin</strong><span>100% an toàn</span></div></div>
-                        <div class="feat-item"><i class="fas fa-sync-alt"></i><div><strong>Đổi trả dễ dàng</strong><span>Trong 7 ngày</span></div></div>
-                        <div class="feat-item"><i class="fas fa-award"></i><div><strong>Sản phẩm chính hãng</strong><span>Cam kết chất lượng</span></div></div>
-                    </div>
-                    
                     <button class="btn-final-submit btn-checkout-confirm" onclick="submitOrder()">
                         <div class="submit-left">
                             <i class="fas fa-lock"></i>
@@ -423,7 +398,7 @@ window.toggleBankInfo = function() {
 }
 
 // ==========================================
-// TÍCH HỢP TÌM KIẾM ĐỊA CHỈ (ĐÃ SỬA API VÀ FIX LỖI SELECT2)
+// TÍCH HỢP TÌM KIẾM ĐỊA CHỈ (ĐÃ KHÔI PHỤC API OPEN-API.VN CŨ)
 // ==========================================
 let vnProvinces = [];
 
@@ -439,23 +414,26 @@ let vnProvinces = [];
 
             const s2Script = document.createElement('script');
             s2Script.src = "https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js";
+            s2Script.onload = () => {
+                applySelect2();
+            };
             document.head.appendChild(s2Script);
         };
         document.head.appendChild(script);
     }
 })();
 
-// Dùng nguồn API mới (Github) ổn định 100%, thay thế cho open-api.vn cũ hay sập
+// Khôi phục lại nguồn API cũ chứa dữ liệu "trước sáp nhập" theo yêu cầu
 async function fetchProvinces() {
     try {
-        const res = await fetch('https://raw.githubusercontent.com/kenzauros/vietnam-cities/master/data.json');
+        const res = await fetch('https://provinces.open-api.vn/api/?depth=3');
         vnProvinces = await res.json();
         const pSelect = document.getElementById('chk-province');
         if(pSelect && pSelect.options.length <= 1) { 
             vnProvinces.forEach(p => {
                 let opt = document.createElement('option');
-                opt.value = p.Id;
-                opt.text = p.Name;
+                opt.value = p.code; // Dùng p.code giống như bản gốc cũ của bạn
+                opt.text = p.name;
                 pSelect.add(opt);
             });
         }
@@ -501,11 +479,10 @@ window.loadDistricts = function() {
         return;
     }
     
-    // Cập nhật cấu trúc quét dữ liệu theo chuẩn Github mới
-    const p = vnProvinces.find(x => x.Id == pCode);
-    if(p && p.Districts) {
-        p.Districts.forEach(d => {
-            dSelect.append(new Option(d.Name, d.Id));
+    const p = vnProvinces.find(x => x.code == pCode);
+    if(p && p.districts) {
+        p.districts.forEach(d => {
+            dSelect.append(new Option(d.name, d.code));
         });
     }
     dSelect.trigger('change');
@@ -525,11 +502,11 @@ window.loadWards = function() {
         return;
     }
     
-    const p = vnProvinces.find(x => x.Id == pCode);
-    const d = p.Districts.find(x => x.Id == dCode);
-    if(d && d.Wards) {
-        d.Wards.forEach(w => {
-            wSelect.append(new Option(w.Name, w.Id));
+    const p = vnProvinces.find(x => x.code == pCode);
+    const d = p.districts.find(x => x.code == dCode);
+    if(d && d.wards) {
+        d.wards.forEach(w => {
+            wSelect.append(new Option(w.name, w.code));
         });
     }
     wSelect.trigger('change');
@@ -866,7 +843,7 @@ function closeCustomConfirmModal(modal, box, callback) {
     }, 300);
 }
 
-// KHAI BÁO TOÀN BỘ CSS MỚI (ĐÃ FIX LỖI CHỒNG CHÉO ICON)
+// KHAI BÁO TOÀN BỘ CSS MỚI
 let oldCheckoutStyle = document.getElementById('checkout-style');
 if(oldCheckoutStyle) oldCheckoutStyle.remove();
 
@@ -920,7 +897,6 @@ checkoutStyle.innerHTML = `
     .chk-alert-box strong { display: block; margin-bottom: 2px; font-size: 13px; }
     .alert-orange { background: #fff5eb; color: #d35400; border: 1px dashed #ffbca8; }
     .alert-gray { background: #f8f9fa; color: #555; border: 1px dashed #ddd; }
-    .alert-green { background: #f0fdf4; color: #166534; border: 1px dashed #bbf7d0; margin-top: 20px;}
 
     .payment-card { display: flex; align-items: center; padding: 15px; border: 1px solid #e0e0e0; border-radius: 10px; margin-bottom: 12px; cursor: pointer; transition: 0.2s; position: relative; }
     .payment-card:hover { border-color: #f55523; background: #fffaf7; }
@@ -954,18 +930,7 @@ checkoutStyle.innerHTML = `
     .chk-total-wrapper span:first-child { font-weight: 800; font-size: 15px; color: #111; }
     .total-price-big { font-size: 22px; font-weight: bold; color: #f55523; }
 
-    .chk-support-box { background: #fafafa; border-radius: 8px; padding: 15px; display: flex; gap: 15px; margin-top: 20px; align-items: flex-start; }
-    .support-icon { width: 35px; height: 35px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #888; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-    .support-info strong { display: block; font-size: 13px; color: #333; margin-bottom: 5px; }
-    .support-info p { margin: 0 0 3px 0; font-size: 12px; color: #666; }
-    .support-info .s-phone { color: #f55523; font-weight: bold; font-size: 14px; margin: 4px 0; }
-
     .chk-footer-area { padding: 20px 30px; background: white; border-top: 1px solid #eee; }
-    .chk-features-row { display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px;}
-    .feat-item { display: flex; align-items: center; gap: 10px; }
-    .feat-item i { font-size: 20px; color: #888; }
-    .feat-item strong { display: block; font-size: 12px; color: #333; margin-bottom: 2px;}
-    .feat-item span { font-size: 11px; color: #999; }
 
     .btn-final-submit { width: 100%; background: linear-gradient(90deg, #ff8c3a, #f55523); color: white; border: none; border-radius: 10px; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(245, 85, 35, 0.3); outline: none;}
     .btn-final-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(245, 85, 35, 0.4); }
@@ -980,8 +945,6 @@ checkoutStyle.innerHTML = `
     @media (max-width: 850px) {
         .chk-body-wrapper { flex-direction: column; padding: 15px; }
         .chk-select-row { flex-direction: column; }
-        .chk-features-row { flex-wrap: wrap; gap: 15px; }
-        .feat-item { width: calc(50% - 10px); }
         .chk-header-gradient { padding: 15px; flex-direction: column; gap: 15px; align-items: flex-start;}
         .chk-hdr-right { width: 100%; justify-content: space-between; }
         .chk-footer-area { padding: 15px; }
