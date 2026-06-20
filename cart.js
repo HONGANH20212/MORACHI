@@ -492,34 +492,21 @@ async function ensureProvinceDetail(pCode) {
 }
 
 function applySelect2() {
-    if (typeof jQuery === 'undefined' || typeof jQuery.fn.select2 === 'undefined') {
-        setTimeout(applySelect2, 300);
-        return;
-    }
+    if (typeof jQuery === 'undefined' || typeof jQuery.fn.select2 === 'undefined') return;
 
     const modalEl = $('#checkout-modal');
+    
+    // Khởi tạo/Re-init Select2 cho từng ô
+    $('#chk-province').select2({ width: '100%', dropdownParent: modalEl });
+    $('#chk-district').select2({ width: '100%', dropdownParent: modalEl });
+    $('#chk-ward').select2({ width: '100%', dropdownParent: modalEl });
 
-    // Hủy các instance cũ nếu có
-    if ($('#chk-province').hasClass("select2-hidden-accessible")) {
-        $('#chk-province').select2('destroy');
-        $('#chk-district').select2('destroy');
-        $('#chk-ward').select2('destroy');
-    }
-
-    // Khởi tạo Select2
-    $('#chk-province').select2({ width: '100%', placeholder: 'Tỉnh/Thành phố', dropdownParent: modalEl });
-    $('#chk-district').select2({ width: '100%', placeholder: 'Quận/Huyện', dropdownParent: modalEl });
-    $('#chk-ward').select2({ width: '100%', placeholder: 'Phường/Xã', dropdownParent: modalEl });
-
-    // Cập nhật sự kiện để ép giao diện hiển thị ngay khi chọn
-    $('#chk-province').off('change').on('change', function() {
-        // Trigger select2 cập nhật visual
-        $(this).trigger('change.select2'); 
+    // Sự kiện quan trọng: ép Select2 cập nhật hiển thị sau khi chọn
+    $('#chk-province').on('select2:select', function(e) {
         window.loadDistricts();
     });
 
-    $('#chk-district').off('change').on('change', function() {
-        $(this).trigger('change.select2');
+    $('#chk-district').on('select2:select', function(e) {
         window.loadWards();
     });
 }
@@ -541,14 +528,14 @@ window.loadDistricts = async function() {
     dSelect.prop('disabled', true).empty().append('<option value="">Đang tải...</option>').trigger('change');
 
     const p = await ensureProvinceDetail(pCode);
-
     dSelect.empty().append('<option value="">Quận/Huyện</option>');
     if (p && p.districts) {
-        p.districts.forEach(d => {
-            dSelect.append(new Option(d.name, d.code));
-        });
+        p.districts.forEach(d => dSelect.append(new Option(d.name, d.code)));
     }
-    dSelect.prop('disabled', false).trigger('change');
+    
+    // Ép Select2 cập nhật giao diện
+    dSelect.trigger('change.select2'); 
+    dSelect.prop('disabled', false);
 };
 
 window.loadWards = function() {
@@ -571,7 +558,7 @@ window.loadWards = function() {
             wSelect.append(new Option(w.name, w.code));
         });
     }
-    wSelect.trigger('change');
+    wSelect.trigger('change.select2');
 };
 
 // ==========================================
