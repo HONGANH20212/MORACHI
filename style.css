@@ -39,17 +39,71 @@ a { text-decoration: none; color: inherit; }
     box-shadow: 0 2px 15px rgba(0,0,0,0.05); 
 }
 /* 1. Top Bar */
-.top-header { border-bottom: 1px solid var(--border-color); padding: 10px 0; font-size: 13px; color: var(--text-main); }
-.top-header-inner { display: flex; justify-content: space-between; align-items: center; }
-.top-header-left { display: flex; align-items: center; flex: 1; }
-.top-header-item { display: flex; align-items: center; gap: 8px; flex: 1; justify-content: center; border-right: 1px solid var(--border-color); }
-.top-header-item:last-child { border-right: none; }
-.top-header-item i { color: var(--primary-red); font-size: 16px; }
-.top-header-right { display: flex; align-items: center; gap: 15px; padding-left: 20px; border-left: 1px solid var(--border-color); }
-.phone-icon-circle { width: 30px; height: 30px; background: var(--icon-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: var(--primary-red); }
-.phone-text { display: flex; flex-direction: column; }
-.phone-text strong { font-size: 15px; color: var(--primary-red); line-height: 1.2; }
-.phone-text span { font-size: 11px; color: var(--text-muted); }
+.top-header { 
+    background-color: #fffafb; /* Màu nền hồng rất nhạt giống mẫu */
+    border-bottom: 1px solid #f5e6e6; 
+    padding: 12px 0; 
+}
+.top-header-inner { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+}
+.top-header-item { 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 10px; 
+    flex: 1; 
+    border-right: 1px solid #f0e4e4; /* Vạch ngăn cách mờ */
+    color: #333; 
+    font-size: 14px; 
+    font-weight: 500;
+}
+.top-header-item:last-child { 
+    border-right: none; 
+}
+.top-header-item i { 
+    color: var(--primary-red); 
+    font-size: 18px; 
+}
+
+/* Phần số điện thoại góc phải */
+.top-header-contact { 
+    gap: 12px; 
+}
+.phone-icon-circle { 
+    width: 36px; 
+    height: 36px; 
+    background: #ffebeb; /* Nền vòng tròn icon đậm hơn 1 chút */
+    border-radius: 50%; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+}
+.phone-icon-circle i {
+    font-size: 15px; /* Chỉnh lại icon điện thoại cho cân đối */
+}
+.phone-text { 
+    display: flex; 
+    flex-direction: column; 
+    text-align: left;
+}
+.phone-text strong { 
+    font-size: 16px; 
+    color: var(--primary-red); 
+    line-height: 1.2; 
+    font-weight: 700;
+}
+.phone-text span { 
+    font-size: 11px; 
+    color: #888; 
+}
+
+/* Ẩn trên Mobile (Giữ nguyên như cũ) */
+@media (max-width: 768px) {
+    .top-header { display: none; }
+}
 
 /* 2. Main Header */
 .main-header-inner { display: flex; align-items: center; justify-content: space-between; padding: 25px 0; gap: 40px; }
