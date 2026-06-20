@@ -499,25 +499,28 @@ function applySelect2() {
 
     const modalEl = $('#checkout-modal');
 
-    // Nếu lỡ có Select2 cũ bị kẹt, hủy nó đi trước khi tạo mới
+    // Hủy các instance cũ nếu có
     if ($('#chk-province').hasClass("select2-hidden-accessible")) {
         $('#chk-province').select2('destroy');
         $('#chk-district').select2('destroy');
         $('#chk-ward').select2('destroy');
     }
 
+    // Khởi tạo Select2
     $('#chk-province').select2({ width: '100%', placeholder: 'Tỉnh/Thành phố', dropdownParent: modalEl });
     $('#chk-district').select2({ width: '100%', placeholder: 'Quận/Huyện', dropdownParent: modalEl });
     $('#chk-ward').select2({ width: '100%', placeholder: 'Phường/Xã', dropdownParent: modalEl });
 
-    $('#chk-province').off('change').on('change', window.loadDistricts);
-    $('#chk-district').off('change').on('change', window.loadWards);
+    // Cập nhật sự kiện để ép giao diện hiển thị ngay khi chọn
+    $('#chk-province').off('change').on('change', function() {
+        // Trigger select2 cập nhật visual
+        $(this).trigger('change.select2'); 
+        window.loadDistricts();
+    });
 
-    $(document).off('select2:open').on('select2:open', () => {
-        setTimeout(() => {
-            const searchField = document.querySelector('.select2-search__field');
-            if (searchField) searchField.focus();
-        }, 50);
+    $('#chk-district').off('change').on('change', function() {
+        $(this).trigger('change.select2');
+        window.loadWards();
     });
 }
 
