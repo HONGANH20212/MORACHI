@@ -123,7 +123,6 @@ function openCheckoutModal() {
         return;
     }
     
-    // Đóng giỏ hàng trượt tạm thời
     const drawer = document.getElementById('cart-drawer');
     const overlay = document.getElementById('cart-overlay');
     if(drawer) drawer.classList.remove('active');
@@ -138,11 +137,11 @@ function openCheckoutModal() {
     currentCheckoutOrderId = 'MO' + timestamp.slice(-4) + randomNum;
     
     // THÔNG TIN NGÂN HÀNG
-    const BANK_ID = "MB Quân Đội"; 
+    const BANK_ID = "MB"; 
     const BANK_ACCOUNT = "2470168848012"; 
     const ACCOUNT_NAME = "VO THI HONG ANH"; 
     
-    const qrUrl = `https://img.vietqr.io/image/${BANK_ID}-${BANK_ACCOUNT}-compact2.jpg?amount=${total}&addInfo=${currentCheckoutOrderId}&accountName=${ACCOUNT_NAME}`;
+    const qrUrl = `https://img.vietqr.io/image/${BANK_ID}-${BANK_ACCOUNT}-compact2.jpg?amount=${total}&addInfo=${encodeURIComponent(currentCheckoutOrderId)}&accountName=${encodeURIComponent(ACCOUNT_NAME)}`;
 
     let modal = document.getElementById('checkout-modal');
     if (!modal) {
@@ -151,7 +150,6 @@ function openCheckoutModal() {
         modal.className = 'checkout-modal';
         document.body.appendChild(modal);
 
-        // Tạo danh sách sản phẩm cho cột bên phải
         const cartItemsHtml = cart.map(item => `
             <div class="chk-item-row">
                 <img src="${item.image}" alt="${item.title}" onerror="this.src='images/icon-logo.png'">
@@ -169,7 +167,6 @@ function openCheckoutModal() {
 
         modal.innerHTML = `
             <div class="checkout-box new-checkout-layout">
-                
                 <div class="chk-header-gradient">
                     <div class="chk-hdr-left">
                         <div class="chk-bag-icon"><i class="fas fa-shopping-bag"></i></div>
@@ -187,9 +184,7 @@ function openCheckoutModal() {
                 </div>
 
                 <div class="chk-body-wrapper">
-                    
                     <div class="chk-col-left">
-                        
                         <div class="chk-card-section">
                             <div class="chk-sec-title">
                                 <div class="step-circle">1</div>
@@ -409,6 +404,11 @@ function openCheckoutModal() {
     }
 
     modal.classList.add('active');
+    
+    // Khởi tạo Select2 sau khi Modal đã mở để chống lệch CSS và đảm bảo kích thước 100%
+    setTimeout(() => {
+        applySelect2();
+    }, 50);
 }
 
 window.closeCheckoutModal = function() {
@@ -423,7 +423,7 @@ window.toggleBankInfo = function() {
 }
 
 // ==========================================
-// TÍCH HỢP TÌM KIẾM ĐỊA CHỈ (SELECT2 LIBRARIES)
+// TÍCH HỢP TÌM KIẾM ĐỊA CHỈ (ĐÃ SỬA API VÀ FIX LỖI SELECT2)
 // ==========================================
 let vnProvinces = [];
 
@@ -439,29 +439,26 @@ let vnProvinces = [];
 
             const s2Script = document.createElement('script');
             s2Script.src = "https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js";
-            s2Script.onload = () => {
-                applySelect2();
-            };
             document.head.appendChild(s2Script);
         };
         document.head.appendChild(script);
     }
 })();
 
+// Dùng nguồn API mới (Github) ổn định 100%, thay thế cho open-api.vn cũ hay sập
 async function fetchProvinces() {
     try {
-        const res = await fetch('https://provinces.open-api.vn/api/?depth=3');
+        const res = await fetch('https://raw.githubusercontent.com/kenzauros/vietnam-cities/master/data.json');
         vnProvinces = await res.json();
         const pSelect = document.getElementById('chk-province');
         if(pSelect && pSelect.options.length <= 1) { 
             vnProvinces.forEach(p => {
                 let opt = document.createElement('option');
-                opt.value = p.code;
-                opt.text = p.name;
+                opt.value = p.Id;
+                opt.text = p.Name;
                 pSelect.add(opt);
             });
         }
-        applySelect2();
     } catch (e) { console.error("Lỗi API địa chỉ:", e); }
 }
 
@@ -471,9 +468,12 @@ function applySelect2() {
         return;
     }
 
-    $('#chk-province').select2({ width: '100%', placeholder: 'Tỉnh/Thành phố' });
-    $('#chk-district').select2({ width: '100%', placeholder: 'Quận/Huyện' });
-    $('#chk-ward').select2({ width: '100%', placeholder: 'Phường/Xã' });
+    const modalEl = $('#checkout-modal');
+
+    // dropdownParent giúp bảng chọn trổ xuống không bị che khuất trong Popup
+    $('#chk-province').select2({ width: '100%', placeholder: 'Tỉnh/Thành phố', dropdownParent: modalEl });
+    $('#chk-district').select2({ width: '100%', placeholder: 'Quận/Huyện', dropdownParent: modalEl });
+    $('#chk-ward').select2({ width: '100%', placeholder: 'Phường/Xã', dropdownParent: modalEl });
 
     $('#chk-province').off('change').on('change', window.loadDistricts);
     $('#chk-district').off('change').on('change', window.loadWards);
@@ -501,10 +501,11 @@ window.loadDistricts = function() {
         return;
     }
     
-    const p = vnProvinces.find(x => x.code == pCode);
-    if(p && p.districts) {
-        p.districts.forEach(d => {
-            dSelect.append(new Option(d.name, d.code));
+    // Cập nhật cấu trúc quét dữ liệu theo chuẩn Github mới
+    const p = vnProvinces.find(x => x.Id == pCode);
+    if(p && p.Districts) {
+        p.Districts.forEach(d => {
+            dSelect.append(new Option(d.Name, d.Id));
         });
     }
     dSelect.trigger('change');
@@ -524,11 +525,11 @@ window.loadWards = function() {
         return;
     }
     
-    const p = vnProvinces.find(x => x.code == pCode);
-    const d = p.districts.find(x => x.code == dCode);
-    if(d && d.wards) {
-        d.wards.forEach(w => {
-            wSelect.append(new Option(w.name, w.code));
+    const p = vnProvinces.find(x => x.Id == pCode);
+    const d = p.Districts.find(x => x.Id == dCode);
+    if(d && d.Wards) {
+        d.Wards.forEach(w => {
+            wSelect.append(new Option(w.Name, w.Id));
         });
     }
     wSelect.trigger('change');
@@ -865,22 +866,19 @@ function closeCustomConfirmModal(modal, box, callback) {
     }, 300);
 }
 
-// KHAI BÁO TOÀN BỘ CSS MỚI PHỤC VỤ GIAO DIỆN HÌNH 2 CỘT TỰ ĐỘNG
+// KHAI BÁO TOÀN BỘ CSS MỚI (ĐÃ FIX LỖI CHỒNG CHÉO ICON)
 let oldCheckoutStyle = document.getElementById('checkout-style');
 if(oldCheckoutStyle) oldCheckoutStyle.remove();
 
 const checkoutStyle = document.createElement('style');
 checkoutStyle.id = 'checkout-style';
 checkoutStyle.innerHTML = `
-    /* Toàn bộ lớp phủ nền mờ */
     .checkout-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; display: flex; justify-content: center; align-items: center; visibility: hidden; opacity: 0; transition: 0.3s; padding: 20px;}
     .checkout-modal.active { visibility: visible; opacity: 1; }
     
-    /* Khung Box chính */
     .new-checkout-layout { background: #f4f5f7; width: 100%; max-width: 1000px; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.2); transform: translateY(-20px); transition: 0.3s; display:flex; flex-direction: column; max-height: 95vh; font-family: 'Segoe UI', Tahoma, sans-serif;}
     .checkout-modal.active .new-checkout-layout { transform: translateY(0); }
 
-    /* Header dốc màu Cam giống ảnh mẫu */
     .chk-header-gradient { background: linear-gradient(135deg, #ff8c3a, #f55523); color: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; }
     .chk-hdr-left { display: flex; align-items: center; gap: 15px; }
     .chk-bag-icon { background: white; color: #f55523; width: 45px; height: 45px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -893,32 +891,30 @@ checkoutStyle.innerHTML = `
     .close-modal-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; margin-left: 10px; opacity: 0.8; }
     .close-modal-btn:hover { opacity: 1; }
 
-    /* Vùng chứa chia hai cột */
     .chk-body-wrapper { display: flex; gap: 20px; padding: 20px 30px; overflow-y: auto; flex: 1; }
     .chk-col-left { flex: 1.6; display: flex; flex-direction: column; }
     .chk-col-right { flex: 1; display: flex; flex-direction: column; }
 
-    /* Khối thẻ bo tròn trắng tinh tế */
     .chk-card-section { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
     .chk-sec-title { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
     .step-circle { width: 28px; height: 28px; background: #f55523; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
     .chk-sec-title h3 { margin: 0 0 3px 0; font-size: 15px; color: #111; font-weight: 700; }
     .chk-sec-title p { margin: 0; font-size: 12px; color: #777; }
 
-    /* Thiết kế các ô điền thông tin */
+    /* Cập nhật cực kỳ quan trọng: Thêm pointer-events để icon không cản click vào khung Select2 */
     .chk-input-group { position: relative; margin-bottom: 12px; }
-    .chk-input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #f55523; z-index: 10; font-size: 14px;}
+    .chk-input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #f55523; z-index: 10; font-size: 14px; pointer-events: none;}
     .chk-form-area input[type="text"], .chk-form-area input[type="tel"] { width: 100%; padding: 13px 15px 13px 40px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; color: #333; outline: none; transition: 0.2s; box-sizing: border-box;}
     .chk-form-area input:focus { border-color: #f55523; box-shadow: 0 0 0 3px rgba(245, 85, 35, 0.1); }
     .chk-select-row { display: flex; gap: 10px; }
     .chk-select-row .chk-input-group { flex: 1; }
 
-    /* Ép Select2 tương thích icon định vị bên trái */
-    .chk-select-wrap .select2-container--default .select2-selection--single { height: 46px; border: 1px solid #e0e0e0; border-radius: 8px; outline: none; }
+    /* Ép kích thước Select2 cố định full 100% để chống co rút và lệch icon */
+    .select2-container { width: 100% !important; }
+    .chk-select-wrap .select2-container--default .select2-selection--single { height: 46px; border: 1px solid #e0e0e0; border-radius: 8px; outline: none; width: 100% !important;}
     .chk-select-wrap .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 46px; padding-left: 40px; color: #333; font-size: 13.5px; }
     .chk-select-wrap .select2-container--default .select2-selection--single .select2-selection__arrow { height: 44px; }
 
-    /* Các hộp thông báo */
     .chk-alert-box { display: flex; gap: 12px; padding: 12px 15px; border-radius: 8px; font-size: 12.5px; margin-top: 15px; }
     .chk-alert-box i { font-size: 18px; margin-top: 2px; }
     .chk-alert-box strong { display: block; margin-bottom: 2px; font-size: 13px; }
@@ -926,7 +922,6 @@ checkoutStyle.innerHTML = `
     .alert-gray { background: #f8f9fa; color: #555; border: 1px dashed #ddd; }
     .alert-green { background: #f0fdf4; color: #166534; border: 1px dashed #bbf7d0; margin-top: 20px;}
 
-    /* Card chọn cách thức thanh toán */
     .payment-card { display: flex; align-items: center; padding: 15px; border: 1px solid #e0e0e0; border-radius: 10px; margin-bottom: 12px; cursor: pointer; transition: 0.2s; position: relative; }
     .payment-card:hover { border-color: #f55523; background: #fffaf7; }
     .payment-card i { font-size: 24px; margin-right: 15px; width: 30px; text-align: center; }
@@ -938,7 +933,6 @@ checkoutStyle.innerHTML = `
     .payment-card input:checked ~ .custom-radio:after { content: ""; position: absolute; top: 4px; left: 4px; width: 8px; height: 8px; border-radius: 50%; background: white; }
     .payment-card:has(input:checked) { border-color: #f55523; background: #fffaf7; }
 
-    /* Cột tóm tắt sản phẩm bên phải */
     .chk-product-list { max-height: 250px; overflow-y: auto; border-bottom: 1px dashed #e0e0e0; padding-bottom: 15px; margin-bottom: 15px; }
     .chk-product-list::-webkit-scrollbar { width: 4px; }
     .chk-product-list::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
@@ -960,14 +954,12 @@ checkoutStyle.innerHTML = `
     .chk-total-wrapper span:first-child { font-weight: 800; font-size: 15px; color: #111; }
     .total-price-big { font-size: 22px; font-weight: bold; color: #f55523; }
 
-    /* Hộp hỗ trợ tổng đài đường dây nóng */
     .chk-support-box { background: #fafafa; border-radius: 8px; padding: 15px; display: flex; gap: 15px; margin-top: 20px; align-items: flex-start; }
     .support-icon { width: 35px; height: 35px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; color: #888; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     .support-info strong { display: block; font-size: 13px; color: #333; margin-bottom: 5px; }
     .support-info p { margin: 0 0 3px 0; font-size: 12px; color: #666; }
     .support-info .s-phone { color: #f55523; font-weight: bold; font-size: 14px; margin: 4px 0; }
 
-    /* Thanh chân Footer cuối cùng */
     .chk-footer-area { padding: 20px 30px; background: white; border-top: 1px solid #eee; }
     .chk-features-row { display: flex; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px;}
     .feat-item { display: flex; align-items: center; gap: 10px; }
@@ -975,7 +967,6 @@ checkoutStyle.innerHTML = `
     .feat-item strong { display: block; font-size: 12px; color: #333; margin-bottom: 2px;}
     .feat-item span { font-size: 11px; color: #999; }
 
-    /* Thiết kế nút bấm Hoàn Tất Đặt Hàng Cam Đậm Khổng Lồ */
     .btn-final-submit { width: 100%; background: linear-gradient(90deg, #ff8c3a, #f55523); color: white; border: none; border-radius: 10px; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(245, 85, 35, 0.3); outline: none;}
     .btn-final-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(245, 85, 35, 0.4); }
     .submit-left { display: flex; align-items: center; gap: 15px; text-align: left;}
@@ -986,7 +977,6 @@ checkoutStyle.innerHTML = `
 
     .terms-text { text-align: center; font-size: 11px; color: #999; margin: 15px 0 0 0; }
 
-    /* Co giãn mượt mà trên Mobile & Máy tính bảng */
     @media (max-width: 850px) {
         .chk-body-wrapper { flex-direction: column; padding: 15px; }
         .chk-select-row { flex-direction: column; }
