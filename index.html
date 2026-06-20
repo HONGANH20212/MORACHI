@@ -11,22 +11,17 @@
 
 <body>
     <header class="modern-header">
-        
         <div class="top-header">
             <div class="container top-header-inner">
-                
                 <div class="top-header-item">
                     <i class="fa-solid fa-shield-heart"></i> 100% Hàng chính hãng Nhật Bản
                 </div>
-                
                 <div class="top-header-item">
                     <i class="fa-solid fa-truck-fast"></i> Order nhanh 10 - 15 ngày
                 </div>
-                
                 <div class="top-header-item">
                     <i class="fa-solid fa-location-dot"></i> Quận 7 - Hồ Chí Minh
                 </div>
-                
                 <div class="top-header-item top-header-contact">
                     <div class="phone-icon-circle"><i class="fa-solid fa-phone"></i></div>
                     <div class="phone-text">
@@ -34,13 +29,11 @@
                         <span>18:00 - 00:00 (T2 - CN)</span>
                     </div>
                 </div>
-
             </div>
         </div>
 
         <div class="main-header">
             <div class="container main-header-inner">
-                
                 <div class="logo-area">
                     <a href="/">
                         <img src="images/morachi_logo.png" alt="MORACHI Logo" class="logo-icon">
@@ -76,7 +69,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
 
@@ -85,7 +77,6 @@
                 <i class="fa-solid fa-truck-fast"></i> CHUYÊN BÁN MỸ PHẨM NHẬT BẢN CHÍNH HÃNG & NHẬN ORDER HÀNG NHẬT BẢN 10-15 DAY
             </div>
         </div>
-
     </header>
 
     <div class="breadcrumb container">
@@ -96,40 +87,18 @@
         
         <aside class="sidebar">
             <div class="sidebar-wrapper">
-                
-                <div class="filter-section">
-                    <h3>KHOẢNG GIÁ</h3>
-                    
-                    <div class="price-inputs">
-                        <div class="input-wrap">
-                            <i class="fa-regular fa-calendar"></i>
-                            <input type="text" placeholder="TỪ">
-                        </div>
-                        <span class="price-divider">-</span>
-                        <div class="input-wrap">
-                            <i class="fa-regular fa-calendar"></i>
-                            <input type="text" placeholder="ĐẾN">
-                        </div>
-                    </div>
-
-                    <button class="btn-apply">
-                        <i class="fa-solid fa-filter"></i> ÁP DỤNG
-                    </button>
-                </div>
-
-                <div class="filter-divider"></div>
-                
-                <div class="filter-section">
+                <div class="filter-section" id="brand-filter-section">
                     <h3>THƯƠNG HIỆU</h3>
                     </div>
 
+                <button class="btn-apply" id="btn-apply-filters">
+                    ÁP DỤNG
+                </button>
             </div>
         </aside>
 
         <main class="content">
             <div class="content-header">
-                <h2>Sản Phẩm Bán Chạy</h2>
-                
                 <div class="sort-tabs">
                     <span>Mới nhất</span>
                     <span class="active">Bán chạy</span>
@@ -154,8 +123,7 @@
             <h2>Giỏ hàng</h2>
             <button onclick="toggleCart()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div class="cart-items" id="cart-items">
-            </div>
+        <div class="cart-items" id="cart-items"></div>
         <div class="cart-footer">
             <div class="cart-total"><span>Tổng cộng:</span> <span id="cart-total-price">0 đ</span></div>
             <button class="btn-checkout" onclick="openCheckoutModal()">TIẾN HÀNH THANH TOÁN</button>
