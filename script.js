@@ -10,6 +10,7 @@ const state = {
     maxPrice: null
 };
 
+// --- Các hàm tiện ích ---
 function parsePrice(value) {
     if (value === null || value === undefined) return 0;
     const cleaned = String(value).replace(/[^\d]/g, "");
@@ -30,6 +31,7 @@ function escapeHtml(text) {
         .replace(/'/g, "&#039;");
 }
 
+// --- Xử lý giao diện ---
 function getSearchElements() {
     const searchBar = document.querySelector(".search-bar");
     return {
@@ -221,6 +223,7 @@ function applyClientFilters() {
     renderProducts(products);
 }
 
+// --- Bộ lọc thương hiệu động ---
 function renderBrandFilters(products) {
     const filterSections = document.querySelectorAll(".filter-section");
     if (filterSections.length < 2) return;
@@ -262,25 +265,33 @@ function renderBrandFilters(products) {
     });
 }
 
+// --- Gọi API lấy dữ liệu (Đã tích hợp Caching & Skeleton chống lưu cache cũ) ---
 async function loadProducts() {
     const productList = document.getElementById("product-list");
     if (!productList) return;
 
     // 1. KIỂM TRA BỘ NHỚ ĐỆM (CACHE)
     const cacheKey = 'morachi_products_cache';
+    const cacheTimeKey = 'morachi_products_cache_time';
     const cachedData = sessionStorage.getItem(cacheKey);
+    const cachedTime = sessionStorage.getItem(cacheTimeKey);
 
-    if (cachedData) {
+    // Cache tồn tại trong 5 phút (300000ms)
+    const isCacheValid = cachedData && cachedTime && (new Date().getTime() - parseInt(cachedTime) < 300000);
+
+    if (isCacheValid) {
         try {
             const products = JSON.parse(cachedData);
             state.allProducts = Array.isArray(products) ? products : [];
             renderBrandFilters(state.allProducts);
             applyClientFilters(); // Render ngay lập tức không cần xoay loading
             return; 
-        } catch(e) {}
+        } catch(e) {
+            console.error("Lỗi đọc cache:", e);
+        }
     }
 
-    // 2. NẾU CHƯA CÓ CACHE -> HIỆN KHUNG XƯƠNG VÀ CALL API
+    // 2. NẾU CHƯA CÓ CACHE HOẶC CACHE HẾT HẠN -> HIỆN KHUNG XƯƠNG VÀ CALL API
     productList.innerHTML = Array(8).fill(`
         <div class="skel-card">
             <div class="skeleton skel-img-home"></div>
@@ -291,13 +302,15 @@ async function loadProducts() {
     `).join('');
 
     try {
-        const response = await fetch(`${API_BASE_URL}/products`);
+        // Tham số ?t= chống lưu cache của trình duyệt khi fetch
+        const response = await fetch(`${API_BASE_URL}/products?t=${new Date().getTime()}`);
         if (!response.ok) throw new Error(`API lỗi: ${response.status}`);
 
         const products = await response.json();
         
         // Lưu vào bộ nhớ đệm để tái sử dụng
         sessionStorage.setItem(cacheKey, JSON.stringify(products));
+        sessionStorage.setItem(cacheTimeKey, new Date().getTime().toString());
 
         state.allProducts = Array.isArray(products) ? products : [];
 
@@ -309,6 +322,7 @@ async function loadProducts() {
     }
 }
 
+// --- Gán sự kiện (Binding) ---
 function bindSortTabs() {
     const tabs = document.querySelectorAll(".sort-tabs span");
     tabs.forEach((tab) => {
@@ -352,6 +366,7 @@ function bindPriceFilter() {
     });
 }
 
+// --- TÍNH NĂNG NÚT LIÊN HỆ NỔI (FLOATING CONTACT) ---
 function initFloatingContact() {
     // 1. Gắn CSS động
     const style = document.createElement('style');
@@ -462,7 +477,7 @@ document.addEventListener("DOMContentLoaded", () => {
     bindPriceFilter();
     loadProducts();
     initFloatingContact(); // Gọi hàm tạo nút liên hệ nổi
-    
+
     // ==============================================================
     // TÙY CHỈNH UX BỘ LỌC GIÁ (TỰ ĐỘNG THÊM 3 SỐ 0)
     // ==============================================================
