@@ -114,7 +114,7 @@ function removeCartItem(index) {
 }
 
 // ==============================================================
-// 9. GIAO DIỆN & TÍNH NĂNG THANH TOÁN (CHECKOUT)
+// 9. GIAO DIỆN & TÍNH NĂNG THANH TOÁN (CHECKOUT) MỚI
 // ==============================================================
 
 function openCheckoutModal() {
@@ -136,7 +136,6 @@ function openCheckoutModal() {
     const randomNum = Math.floor(10 + Math.random() * 90);
     currentCheckoutOrderId = 'MO' + timestamp.slice(-4) + randomNum;
     
-    // THÔNG TIN NGÂN HÀNG
     const BANK_ID = "MB"; 
     const BANK_ACCOUNT = "2470168848012"; 
     const ACCOUNT_NAME = "VO THI HONG ANH"; 
@@ -349,7 +348,6 @@ function openCheckoutModal() {
             </div>
         `;
         
-        fetchProvinces(); 
         setupAddressAutocomplete(); 
     } else {
         document.getElementById('chk-subtotal').innerText = subtotal.toLocaleString('vi-VN') + ' đ';
@@ -380,10 +378,8 @@ function openCheckoutModal() {
 
     modal.classList.add('active');
     
-    // Khởi tạo Select2 sau khi Modal đã mở để chống lệch CSS và đảm bảo kích thước 100%
-    setTimeout(() => {
-        applySelect2();
-    }, 50);
+    // LUÔN FETCH VÀ APPLY SELECT2 SAU KHI MODAL HIỂN THỊ ĐỂ CHỐNG LỖI HIỂN THỊ TRẮNG
+    fetchProvinces();
 }
 
 window.closeCheckoutModal = function() {
@@ -398,7 +394,7 @@ window.toggleBankInfo = function() {
 }
 
 // ==========================================
-// TÍCH HỢP TÌM KIẾM ĐỊA CHỈ (ĐÃ KHÔI PHỤC API OPEN-API.VN CŨ)
+// TÍCH HỢP TÌM KIẾM ĐỊA CHỈ (ĐÃ KHÔI PHỤC API OPEN-API.VN CŨ VÀ FIX LỖI "KHÔNG HIỆN CHỮ")
 // ==========================================
 let vnProvinces = [];
 
@@ -414,29 +410,31 @@ let vnProvinces = [];
 
             const s2Script = document.createElement('script');
             s2Script.src = "https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js";
-            s2Script.onload = () => {
-                applySelect2();
-            };
             document.head.appendChild(s2Script);
         };
         document.head.appendChild(script);
     }
 })();
 
-// Khôi phục lại nguồn API cũ chứa dữ liệu "trước sáp nhập" theo yêu cầu
 async function fetchProvinces() {
     try {
-        const res = await fetch('https://provinces.open-api.vn/api/?depth=3');
-        vnProvinces = await res.json();
+        // Chỉ tải dữ liệu nếu chưa có (Cache lại) để không bị chậm
+        if (vnProvinces.length === 0) {
+            const res = await fetch('https://provinces.open-api.vn/api/?depth=3');
+            vnProvinces = await res.json();
+        }
+        
         const pSelect = document.getElementById('chk-province');
         if(pSelect && pSelect.options.length <= 1) { 
             vnProvinces.forEach(p => {
                 let opt = document.createElement('option');
-                opt.value = p.code; // Dùng p.code giống như bản gốc cũ của bạn
+                opt.value = p.code;
                 opt.text = p.name;
                 pSelect.add(opt);
             });
         }
+        // Gọi applySelect2 CHỈ KHI dữ liệu đã chèn xong vào DOM
+        applySelect2();
     } catch (e) { console.error("Lỗi API địa chỉ:", e); }
 }
 
@@ -843,7 +841,7 @@ function closeCustomConfirmModal(modal, box, callback) {
     }, 300);
 }
 
-// KHAI BÁO TOÀN BỘ CSS MỚI
+// KHAI BÁO TOÀN BỘ CSS MỚI VÀ FIX HIỂN THỊ SELECT2 DROPDOWN
 let oldCheckoutStyle = document.getElementById('checkout-style');
 if(oldCheckoutStyle) oldCheckoutStyle.remove();
 
@@ -878,7 +876,6 @@ checkoutStyle.innerHTML = `
     .chk-sec-title h3 { margin: 0 0 3px 0; font-size: 15px; color: #111; font-weight: 700; }
     .chk-sec-title p { margin: 0; font-size: 12px; color: #777; }
 
-    /* Cập nhật cực kỳ quan trọng: Thêm pointer-events để icon không cản click vào khung Select2 */
     .chk-input-group { position: relative; margin-bottom: 12px; }
     .chk-input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #f55523; z-index: 10; font-size: 14px; pointer-events: none;}
     .chk-form-area input[type="text"], .chk-form-area input[type="tel"] { width: 100%; padding: 13px 15px 13px 40px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; color: #333; outline: none; transition: 0.2s; box-sizing: border-box;}
@@ -886,11 +883,15 @@ checkoutStyle.innerHTML = `
     .chk-select-row { display: flex; gap: 10px; }
     .chk-select-row .chk-input-group { flex: 1; }
 
-    /* Ép kích thước Select2 cố định full 100% để chống co rút và lệch icon */
     .select2-container { width: 100% !important; }
     .chk-select-wrap .select2-container--default .select2-selection--single { height: 46px; border: 1px solid #e0e0e0; border-radius: 8px; outline: none; width: 100% !important;}
     .chk-select-wrap .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 46px; padding-left: 40px; color: #333; font-size: 13.5px; }
     .chk-select-wrap .select2-container--default .select2-selection--single .select2-selection__arrow { height: 44px; }
+
+    /* Fix z-index và style list cho Select2 */
+    .select2-container--open { z-index: 999999 !important; }
+    .select2-dropdown { border-color: #f55523; border-radius: 8px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.15); z-index: 999999 !important; }
+    .select2-container--default .select2-results__option--highlighted[aria-selected], .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable { background-color: #f55523 !important; color: white !important;}
 
     .chk-alert-box { display: flex; gap: 12px; padding: 12px 15px; border-radius: 8px; font-size: 12.5px; margin-top: 15px; }
     .chk-alert-box i { font-size: 18px; margin-top: 2px; }
