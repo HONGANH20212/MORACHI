@@ -60,22 +60,36 @@ def get_blob_container_client():
     return blob_service_client.get_container_client(BLOB_CONTAINER_NAME)
 
 def normalize_product(data, existing=None):
-    """Chuẩn hóa dữ liệu sản phẩm, đảm bảo không có trường nào bị trống (None)"""
+    """Chuẩn hóa dữ liệu sản phẩm, hỗ trợ xóa rỗng dữ liệu tùy chọn"""
     existing = existing or {}
+    
+    def get_field(key, default_val=""):
+        # Nếu Admin có gửi lên (ngay cả khi gửi lên chuỗi rỗng ""), thì lấy giá trị đó
+        if key in data:
+            val = data[key]
+            return str(val).strip() if val is not None else ""
+        # Nếu không gửi lên, thì mới lấy lại đồ cũ trong database
+        return str(existing.get(key, default_val)).strip()
+
+    # Các trường bắt buộc (Không cho phép lưu rỗng)
+    title = str(data.get("title", "")).strip() or existing.get("title", "")
+    brand = str(data.get("brand", "")).strip() or existing.get("brand", "")
+    current_price = str(data.get("current_price", "")).strip() or existing.get("current_price", "")
+
     return {
-        "title": (data.get("title") or existing.get("title") or "").strip(),
-        "brand": (data.get("brand") or existing.get("brand") or "").strip(),
-        "thumbnail": (data.get("thumbnail") or existing.get("thumbnail") or "").strip(),
-        "current_price": str(data.get("current_price") or existing.get("current_price") or "").strip(),
-        "old_price": str(data.get("old_price") or existing.get("old_price") or "").strip(),
-        "discount": str(data.get("discount") or existing.get("discount") or "").strip(),
-        "rating": str(data.get("rating") or existing.get("rating") or "4.9").strip(),
-        "sold_text": str(data.get("sold_text") or existing.get("sold_text") or "1k/tháng").strip(),
-        "description": str(data.get("description") or existing.get("description") or "").strip(),
-        "specifications": str(data.get("specifications") or existing.get("specifications") or "").strip(),
-        "ingredients": str(data.get("ingredients") or existing.get("ingredients") or "").strip(),
-        "usage_manual": str(data.get("usage_manual") or existing.get("usage_manual") or "").strip(),
-        "status": (data.get("status") or existing.get("status") or "active").strip(),
+        "title": title.strip() if title else "",
+        "brand": brand.strip() if brand else "",
+        "current_price": current_price.strip() if current_price else "",
+        "thumbnail": get_field("thumbnail"),
+        "old_price": get_field("old_price"),
+        "discount": get_field("discount"), # Giờ đây nếu admin xóa trắng, nó sẽ lưu rỗng thay vì giữ data cũ
+        "rating": get_field("rating", "4.9"),
+        "sold_text": get_field("sold_text", "1k/tháng"),
+        "description": get_field("description"),
+        "specifications": get_field("specifications"),
+        "ingredients": get_field("ingredients"),
+        "usage_manual": get_field("usage_manual"),
+        "status": get_field("status", "active"),
         "variants": data.get("variants") if "variants" in data else existing.get("variants", [])
     }
 

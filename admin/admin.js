@@ -77,7 +77,13 @@ window.deleteProduct = async function(id, brand) {
     if (!confirm(`Bạn có chắc chắn muốn xóa sản phẩm ${brand}?`)) return;
     try {
         const res = await fetch(`${API_BASE_URL}/products/${id}`, { method: "DELETE" });
-        if (res.ok) { alert("Xóa thành công!"); window.loadAdminProducts(); }
+        if (res.ok) { 
+            alert("Xóa thành công!"); 
+            // Phá hủy Cache khi Xóa để trang chủ cập nhật ngay lập tức
+            sessionStorage.removeItem('morachi_products_cache');
+            sessionStorage.removeItem('morachi_products_cache_time');
+            window.loadAdminProducts(); 
+        }
     } catch (err) { alert("Lỗi hệ thống khi xóa!"); }
 }
 
@@ -131,10 +137,10 @@ window.editProduct = async function(id) {
         const p = allProductsData.find(item => item.id === id);
         
         if (p) {
-                    document.getElementById("product-id").value = p.id;
-                    document.getElementById("product-thumbnail-old").value = p.thumbnail || ""; 
-                    document.getElementById("title").value = p.title || "";
-                    document.getElementById("brand").value = p.brand || "";
+            document.getElementById("product-id").value = p.id;
+            document.getElementById("product-thumbnail-old").value = p.thumbnail || ""; 
+            document.getElementById("title").value = p.title || "";
+            document.getElementById("brand").value = p.brand || "";
             document.getElementById("current_price").value = p.current_price || "";
             
             if (document.getElementById("old_price")) document.getElementById("old_price").value = p.old_price || "";
@@ -267,14 +273,13 @@ if (form) {
                 variants: variantsArray
             };
 
-// THAY THẾ ĐOẠN "if (imageUrl) productData.thumbnail = imageUrl;" BẰNG ĐOẠN CODE DƯỚI ĐÂY:
-if (imageUrl) {
-    // Nếu có upload ảnh mới thành công thì lấy ảnh mới
-    productData.thumbnail = imageUrl; 
-} else {
-    // Nếu không upload ảnh mới, giữ nguyên link ảnh cũ lấy từ input ẩn
-    productData.thumbnail = document.getElementById("product-thumbnail-old").value; 
-}
+            if (imageUrl) {
+                // Nếu có upload ảnh mới thành công thì lấy ảnh mới
+                productData.thumbnail = imageUrl; 
+            } else {
+                // Nếu không upload ảnh mới, giữ nguyên link ảnh cũ lấy từ input ẩn
+                productData.thumbnail = document.getElementById("product-thumbnail-old").value; 
+            }
 
             const url = isEditing ? `${API_BASE_URL}/products/${id}` : `${API_BASE_URL}/products`;
             const method = isEditing ? "PUT" : "POST";
@@ -288,6 +293,11 @@ if (imageUrl) {
             if (res.ok) {
                 msg.innerText = isEditing ? "Cập nhật thành công!" : "Thêm mới thành công!";
                 msg.style.color = "green";
+                
+                // --- PHÁ HỦY CACHE ĐỂ TRANG CHỦ CẬP NHẬT NGAY LẬP TỨC ---
+                sessionStorage.removeItem('morachi_products_cache');
+                sessionStorage.removeItem('morachi_products_cache_time');
+                
                 setTimeout(() => { window.closeModal(); window.loadAdminProducts(); }, 1200);
             } else {
                 throw new Error("API backend từ chối lưu dữ liệu");
@@ -516,7 +526,7 @@ window.exportSPX = function() {
         "*Mã đơn hàng", "*Tên người nhận", "*Số điện thoại", "*Tỉnh/Thành Phố", 
         "*Quận/Huyện", "*Xã/Phường", "*Địa chỉ chi tiết", "Lưu ý về địa chỉ", 
         "Mã bưu chính", "*Tên sản phẩm", 
-        "Số lượng (Thông tin bắt buộc khi chọn Giao hàng một phần & Thu COD)", 
+        "Số lượng (Thông পাশ bắt buộc khi chọn Giao hàng một phần & Thu COD)", 
         "Giá tiền (Thông tin bắt buộc khi chọn Giao hàng một phần & Thu COD)", 
         "*Tổng cân nặng bưu gửi (KG)", "Chiều dài (CM)", "Chiều rộng (CM)", 
         "Chiều cao (CM)", "Mã khách hàng", "*Giá trị đơn hàng", 
