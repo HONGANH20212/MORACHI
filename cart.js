@@ -3,6 +3,7 @@
 // 1. Khởi tạo giỏ hàng từ bộ nhớ trình duyệt
 let cart = JSON.parse(localStorage.getItem('morachi_cart')) || [];
 let currentCheckoutOrderId = ""; 
+let vnProvinces = []; // Biến chứa dữ liệu địa chỉ toàn cục
 
 // 2. Lưu giỏ hàng
 function saveCart() {
@@ -114,7 +115,7 @@ function removeCartItem(index) {
 }
 
 // ==============================================================
-// 9. GIAO DIỆN & TÍNH NĂNG THANH TOÁN (CHECKOUT) MỚI
+// 9. GIAO DIỆN & TÍNH NĂNG THANH TOÁN (CHECKOUT)
 // ==============================================================
 
 function openCheckoutModal() {
@@ -136,6 +137,7 @@ function openCheckoutModal() {
     const randomNum = Math.floor(10 + Math.random() * 90);
     currentCheckoutOrderId = 'MO' + timestamp.slice(-4) + randomNum;
     
+    // THÔNG TIN NGÂN HÀNG
     const BANK_ID = "MB"; 
     const BANK_ACCOUNT = "2470168848012"; 
     const ACCOUNT_NAME = "VO THI HONG ANH"; 
@@ -206,15 +208,15 @@ function openCheckoutModal() {
                                 <div class="chk-select-row">
                                     <div class="chk-input-group chk-select-wrap">
                                         <i class="fas fa-map-marker-alt"></i>
-                                        <select id="chk-province"><option value="">Tỉnh/Thành phố</option></select>
+                                        <select id="chk-province" style="width: 100%;"><option value="">Tỉnh/Thành phố</option></select>
                                     </div>
                                     <div class="chk-input-group chk-select-wrap">
                                         <i class="fas fa-building"></i>
-                                        <select id="chk-district"><option value="">Quận/Huyện</option></select>
+                                        <select id="chk-district" style="width: 100%;"><option value="">Quận/Huyện</option></select>
                                     </div>
                                     <div class="chk-input-group chk-select-wrap">
                                         <i class="fas fa-home"></i>
-                                        <select id="chk-ward"><option value="">Phường/Xã</option></select>
+                                        <select id="chk-ward" style="width: 100%;"><option value="">Phường/Xã</option></select>
                                     </div>
                                 </div>
                                 
@@ -376,10 +378,21 @@ function openCheckoutModal() {
         }
     }
 
+    // Đổ dữ liệu Tỉnh thành vào (nếu đã tải xong ở Background)
+    const pSelect = document.getElementById('chk-province');
+    if (pSelect && vnProvinces.length > 0 && pSelect.options.length <= 1) {
+        vnProvinces.forEach(p => {
+            pSelect.add(new Option(p.name, p.code));
+        });
+    }
+
     modal.classList.add('active');
     
-    // LUÔN FETCH VÀ APPLY SELECT2 SAU KHI MODAL HIỂN THỊ ĐỂ CHỐNG LỖI HIỂN THỊ TRẮNG
-    fetchProvinces();
+    // KHÓA ĐỘ TRỄ: Đợi đúng 350ms (Cho Popup mở xong hoàn toàn) mới vẽ Select2
+    // Việc này sẽ khắc phục 100% lỗi icon lộn xộn và khung chọn bị ép còn 0px
+    setTimeout(() => {
+        applySelect2();
+    }, 350);
 }
 
 window.closeCheckoutModal = function() {
@@ -394,10 +407,8 @@ window.toggleBankInfo = function() {
 }
 
 // ==========================================
-// TÍCH HỢP TÌM KIẾM ĐỊA CHỈ (ĐÃ KHÔI PHỤC API OPEN-API.VN CŨ VÀ FIX LỖI "KHÔNG HIỆN CHỮ")
+// TẢI DỮ LIỆU ĐỊA CHỈ NGẦM (BACKGROUND PRE-LOAD) VÀ CACHE
 // ==========================================
-let vnProvinces = [];
-
 (function preloadLibraries() {
     if (typeof jQuery === 'undefined') {
         const script = document.createElement('script');
@@ -416,25 +427,18 @@ let vnProvinces = [];
     }
 })();
 
-async function fetchProvinces() {
+// Hàm tải dữ liệu được gọi NGAY KHI VÀO TRANG, không chờ ấn thanh toán
+async function preFetchProvinces() {
+    if (vnProvinces.length > 0) return;
     try {
-        // Chỉ tải dữ liệu nếu chưa có (Cache lại) để không bị chậm
-        if (vnProvinces.length === 0) {
+        let cachedData = localStorage.getItem('morachi_vn_provinces');
+        if (cachedData) {
+            vnProvinces = JSON.parse(cachedData);
+        } else {
             const res = await fetch('https://provinces.open-api.vn/api/?depth=3');
             vnProvinces = await res.json();
+            try { localStorage.setItem('morachi_vn_provinces', JSON.stringify(vnProvinces)); } catch(e){}
         }
-        
-        const pSelect = document.getElementById('chk-province');
-        if(pSelect && pSelect.options.length <= 1) { 
-            vnProvinces.forEach(p => {
-                let opt = document.createElement('option');
-                opt.value = p.code;
-                opt.text = p.name;
-                pSelect.add(opt);
-            });
-        }
-        // Gọi applySelect2 CHỈ KHI dữ liệu đã chèn xong vào DOM
-        applySelect2();
     } catch (e) { console.error("Lỗi API địa chỉ:", e); }
 }
 
@@ -446,7 +450,13 @@ function applySelect2() {
 
     const modalEl = $('#checkout-modal');
 
-    // dropdownParent giúp bảng chọn trổ xuống không bị che khuất trong Popup
+    // Nếu lỡ có Select2 cũ bị kẹt, hủy nó đi trước khi tạo mới
+    if ($('#chk-province').hasClass("select2-hidden-accessible")) {
+        $('#chk-province').select2('destroy');
+        $('#chk-district').select2('destroy');
+        $('#chk-ward').select2('destroy');
+    }
+
     $('#chk-province').select2({ width: '100%', placeholder: 'Tỉnh/Thành phố', dropdownParent: modalEl });
     $('#chk-district').select2({ width: '100%', placeholder: 'Quận/Huyện', dropdownParent: modalEl });
     $('#chk-ward').select2({ width: '100%', placeholder: 'Phường/Xã', dropdownParent: modalEl });
@@ -883,12 +893,13 @@ checkoutStyle.innerHTML = `
     .chk-select-row { display: flex; gap: 10px; }
     .chk-select-row .chk-input-group { flex: 1; }
 
-    .select2-container { width: 100% !important; }
-    .chk-select-wrap .select2-container--default .select2-selection--single { height: 46px; border: 1px solid #e0e0e0; border-radius: 8px; outline: none; width: 100% !important;}
-    .chk-select-wrap .select2-container--default .select2-selection--single .select2-selection__rendered { line-height: 46px; padding-left: 40px; color: #333; font-size: 13.5px; }
-    .chk-select-wrap .select2-container--default .select2-selection--single .select2-selection__arrow { height: 44px; }
+    /* Fix triệt để Select2 CSS: Đảm bảo độ rộng 100% và canh lề chữ */
+    .select2-container { width: 100% !important; display: block; }
+    .chk-select-wrap .select2-container--default .select2-selection--single { height: 46px; border: 1px solid #e0e0e0; border-radius: 8px; outline: none; width: 100% !important; display: flex; align-items: center;}
+    .chk-select-wrap .select2-container--default .select2-selection--single .select2-selection__rendered { padding-left: 40px !important; color: #333; font-size: 13.5px; width: 100%; text-align: left; }
+    .chk-select-wrap .select2-container--default .select2-selection--single .select2-selection__arrow { height: 46px !important; right: 10px !important; }
 
-    /* Fix z-index và style list cho Select2 */
+    /* Fix Menu trỏ xuống */
     .select2-container--open { z-index: 999999 !important; }
     .select2-dropdown { border-color: #f55523; border-radius: 8px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.15); z-index: 999999 !important; }
     .select2-container--default .select2-results__option--highlighted[aria-selected], .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable { background-color: #f55523 !important; color: white !important;}
@@ -1011,4 +1022,5 @@ function initFloatingContact() {
 document.addEventListener('DOMContentLoaded', () => {
     updateCartUI();
     initFloatingContact(); 
+    preFetchProvinces(); // Kích hoạt tải dữ liệu địa chỉ ngầm ngay khi vào web
 });
