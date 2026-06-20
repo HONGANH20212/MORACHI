@@ -171,13 +171,6 @@ function renderProducts(products) {
 }
 
 // --- Logic lọc và sắp xếp tự động ---
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join("");
-}
-
 function applyClientFilters() {
     let products = [...state.allProducts];
 
