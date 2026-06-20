@@ -10,7 +10,6 @@ const state = {
     maxPrice: null
 };
 
-// --- Các hàm tiện ích ---
 function parsePrice(value) {
     if (value === null || value === undefined) return 0;
     const cleaned = String(value).replace(/[^\d]/g, "");
@@ -31,7 +30,6 @@ function escapeHtml(text) {
         .replace(/'/g, "&#039;");
 }
 
-// --- Xử lý giao diện ---
 function getSearchElements() {
     const searchBar = document.querySelector(".search-bar");
     return {
@@ -74,7 +72,6 @@ function setProductCount(count) {
     }
 }
 
-// --- HÀM HIỂN THỊ SẢN PHẨM TRANG CHỦ ---
 function renderProducts(products) {
     const productList = document.getElementById("product-list");
     if (!productList) return;
@@ -97,13 +94,23 @@ function renderProducts(products) {
         const thumbnail = escapeHtml(product.thumbnail || "images/icon-logo.png");
         const currentPrice = formatPrice(product.current_price);
         const oldPrice = parsePrice(product.old_price) > 0 ? formatPrice(product.old_price) : "";
-        const discount = escapeHtml(product.discount || "");
         const rating = escapeHtml(product.rating || "4.9");
         const soldText = escapeHtml(product.sold_text || "1k/tháng");
 
-        // QUÉT CÁC BIẾN THỂ ĐỂ LẤY SỐ LƯỢNG & TRẠNG THÁI
+        // 1. TẠO KHỐI WRAPPER CHO CÁC NHÃN (BADGES)
+        let badgesHTML = '<div class="badges-wrapper">';
+
+        // Xử lý nhãn Bán chạy / Giảm giá
+        const rawDiscount = product.discount || "";
+        const lowerDiscount = rawDiscount.toLowerCase();
+        if (lowerDiscount.includes("bán chạy") || lowerDiscount.includes("hot")) {
+            badgesHTML += `<span class="badge badge-hot"><i class="fas fa-fire"></i> ${escapeHtml(rawDiscount)}</span>`;
+        } else if (rawDiscount) {
+            badgesHTML += `<span class="badge badge-sale">${escapeHtml(rawDiscount)}</span>`;
+        }
+
+        // QUÉT CÁC BIẾN THỂ ĐỂ LẤY SỐ LƯỢNG & TẠO NHÃN TRẠNG THÁI
         const variants = product.variants || [];
-        let statusBadge = "";
         let totalInstock = 0;
         let hasOrder = false;
         let hasInstock = false;
@@ -120,13 +127,18 @@ function renderProducts(products) {
             });
 
             const firstVariant = variants[0];
+            // Thêm nhãn Hết hàng / Order vào chung Wrapper
             if (firstVariant.status === 'out') {
-                statusBadge = `<span class="discount-badge" style="background:#666; right:auto; left:10px;">HẾT HÀNG</span>`;
+                badgesHTML += `<span class="badge badge-out"><i class="fas fa-times-circle"></i> HẾT HÀNG</span>`;
             } else if (firstVariant.status === 'order') {
-                statusBadge = `<span class="discount-badge" style="background:#f57224; right:auto; left:10px;">ORDER</span>`;
+                badgesHTML += `<span class="badge badge-order"><i class="fas fa-plane"></i> ORDER</span>`;
             }
         }
+        
+        // Đóng khối badges wrapper
+        badgesHTML += '</div>';
 
+        // 2. XỬ LÝ TEXT SỐ LƯỢNG HIỂN THỊ
         let stockHTML = "";
         if (hasInstock) {
             stockHTML = `<div style="font-size: 12px; color: #27ae60; font-weight: bold; margin-bottom: 5px;">Số lượng: ${totalInstock}</div>`;
@@ -136,12 +148,9 @@ function renderProducts(products) {
             stockHTML = `<div style="font-size: 12px; color: #999; font-weight: bold; margin-bottom: 5px;">Hết hàng</div>`;
         }
 
-        const discountBadgeHTML = discount ? `<span class="discount-badge">${discount}</span>` : "";
-
         return `
             <div class="product-card" onclick="window.location.href='product-detail.html?id=${id}'" style="cursor:pointer;">
-                ${statusBadge}
-                ${discountBadgeHTML}
+                ${badgesHTML}
                 
                 <img
                     class="product-img"
@@ -169,7 +178,6 @@ function renderProducts(products) {
     }).join("");
 }
 
-// --- Logic lọc và sắp xếp tự động ---
 function applyClientFilters() {
     let products = [...state.allProducts];
 
@@ -220,7 +228,6 @@ function applyClientFilters() {
     renderProducts(products);
 }
 
-// --- Bộ lọc thương hiệu động ---
 function renderBrandFilters(products) {
     const filterSections = document.querySelectorAll(".filter-section");
     if (filterSections.length < 2) return;
@@ -262,7 +269,6 @@ function renderBrandFilters(products) {
     });
 }
 
-// --- Gọi API lấy dữ liệu (Đã tích hợp Caching & Skeleton) ---
 async function loadProducts() {
     const productList = document.getElementById("product-list");
     if (!productList) return;
@@ -310,7 +316,6 @@ async function loadProducts() {
     }
 }
 
-// --- Gán sự kiện (Binding) ---
 function bindSortTabs() {
     const tabs = document.querySelectorAll(".sort-tabs span");
     tabs.forEach((tab) => {
@@ -354,7 +359,6 @@ function bindPriceFilter() {
     });
 }
 
-// --- TÍNH NĂNG NÚT LIÊN HỆ NỔI (FLOATING CONTACT) ---
 function initFloatingContact() {
     // 1. Gắn CSS động
     const style = document.createElement('style');
@@ -465,10 +469,10 @@ document.addEventListener("DOMContentLoaded", () => {
     bindPriceFilter();
     loadProducts();
     initFloatingContact(); // Gọi hàm tạo nút liên hệ nổi
- // ==============================================================
-// TÙY CHỈNH UX BỘ LỌC GIÁ (TỰ ĐỘNG THÊM 3 SỐ 0)
-// ==============================================================
-document.addEventListener("DOMContentLoaded", () => {
+    
+    // ==============================================================
+    // TÙY CHỈNH UX BỘ LỌC GIÁ (TỰ ĐỘNG THÊM 3 SỐ 0)
+    // ==============================================================
     document.querySelectorAll('.price-inputs input').forEach(input => {
         // Tự động format khi click chuột ra ngoài
         input.addEventListener('blur', function() {
@@ -494,6 +498,5 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (applyBtn) applyBtn.click(); // Kích hoạt nút Áp Dụng
             }
         });
-    });
-});   
+    });   
 });
