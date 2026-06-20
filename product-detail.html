@@ -17,7 +17,7 @@
         :root {
             --primary-red: #ba1a1a;
             --primary-red-hover: #9c1515;
-            --bg-body: #f8f9fa;
+            --bg-body: #ffffff; /* Sửa thành nền trắng để đồng bộ mẫu */
             --bg-surface: #ffffff;
             --text-main: #333333;
             --text-muted: #888888;
@@ -33,7 +33,7 @@
         /* =============================================================
            CHI TIẾT SẢN PHẨM STYLES
            ============================================================= */
-        .pd-wrapper { display: flex; gap: 40px; background: var(--bg-surface); padding: 30px; border-radius: var(--radius-md); box-shadow: var(--shadow-card); }
+        .pd-wrapper { display: flex; gap: 40px; background: var(--bg-surface); padding: 0; margin-bottom: 40px; }
         .pd-gallery { width: 45%; flex-shrink: 0; }
         .pd-info { flex: 1; }
         
@@ -50,43 +50,53 @@
         .pd-rating { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
         .pd-rating i { color: #f5c518; }
 
-        .pd-price-box { background: var(--bg-body); padding: 20px; border: 1px dashed #ddd; border-radius: var(--radius-md); margin-bottom: 25px; }
-        .pd-price-now { color: var(--primary-red); font-size: 34px; font-weight: bold; }
+        /* Chỉnh lại phần giá phẳng, không có border đứt */
+        .pd-price-box { margin-bottom: 25px; }
+        .pd-price-now { color: var(--primary-red); font-size: 30px; font-weight: bold; }
         .pd-price-old { text-decoration: line-through; color: var(--text-muted); font-size: 16px; margin-left: 15px; }
 
         .pd-variants { margin-bottom: 25px; }
         .pd-variant-label { font-weight: bold; font-size: 14px; display: block; margin-bottom: 12px; color: var(--text-main);}
         .pd-variant-list { display: flex; gap: 10px; flex-wrap: wrap; }
-        .pd-btn-v { border: 1px solid var(--border-color); background: var(--bg-surface); padding: 10px 18px; border-radius: var(--radius-md); cursor: pointer; transition: 0.2s; color: var(--text-main); font-size: 14px; }
+        .pd-btn-v { border: 1px solid var(--border-color); background: var(--border-color); padding: 10px 18px; border-radius: var(--radius-md); cursor: pointer; transition: 0.2s; color: var(--text-main); font-size: 14px; }
         .pd-btn-v:hover { border-color: var(--primary-red); }
         .pd-btn-v.active { border-color: var(--primary-red); color: var(--primary-red); background: var(--icon-bg); font-weight: bold; }
 
-        .pd-status { padding: 15px; background: var(--bg-body); border: 1px solid var(--border-color); border-radius: var(--radius-md); margin-bottom: 25px; font-size: 14px; line-height: 1.6; }
+        /* Chỉnh lại phần trạng thái */
+        .pd-status { margin-bottom: 25px; font-size: 14px; line-height: 1.6; }
         .pd-text-green { color: #27ae60; font-weight: bold; }
         .pd-text-red { color: var(--primary-red); font-weight: bold; }
 
+        /* NÚT THÊM GIỎ HÀNG VÀ MUA NGAY (Sửa theo mẫu mới) */
         .pd-actions { display: flex; gap: 15px; }
-        .pd-btn-cart { flex: 1; padding: 16px; border: 1px solid var(--primary-red); color: var(--primary-red); background: var(--icon-bg); font-weight: bold; cursor: pointer; border-radius: var(--radius-md); font-size: 15px; transition: 0.2s;}
-        .pd-btn-cart:hover { background: var(--primary-red); color: white;}
-        .pd-btn-buy { flex: 1; padding: 16px; background: var(--primary-red); color: white; border: none; font-weight: bold; cursor: pointer; border-radius: var(--radius-md); font-size: 15px; transition: 0.2s;}
+        .pd-btn-cart { flex: 1; padding: 14px; border: 1px solid var(--primary-red); color: var(--primary-red); background: #ffffff; font-weight: bold; cursor: pointer; border-radius: var(--radius-md); font-size: 15px; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;}
+        .pd-btn-cart:hover { background: var(--icon-bg); }
+        .pd-btn-buy { flex: 1; padding: 14px; background: var(--primary-red); color: white; border: none; font-weight: bold; cursor: pointer; border-radius: var(--radius-md); font-size: 15px; transition: 0.2s; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(186, 26, 26, 0.3);}
         .pd-btn-buy:hover { background: var(--primary-red-hover); }
 
-        /* TABS */
-        .pd-desc-container { margin-top: 30px; }
-        .pd-desc-tabs { display: flex; background: var(--bg-surface); border-radius: var(--radius-md); box-shadow: var(--shadow-card); overflow-x: auto; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid var(--border-color); }
-        .pd-tab-link { flex: 1; text-align: center; font-size: 15px; color: var(--text-main); padding: 18px 20px; cursor: pointer; font-weight: 500; text-decoration: none; white-space: nowrap; border-bottom: 3px solid transparent; transition: 0.2s; }
+        /* GRID ƯU ĐÃI CAM KẾT SIDEBAR */
+        .guarantee-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 15px; }
+        .guarantee-box { border: 1px solid var(--border-color); border-radius: 12px; padding: 15px 5px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; background: #fff; transition: 0.2s;}
+        .guarantee-box:hover { border-color: var(--primary-red); box-shadow: 0 4px 10px rgba(186,26,26,0.05); }
+        .guarantee-box i { font-size: 26px; color: var(--primary-red); }
+        .guarantee-box span { font-size: 11px; color: var(--text-main); font-weight: 500; line-height: 1.4;}
+
+        /* TABS (Phẳng và tinh tế hơn) */
+        .pd-desc-container { margin-top: 10px; }
+        .pd-desc-tabs { display: flex; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; background: var(--bg-body); }
+        .pd-tab-link { flex: 1; text-align: center; font-size: 15px; color: var(--text-main); padding: 15px 20px; cursor: pointer; font-weight: 500; text-decoration: none; white-space: nowrap; border-bottom: 3px solid transparent; transition: 0.2s; }
         .pd-tab-link.active { color: var(--primary-red); border-bottom: 3px solid var(--primary-red); font-weight: bold; }
         .pd-tab-link:hover:not(.active) { color: var(--primary-red); }
 
         /* SECTIONS */
-        .pd-section-block { background: var(--bg-surface); border-radius: var(--radius-md); padding: 30px; margin-top: 25px; box-shadow: var(--shadow-card); scroll-margin-top: 70px;}
+        .pd-section-block { margin-top: 30px; scroll-margin-top: 70px; padding-bottom: 20px;}
         .pd-section-block h3 { font-size: 18px; margin-top: 0; margin-bottom: 20px; color: var(--text-main); font-weight: bold; display: flex; align-items: center; gap: 10px;}
         .pd-section-block h3::before { content: ''; display: inline-block; width: 4px; height: 18px; background: var(--primary-red); }
         .pd-section-content { font-size: 14px; line-height: 1.8; color: #444; white-space: pre-wrap; font-family: 'Segoe UI', Arial, sans-serif; }
 
         .specs-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         .specs-table td { padding: 12px 15px; border: 1px solid var(--border-color); font-size: 14px; }
-        .specs-table tr td:first-child { width: 30%; background: var(--bg-body); color: var(--text-main); font-weight: bold; }
+        .specs-table tr td:first-child { width: 30%; background: #f9f9f9; color: var(--text-main); font-weight: bold; }
 
         /* SKELETON */
         .skeleton { background: #f6f7f8; background: linear-gradient(110deg, #ececec 8%, #f5f5f5 18%, #ececec 33%); border-radius: var(--radius-md); background-size: 200% 100%; animation: 1.5s shine linear infinite; }
@@ -101,7 +111,7 @@
 
         /* RESPONSIVE */
         @media (max-width: 768px) {
-            .pd-wrapper { flex-direction: column; padding: 20px; gap: 20px; }
+            .pd-wrapper { flex-direction: column; gap: 20px; }
             .pd-gallery { width: 100%; }
             .pd-main-img { height: 350px; }
             .pd-title { font-size: 22px; }
@@ -109,18 +119,18 @@
             .pd-actions { flex-direction: row; gap: 10px; }
             .pd-btn-cart, .pd-btn-buy { padding: 14px 5px; font-size: 13px; flex: 1; text-align: center; }
             .pd-desc-container { margin-top: 20px; }
-            .pd-desc-tabs { border-radius: 0; margin: 0 -15px; padding: 0 15px; -webkit-overflow-scrolling: touch; }
+            .pd-desc-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
             .pd-tab-link { padding: 15px; font-size: 14px; }
-            .pd-section-block { padding: 20px 15px; margin-top: 15px; }
             .specs-table td { padding: 10px; font-size: 13px; }
             .skel-img { height: 350px; }
+            .guarantee-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
 
 <body>
 
-<header class="modern-header">
+    <header class="modern-header">
         
         <div class="top-header">
             <div class="container top-header-inner">
@@ -210,14 +220,41 @@
             <div class="filter-section">
                 <h3>THÔNG TIN GIAO HÀNG</h3>
                 <div style="font-size: 13px; color: var(--text-main); line-height: 2.4; margin-top: 15px;">
-                    <div style="display: flex; gap: 10px; align-items: center;"><i class="fas fa-truck" style="color: #27ae60; font-size: 16px;"></i> Ưu đãi tháng 6 giao hàng 15.000 toàn quốc</div>
+                    <div style="display: flex; gap: 10px; align-items: center;"><i class="fas fa-truck" style="color: #27ae60; font-size: 16px;"></i> Ưu đãi tháng 6 giao hàng 15.000đ toàn quốc</div>
                     <div style="display: flex; gap: 10px; align-items: center;"><i class="fas fa-box" style="color: var(--primary-red); font-size: 16px;"></i> Đền bù 100% nếu phát hiện giả</div>
                     <div style="display: flex; gap: 10px; align-items: center;"><i class="fas fa-undo" style="color: #2980b9; font-size: 16px;"></i> Cam kết chính hãng</div>
                 </div>
             </div>
+            
+            <div class="filter-divider"></div>
+
             <div class="filter-section">
                 <h3>MÔ TẢ NGẮN</h3>
                 <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-top: 10px;">Sản phẩm cam kết chính hãng. Vui lòng chọn đúng phân loại hoặc dung tích trước khi thêm vào giỏ hàng để được phục vụ tốt nhất.</p>
+            </div>
+
+            <div class="filter-divider"></div>
+
+            <div class="filter-section">
+                <h3>Ưu đãi & Cam kết</h3>
+                <div class="guarantee-grid">
+                    <div class="guarantee-box">
+                        <i class="fa-solid fa-award"></i>
+                        <span>Chính hãng<br>Nhật Bản 100%</span>
+                    </div>
+                    <div class="guarantee-box">
+                        <i class="fa-solid fa-truck-fast"></i>
+                        <span>Giao hàng<br>15.000đ toàn quốc tháng 6</span>
+                    </div>
+                    <div class="guarantee-box">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Đền bù 100%<br>nếu phát hiện giả</span>
+                    </div>
+                    <div class="guarantee-box">
+                        <i class="fa-solid fa-handshake-angle"></i>
+                        <span>Cam kết<br>chính hãng</span>
+                    </div>
+                </div>
             </div>
         </aside>
 
@@ -380,11 +417,6 @@
                     <div class="pd-info">
                         <div class="pd-brand">${p.brand}</div>
                         <h1 class="pd-title">${p.title}</h1>
-                        
-                        <div class="pd-rating">
-                            <span><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i></span>
-                            <span>${p.rating || '4.9'} đánh giá</span>
-                        </div>
 
                         <div class="pd-price-box">
                             <span class="pd-price-now" id="pd-price-view">${formatVND(p.current_price)}</span>
@@ -407,8 +439,8 @@
                         <div class="pd-status" id="pd-status-view"></div>
 
                         <div class="pd-actions">
-                            <button class="pd-btn-cart" onclick="handleAddToCart()"><i class="fas fa-cart-plus"></i> THÊM GIỎ HÀNG</button>
-                            <button class="pd-btn-buy" onclick="handleBuyNow()">MUA NGAY</button>
+                            <button class="pd-btn-cart" onclick="handleAddToCart()"><i class="fas fa-cart-plus"></i> Thêm giỏ hàng</button>
+                            <button class="pd-btn-buy" onclick="handleBuyNow()">Mua ngay</button>
                         </div>
                     </div>
                 </div>
@@ -427,17 +459,17 @@
                     </div>
 
                     <div id="sec-spec" class="pd-section-block">
-                        <h3>Thông số sản phẩm</h3>
+                        <h3>Thông số</h3>
                         <div class="pd-section-content">${specsHTML}</div>
                     </div>
 
                     <div id="sec-ingr" class="pd-section-block">
-                        <h3>Thành phần sản phẩm</h3>
+                        <h3>Thành phần</h3>
                         <div class="pd-section-content">${safeIngr}</div>
                     </div>
 
                     <div id="sec-usage" class="pd-section-block">
-                        <h3>Hướng dẫn sử dụng</h3>
+                        <h3>HDSD</h3>
                         <div class="pd-section-content">${safeUsage}</div>
                     </div>
                 </div>
@@ -512,7 +544,6 @@
                 image: v.image || currentProduct.thumbnail,
                 variant: v.name || 'Mặc định',
                 price: v.price || currentProduct.current_price,
-                // THÊM 2 DÒNG NÀY ĐỂ LƯU TRẠNG THÁI VÀ NGÀY VÀO GIỎ HÀNG
                 status: v.status || 'instock', 
                 date: v.date || v.expected_date || 'Đang cập nhật'
             };
@@ -522,7 +553,7 @@
                 
                 const btn = document.querySelector('.pd-btn-cart');
                 const originalHtml = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-check"></i> ĐÃ THÊM';
+                btn.innerHTML = '<i class="fas fa-check"></i> Đã thêm';
                 btn.style.background = '#27ae60';
                 btn.style.color = 'white';
                 btn.style.borderColor = '#27ae60';
@@ -549,7 +580,6 @@
                 image: v.image || currentProduct.thumbnail,
                 variant: v.name || 'Mặc định',
                 price: v.price || currentProduct.current_price,
-                // THÊM 2 DÒNG NÀY
                 status: v.status || 'instock',
                 date: v.date || v.expected_date || 'Đang cập nhật'
             };
@@ -594,10 +624,9 @@
             if (v.status === 'instock') {
                 box.innerHTML = `
                     <div style="margin-bottom: 5px;"><i class="fas fa-check-circle pd-text-green"></i> Tình trạng: <span class="pd-text-green">Sẵn hàng tại kho</span></div>
-                    <div>Số lượng: <strong>${v.stock || 0} sản phẩm</strong></div>
+                    <div>Số lượng: <strong>${v.stock || 1} sản phẩm</strong></div>
                 `;
             } else if (v.status === 'order' || v.status === 'out') {
-                // Lấy ngày dự kiến từ API (hỗ trợ cả key 'date' hoặc 'expected_date')
                 const expectedDate = v.date || v.expected_date || 'Đang cập nhật';
                 
                 box.innerHTML = `
