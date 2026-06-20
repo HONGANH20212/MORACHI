@@ -214,12 +214,37 @@ a { text-decoration: none; color: inherit; }
 }
 
 .filter-section h3 {
-    font-size: 15px; margin-bottom: 20px; text-transform: uppercase;
-    display: flex; align-items: center; gap: 10px; color: var(--text-main); font-weight: bold;
+    font-size: 14px; margin-bottom: 20px; text-transform: uppercase;
+    display: flex; align-items: center; gap: 10px; color: var(--text-main);
 }
 
 .filter-section h3::before { 
     content: ''; display: inline-block; width: 4px; height: 16px; background: var(--primary-red); 
+}
+
+/* Price Inputs */
+.price-inputs { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+.input-wrap { position: relative; flex: 1; }
+.input-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--primary-red); font-size: 13px; }
+.price-inputs input {
+    width: 100%; padding: 10px 10px 10px 35px;
+    border: 1px solid var(--border-color); border-radius: var(--radius-md);
+    font-size: 13px; outline: none;
+}
+.price-divider { color: var(--text-muted); font-weight: bold; }
+
+/* Apply Button */
+.btn-apply {
+    width: 100%; padding: 12px; background: var(--primary-red); color: #fff;
+    border: none; border-radius: var(--radius-md);
+    font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s;
+}
+.btn-apply:hover { background: var(--primary-red-hover); }
+
+/* Divider Tag */
+.filter-divider { 
+    margin: 25px 0; 
+    border-top: 1px solid var(--border-color); 
 }
 
 /* Checkbox Thương Hiệu */
@@ -232,31 +257,23 @@ a { text-decoration: none; color: inherit; }
     width: 16px; height: 16px; cursor: pointer;
 }
 
-/* Nút Áp Dụng bo tròn full */
-.btn-apply {
-    width: 100%; padding: 12px; background: var(--primary-red); color: #fff;
-    border: none; border-radius: 50px;
-    font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s;
-    margin-top: 25px;
-}
-.btn-apply:hover { background: var(--primary-red-hover); }
-
 /* =========================================
    MAIN CONTENT
    ========================================= */
 .content { flex: 1; background: var(--bg-surface); padding: 30px; border-radius: var(--radius-md); box-shadow: var(--shadow-card); }
 
-.content-header { margin-bottom: 25px; }
+.content-header h2 { font-size: 22px; font-weight: bold; margin-bottom: 25px; display: flex; align-items: baseline; gap: 10px; }
+.content-header h2 span { font-size: 13px; color: var(--text-muted); font-weight: normal; }
 
-/* Sort Tabs phẳng (Không viền dưới) */
+/* Sort Tabs */
 .sort-tabs { 
-    display: flex; gap: 35px; border-bottom: none; margin-bottom: 0; 
+    display: flex; gap: 30px; border-bottom: 1px solid var(--border-color); margin-bottom: 30px; 
     overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; 
 }
 .sort-tabs::-webkit-scrollbar { display: none; }
-.sort-tabs span { font-size: 15px; color: var(--text-main); cursor: pointer; padding-bottom: 10px; position: relative; font-weight: 500;}
+.sort-tabs span { font-size: 14px; color: var(--text-main); cursor: pointer; padding-bottom: 12px; position: relative; }
 .sort-tabs span.active { color: var(--primary-red); font-weight: bold; }
-.sort-tabs span.active::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background: var(--primary-red); }
+.sort-tabs span.active::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 100%; height: 2px; background: var(--primary-red); }
 
 /* =========================================
    PRODUCT CARD
@@ -298,20 +315,19 @@ a { text-decoration: none; color: inherit; }
     font-weight: bold;
 }
 
-/* Tem bán chạy nền trong suốt */
 .discount-badge {
     position: absolute;
-    top: 15px;
-    left: 15px;
-    background: transparent;
-    color: var(--primary-red);
+    top: 10px;
+    left: 10px;
+    background: var(--primary-red);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
     font-size: 11px;
     font-weight: bold;
     z-index: 2;
     text-transform: uppercase;
-    display: flex;
-    align-items: center;
-    gap: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
 }
 
 /* Khu vực ảnh */
@@ -376,15 +392,15 @@ a { text-decoration: none; color: inherit; }
     text-decoration: line-through; 
 }
 
-/* Nút MUA NGAY bo tròn */
+/* Nút MUA NGAY */
 .btn-buy-now {
     width: 100%;
     padding: 10px;
     background-color: var(--primary-red);
     color: white;
     border: none;
-    border-radius: 50px;
-    font-size: 14px;
+    border-radius: 8px;
+    font-size: 15px;
     font-weight: bold;
     cursor: pointer;
     display: flex;
@@ -431,6 +447,7 @@ a { text-decoration: none; color: inherit; }
 }
 
 @media (max-width: 768px) {
+    /* --- 1. HEADER MOBILE THEO MẪU MỚI --- */
     .top-header { display: none; } 
     
     .main-header-inner { 
@@ -440,6 +457,7 @@ a { text-decoration: none; color: inherit; }
         justify-content: space-between;
     }
     
+    /* Cụm Logo */
     .logo-area { flex: 0 0 auto; }
     .logo-area a { gap: 8px; }
     .logo-icon { height: 42px; } 
@@ -455,6 +473,7 @@ a { text-decoration: none; color: inherit; }
         margin-top: 3px; 
     }
 
+    /* Cụm Icon Tròn (Location & Cart) */
     .header-actions { 
         flex: 0 0 auto; 
         justify-content: flex-end; 
@@ -470,6 +489,7 @@ a { text-decoration: none; color: inherit; }
         color: var(--primary-red);
     }
     
+    /* Thanh Tìm Kiếm */
     .search-bar { 
         width: 100%; 
         order: 3; 
@@ -491,12 +511,14 @@ a { text-decoration: none; color: inherit; }
         color: #111;
     }
 
+    /* Banner Đỏ */
     .red-banner {
         padding: 10px 15px;
         font-size: 11px;
         line-height: 1.5;
     }
     
+    /* --- 2. CÁC PHẦN BODY KHÁC GIỮ NGUYÊN KHOẢNG CÁCH --- */
     .floating-contact { 
         transform: scale(0.75); 
         transform-origin: bottom right; 
@@ -528,9 +550,18 @@ a { text-decoration: none; color: inherit; }
     .breadcrumb {
         padding: 20px 15px 5px 15px !important;
     }
+
+    .price-inputs {
+        flex-direction: column;
+        gap: 15px;
+    }
+    .price-divider {
+        display: none;
+    }
 }
 
 @media (max-width: 576px) {
+    /* Lưới sản phẩm mobile mới */
     .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .product-card { padding: 10px; }
     
@@ -543,7 +574,7 @@ a { text-decoration: none; color: inherit; }
     .current-price { font-size: 16px; }
     .old-price { font-size: 11px; }
     
-    .discount-badge { font-size: 10px; padding: 0; }
+    .discount-badge { font-size: 10px; padding: 3px 6px; }
     
     .btn-buy-now { font-size: 13px; padding: 8px; }
 
