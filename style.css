@@ -296,6 +296,7 @@ a { text-decoration: none; color: inherit; }
     background: #fff;
     height: 100%; /* Ép card luôn lấy chiều cao tối đa của grid */
     box-sizing: border-box;
+    padding-bottom: 3mm
 }
 
 .product-card:hover { 
@@ -415,6 +416,7 @@ a { text-decoration: none; color: inherit; }
     justify-content: center;
     gap: 6px;
     transition: 0.2s;
+    margin-top: 3mm;
 }
 .btn-buy-now:hover {
     background-color: var(--primary-red-hover);
