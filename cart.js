@@ -410,14 +410,14 @@ function openCheckoutModal() {
 window.closeCheckoutModal = function() {
     const modal = document.getElementById('checkout-modal');
     if (modal) modal.classList.remove('active');
-}
+};
 
 window.toggleBankInfo = function() {
     const checkedInput = document.querySelector('input[name="chk-payment"]:checked');
     const method = checkedInput ? checkedInput.value : 'cod';
     const box = document.getElementById('bank-info-box');
     if (box) box.style.display = method === 'bank' ? 'block' : 'none';
-}
+};
 
 // ==========================================
 // TẢI DỮ LIỆU ĐỊA CHỈ NGẦM (BACKGROUND PRE-LOAD) VÀ CACHE
@@ -508,7 +508,7 @@ window.loadDistricts = function() {
     }
     dSelect.trigger('change');
     wSelect.trigger('change');
-}
+};
 
 window.loadWards = function() {
     if (typeof jQuery === 'undefined') return;
@@ -531,7 +531,7 @@ window.loadWards = function() {
         });
     }
     wSelect.trigger('change');
-}
+};
 
 // ==========================================
 // TÍNH NĂNG GỢI Ý ĐỊA CHỈ (AUTOCOMPLETE) 
@@ -595,7 +595,7 @@ window.setupAddressAutocomplete = function() {
             dropdown.style.display = 'none';
         }
     });
-}
+};
 
 // ==============================================================
 // XỬ LÝ ĐẶT HÀNG VÀ BẮN API VÀO DATABASE
@@ -650,7 +650,7 @@ window.submitOrder = async function() {
     } else {
         executeOrderSubmit(btn, name, phone, address);
     }
-}
+};
 
 async function executeOrderSubmit(btn, name, phone, address) {
     const textNode = btn.querySelector('.submit-texts strong');
