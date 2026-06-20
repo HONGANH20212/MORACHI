@@ -1,7 +1,19 @@
 // === HỆ THỐNG GIỎ HÀNG BẰNG LOCALSTORAGE ===
 
 // 1. Khởi tạo giỏ hàng từ bộ nhớ trình duyệt
-let cart = JSON.parse(localStorage.getItem('morachi_cart')) || [];
+// (Bọc trong try/catch: nếu dữ liệu localStorage bị lỗi/hỏng, JSON.parse sẽ
+// ném lỗi và làm dừng toàn bộ phần code phía dưới của file này -> khiến các
+// hàm như setupAddressAutocomplete, toggleBankInfo, submitOrder... không
+// bao giờ được định nghĩa, dẫn đến popup thanh toán không hiện ra được)
+let cart = [];
+try {
+    cart = JSON.parse(localStorage.getItem('morachi_cart')) || [];
+    if (!Array.isArray(cart)) cart = [];
+} catch (e) {
+    console.error('Dữ liệu giỏ hàng (morachi_cart) bị lỗi, đã reset về giỏ hàng trống:', e);
+    cart = [];
+    try { localStorage.removeItem('morachi_cart'); } catch (e2) {}
+}
 let currentCheckoutOrderId = ""; 
 let vnProvinces = []; // Biến chứa dữ liệu địa chỉ toàn cục
 
@@ -401,9 +413,10 @@ window.closeCheckoutModal = function() {
 }
 
 window.toggleBankInfo = function() {
-    const method = document.querySelector('input[name="chk-payment"]:checked').value;
+    const checkedInput = document.querySelector('input[name="chk-payment"]:checked');
+    const method = checkedInput ? checkedInput.value : 'cod';
     const box = document.getElementById('bank-info-box');
-    box.style.display = method === 'bank' ? 'block' : 'none';
+    if (box) box.style.display = method === 'bank' ? 'block' : 'none';
 }
 
 // ==========================================
@@ -650,7 +663,8 @@ async function executeOrderSubmit(btn, name, phone, address) {
     const ward = wardEl.options[wardEl.selectedIndex] ? wardEl.options[wardEl.selectedIndex].text : '';
 
     const orderId = currentCheckoutOrderId;
-    const method = document.querySelector('input[name="chk-payment"]:checked').value;
+    const checkedPayment = document.querySelector('input[name="chk-payment"]:checked');
+    const method = checkedPayment ? checkedPayment.value : 'cod';
     const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) + 15000;
     
     const orderData = {
@@ -662,7 +676,14 @@ async function executeOrderSubmit(btn, name, phone, address) {
         status: method === 'bank' ? 'Chờ xác nhận đã chuyển khoản' : 'Xác nhận đặt đơn Shipcod thành công'
     };
 
-    let allOrders = JSON.parse(localStorage.getItem('morachi_orders') || '[]');
+    let allOrders = [];
+    try {
+        allOrders = JSON.parse(localStorage.getItem('morachi_orders') || '[]');
+        if (!Array.isArray(allOrders)) allOrders = [];
+    } catch (e) {
+        console.error('Dữ liệu morachi_orders bị lỗi, đã reset:', e);
+        allOrders = [];
+    }
     allOrders.unshift(orderData);
     localStorage.setItem('morachi_orders', JSON.stringify(allOrders));
 
