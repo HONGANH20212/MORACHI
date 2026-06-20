@@ -205,6 +205,7 @@ a { text-decoration: none; color: inherit; }
 .old-price { font-size: 12px; color: var(--text-muted); text-decoration: line-through; margin-left: 5px; }
 .product-rating { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--border-color); }
 .stars { color: #f5c518; }
+.discount-badge { position: absolute; top: 10px; left: 10px; background: var(--primary-red); color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; z-index: 2;}
 
 /* Skel loading / Empty State styling */
 .skel-card { border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 15px; display: flex; flex-direction: column; gap: 10px; height: 100%; }
@@ -348,54 +349,3 @@ a { text-decoration: none; color: inherit; }
 .pd-rating {
     display: none !important;
 }
-/* =========================================
-HỆ THỐNG BADGE (NHÃN SẢN PHẨM) CHUYÊN NGHIỆP
-========================================= /
-.badges-wrapper {
-position: absolute;
-top: 10px;
-left: 10px;
-display: flex;
-flex-direction: column;
-gap: 6px;
-z-index: 10;
-pointer-events: none; / Tránh cản trở click vào ảnh */
-}
-
-.badge {
-padding: 4px 8px;
-border-radius: 4px;
-font-size: 11px;
-font-weight: 700;
-color: white;
-box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-display: inline-flex;
-align-items: center;
-gap: 4px;
-width: fit-content;
-text-transform: uppercase;
-letter-spacing: 0.3px;
-}
-
-/* Nhãn Bán chạy / Hot (Màu Gradient đỏ cam + Icon Lửa) */
-.badge-hot {
-background: linear-gradient(90deg, #ff416c, #ff4b2b);
-}
-
-/* Nhãn Giảm giá bình thường (-20%) */
-.badge-sale {
-background: var(--primary-red);
-}
-
-/* Nhãn Order (Màu cam) */
-.badge-order {
-background: #f39c12;
-}
-
-/* Nhãn Hết hàng (Màu xám) */
-.badge-out {
-background: #7f8c8d;
-}
-
-/* Skel loading / Empty State styling /
-/ ... existing code ... */
