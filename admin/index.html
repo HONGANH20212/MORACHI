@@ -235,15 +235,15 @@
             border-top: 1px solid var(--border-color);
         }
         .bulk-actions { display: flex; align-items: center; gap: 15px; font-size: 13px; color: var(--text-light); }
-        .btn-outline { background: white; border: 1px solid var(--border-color); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 12px; color: var(--text-main); display: flex; align-items: center; gap: 6px; }
-        .btn-outline:hover { background: var(--bg); }
+        .btn-outline { background: white; border: 1px solid var(--border-color); padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 12px; color: var(--text-main); display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+        .btn-outline:hover { background: var(--bg); border-color: #ccc; }
         
         .pagination { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--text-light); }
         .page-item { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer; }
         .page-item.active { background: var(--accent); color: white; font-weight: bold; }
         .page-item:hover:not(.active) { background: var(--bg); }
 
-        /* Modal & Variant Forms (Giữ nguyên cấu trúc nhưng đổi màu cho hợp layout) */
+        /* Modal & Variant Forms */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(2px); }
         .modal-content { background: white; width: 900px; padding: 30px; border-radius: 12px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .variant-header { display: flex; justify-content: space-between; align-items: center; margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border-color); }
@@ -258,6 +258,71 @@
 
         /* Checkbox styling */
         input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+
+        /* --- PHẦN CSS CẬP NHẬT CHO ĐƠN HÀNG GIỐNG ẢNH MẪU --- */
+        .order-header {
+            display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;
+        }
+        .order-header .title h1 { font-size: 22px; margin: 0 0 5px 0; color: var(--text-main); font-weight: 700; }
+        .order-header .title p { margin: 0; color: var(--text-light); font-size: 13px; }
+        .order-header-actions { display: flex; gap: 10px; }
+
+        .order-stats {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;
+        }
+        .order-stat-card {
+            background: white; border-radius: 12px; padding: 15px 20px;
+            display: flex; align-items: center; gap: 15px;
+            border: 1px solid var(--border-color); box-shadow: 0 2px 10px rgba(0,0,0,0.01);
+        }
+        .order-stat-icon {
+            width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px;
+        }
+        .order-stat-info { flex: 1; }
+        .order-stat-info .title { font-size: 12px; color: var(--text-light); margin-bottom: 6px; font-weight: 500; }
+        .order-stat-info .number { font-size: 24px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; line-height: 1; }
+        .order-stat-info .badge { font-size: 11px; padding: 2px 6px; border-radius: 10px; font-weight: 600; }
+        .order-stat-info .desc { font-size: 11px; color: #b5b5c3; margin-top: 6px; }
+
+        .order-filter-container {
+            background: white; padding: 15px 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color);
+        }
+        .order-filter-top { display: flex; gap: 10px; margin-bottom: 15px; align-items: center; }
+        .order-filter-top .search-box { flex: 1; max-width: 320px; }
+        .order-filter-top select, .order-filter-top input, .order-filter-top button {
+            padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; outline: none; background: white; font-family: inherit;
+        }
+        .order-filter-quick { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text-main); }
+        .tag-pill {
+            padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid var(--border-color); cursor: pointer; color: var(--text-light); transition: 0.2s;
+        }
+        .tag-pill.red { color: var(--danger); border-color: rgba(231, 76, 60, 0.2); background: var(--danger-bg); }
+        .tag-pill.orange { color: var(--accent); border-color: rgba(245, 114, 36, 0.2); background: #fff2eb; }
+        .tag-pill.blue { color: #3498db; border-color: rgba(52, 152, 219, 0.2); background: #ebf5fb; }
+        .tag-pill.green { color: var(--success); border-color: rgba(39, 174, 96, 0.2); background: var(--success-bg); }
+
+        .badge-status { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .badge-status.yellow { background: #fff9e6; color: #f39c12; }
+        .badge-status.blue { background: #eef2ff; color: #4f46e5; }
+        .badge-status.purple { background: #f4ecf8; color: #9b59b6; }
+        .badge-status.green { background: #e8f8f0; color: #27ae60; }
+        .badge-status.red { background: #fdedec; color: #e74c3c; }
+
+        .action-btns { display: flex; gap: 6px; }
+        .action-btns button {
+            width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border-color); background: white; cursor: pointer;
+            color: var(--text-light); display: flex; align-items: center; justify-content: center; transition: 0.2s; font-size: 12px;
+        }
+        .action-btns button:hover { border-color: var(--accent); color: var(--accent); }
+
+        .bulk-action-bar {
+            position: fixed; bottom: 20px; left: calc(var(--sidebar-width) + (100% - var(--sidebar-width))/2); transform: translateX(-50%);
+            background: white; padding: 12px 24px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            display: none; align-items: center; justify-content: space-between; gap: 40px; border: 1px solid var(--border-color); z-index: 999; width: auto; min-width: 650px;
+        }
+        .bulk-action-bar.show { display: flex; }
+        .bulk-info { font-size: 13px; }
+        .bulk-actions-btns { display: flex; gap: 8px; }
     </style>
 </head>
 <body>
@@ -362,8 +427,7 @@
                             <th>Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody id="admin-product-list">
-                        </tbody>
+                    <tbody id="admin-product-list"></tbody>
                 </table>
                 <div class="table-footer">
                     <div class="bulk-actions">
@@ -385,42 +449,115 @@
         </div>
 
         <div id="section-orders" class="section-view">
-            <div class="top-header">
-                <h1><i class="fas fa-bars"></i> Đơn đặt hàng</h1>
-            </div>
-
-            <div class="filter-bar" style="justify-content: space-between;">
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <span style="font-size: 13px; font-weight: 600; color: var(--text-main);">Thao tác hàng loạt:</span>
-                    <select id="bulk-status-select">
-                        <option value="">-- Chọn trạng thái --</option>
-                        <option value="Chờ xác nhận">Chờ xác nhận</option>
-                        <option value="Đang chuẩn bị hàng">Đang chuẩn bị hàng</option>
-                        <option value="Đang giao hàng">Đang giao hàng</option>
-                        <option value="Đã hoàn thành">Đã hoàn thành</option>
-                        <option value="Đã hủy">Đã hủy</option>
-                    </select>
-                    <button class="btn-add" onclick="applyBulkStatus()" style="padding: 10px 15px;">Cập nhật</button>
+            <div class="order-header">
+                <div class="title">
+                    <h1>Đơn hàng</h1>
+                    <p>Quản lý và xử lý đơn hàng trong ngày</p>
                 </div>
-                <button class="btn-outline" onclick="exportSPX()" style="background: var(--success); color: white; border:none;"><i class="fas fa-file-excel"></i> Xuất SPX</button>
+                <div class="order-header-actions">
+                    <button class="btn-outline"><i class="far fa-calendar"></i> Hôm nay</button>
+                    <button class="btn-outline" onclick="exportSPX()"><i class="fas fa-download"></i> Xuất Excel</button>
+                    <button class="btn-add" style="background: var(--accent);"><i class="fas fa-plus"></i> Tạo đơn</button>
+                </div>
             </div>
 
-            <div class="card">
+            <div class="order-stats">
+                <div class="order-stat-card">
+                    <div class="order-stat-icon" style="color: var(--accent); background: #fff2eb;"><i class="far fa-clock"></i></div>
+                    <div class="order-stat-info">
+                        <div class="title">Chờ xác nhận</div>
+                        <div class="number">18 <span class="badge" style="background:#fff2eb; color:var(--accent);">+3</span></div>
+                        <div class="desc">So với hôm qua</div>
+                    </div>
+                </div>
+                <div class="order-stat-card">
+                    <div class="order-stat-icon" style="color: #4f46e5; background: #eef2ff;"><i class="fas fa-box"></i></div>
+                    <div class="order-stat-info">
+                        <div class="title">Đang đóng gói</div>
+                        <div class="number">12 <span class="badge" style="background:#fdedec; color:var(--danger);">2 quá hạn</span></div>
+                        <div class="desc">So với hôm qua</div>
+                    </div>
+                </div>
+                <div class="order-stat-card">
+                    <div class="order-stat-icon" style="color: #9b59b6; background: #f4ecf8;"><i class="fas fa-truck"></i></div>
+                    <div class="order-stat-info">
+                        <div class="title">Đã gửi hàng</div>
+                        <div class="number">35</div>
+                        <div class="desc">So với hôm qua</div>
+                    </div>
+                </div>
+                <div class="order-stat-card">
+                    <div class="order-stat-icon" style="color: var(--success); background: var(--success-bg);"><i class="far fa-check-circle"></i></div>
+                    <div class="order-stat-info">
+                        <div class="title">Hoàn tất hôm nay</div>
+                        <div class="number">27 <span class="badge" style="background:var(--success-bg); color:var(--success);">+12%</span></div>
+                        <div class="desc">So với hôm qua</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="order-filter-container">
+                <div class="order-filter-top">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Tìm theo mã đơn, SĐT, tên khách hàng...">
+                    </div>
+                    <select>
+                        <option>Tất cả trạng thái</option>
+                    </select>
+                    <div style="position: relative; display: flex; align-items: center;">
+                        <i class="far fa-calendar-alt" style="position: absolute; left: 12px; color: var(--text-light);"></i>
+                        <input type="text" value="21/06/2025" readonly style="width: 120px; padding-left: 35px; cursor: pointer;">
+                    </div>
+                    <button class="btn-outline"><i class="fas fa-filter"></i> Lọc</button>
+                    <button class="btn-outline" style="border: none; color: var(--text-light);"><i class="fas fa-times"></i> Xóa lọc</button>
+                    
+                    <div style="margin-left: auto; display: flex; gap: 5px;">
+                        <button class="btn-outline" style="background: #fff2eb; color: var(--accent); border-color: rgba(245,114,36,0.3);"><i class="fas fa-list"></i> Bảng</button>
+                        <button class="btn-outline"><i class="fas fa-th-large"></i> Thẻ</button>
+                    </div>
+                </div>
+                <div class="order-filter-quick">
+                    Lọc nhanh:
+                    <span class="tag-pill red">Quá hạn</span>
+                    <span class="tag-pill orange">COD</span>
+                    <span class="tag-pill blue">Khách mới</span>
+                    <span class="tag-pill green">Giá trị > 500k</span>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom: 60px;">
                 <table>
                     <thead>
                         <tr>
                             <th style="width: 40px; text-align: center;"><input type="checkbox" id="check-all-orders" onclick="toggleAllOrders(this)"></th>
-                            <th>Mã Đơn</th>
-                            <th>Khách Hàng & Liên Hệ</th>
-                            <th>Sản Phẩm (SL)</th>
-                            <th>Tổng Thu</th>
-                            <th>Trạng Thái</th>
-                            <th>Thao tác</th>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Sản phẩm</th>
+                            <th>Tổng thu</th>
+                            <th>Trạng thái</th>
+                            <th style="text-align: center;">Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody id="admin-order-list">
-                        </tbody>
+                    <tbody id="admin-order-list"></tbody>
                 </table>
+            </div>
+
+            <div id="bulk-action-bar" class="bulk-action-bar">
+                <div class="bulk-info">
+                    <div style="font-weight: 600; color: var(--text-main); font-size: 14px;">Đang chọn <span id="selected-count" style="color: var(--accent);">0</span> đơn hàng</div>
+                    <div style="color: var(--text-light); margin-top: 3px;">Tổng tiền: <span id="selected-total" style="color: var(--accent); font-weight: 700;">0đ</span></div>
+                </div>
+                <div class="bulk-actions-btns">
+                    <select id="bulk-status-select" style="display:none;">
+                        <option value="Đã hoàn thành">Đã hoàn thành</option>
+                    </select>
+                    
+                    <button class="btn-add" onclick="document.getElementById('bulk-status-select').value='Đã hoàn thành'; applyBulkStatus()" style="background: var(--accent);"><i class="fas fa-check"></i> Xác nhận (<span class="sel-count">0</span>)</button>
+                    <button class="btn-outline"><i class="fas fa-print"></i> In vận đơn (<span class="sel-count">0</span>)</button>
+                    <button class="btn-outline"><i class="fas fa-truck"></i> Giao Shipcod (<span class="sel-count">0</span>)</button>
+                    <button class="btn-outline" style="color: var(--text-light); border-color: #ddd;" onclick="document.getElementById('check-all-orders').click();"><i class="fas fa-ban"></i> Hủy chọn</button>
+                </div>
             </div>
         </div>
 

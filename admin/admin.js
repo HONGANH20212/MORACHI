@@ -405,7 +405,7 @@ if (form) {
 }
 
 // =========================================================
-// PHẦN 2: QUẢN LÝ ĐƠN HÀNG 
+// PHẦN 2: QUẢN LÝ ĐƠN HÀNG (CẬP NHẬT HOÀN TOÀN MỚI)
 // =========================================================
 
 window.switchTab = function(tabId) {
@@ -444,6 +444,7 @@ window.loadOrders = async function() {
 
         const checkAllEl = document.getElementById('check-all-orders');
         if (checkAllEl) checkAllEl.checked = false;
+        window.updateBulkActionBar(); 
 
         if (!orders || orders.length === 0) {
             tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; padding: 40px; color:#888;'>Chưa có đơn hàng nào.</td></tr>";
@@ -453,33 +454,61 @@ window.loadOrders = async function() {
         tbody.innerHTML = orders.map(o => {
             const c = o.customer_info || {};
             const items = o.items || [];
-            let itemNames = items.map(i => `<div style="font-size:12px; margin-bottom:2px; color:#555;">• ${i.title} (${i.variant}) x<b>${i.quantity}</b></div>`).join("");
             
-            let statusBadge = `<span class="status-badge" style="background:#eef2ff; color:#4f46e5;">${o.status || 'Mới'}</span>`;
-            if(o.status === 'Đang giao hàng') statusBadge = `<span class="status-badge" style="background:var(--warning-bg); color:var(--warning);">${o.status}</span>`;
-            if(o.status === 'Đã hoàn thành') statusBadge = `<span class="status-badge active">${o.status}</span>`;
-            if(o.status === 'Đã hủy') statusBadge = `<span class="status-badge out">${o.status}</span>`;
+            // Xử lý hiển thị danh sách sản phẩm thu gọn chuẩn UI ảnh mẫu
+            let itemDisplay = '';
+            if (items.length > 0) {
+                itemDisplay = `<div style="font-size:13px; font-weight: 500; color: var(--text-main); margin-bottom:3px;">${items[0].title} (${items[0].variant || 'Mặc định'}) x<b>${items[0].quantity}</b></div>`;
+                if (items.length > 1) {
+                    itemDisplay += `<div style="font-size:12px; color:var(--text-light);">+ ${items.length - 1} sản phẩm khác</div>`;
+                }
+            }
+
+            // Phân loại màu sắc nhãn Trạng thái giống ảnh mẫu
+            let badgeClass = 'yellow';
+            let statusText = o.status || 'Chờ xác nhận';
+            
+            if (statusText === 'Đang chuẩn bị hàng' || statusText === 'Đang đóng gói' || statusText === 'Đã chuyển khoản') {
+                badgeClass = 'blue';
+            } else if (statusText === 'Đang giao hàng' || statusText.includes('Shipcod')) {
+                badgeClass = 'purple';
+            } else if (statusText === 'Đã hoàn thành') {
+                badgeClass = 'green';
+            } else if (statusText === 'Đã hủy') {
+                badgeClass = 'red';
+            }
+
+            let statusBadge = `<span class="badge-status ${badgeClass}">${statusText}</span>`;
 
             let spxHtml = o.spx_tracking_code 
-                ? `<div style="margin-top:6px; color:var(--success); font-size:11px;"><i class="fas fa-truck"></i> SPX: <b>${o.spx_tracking_code}</b></div>` 
+                ? `<div style="margin-top:4px; color:var(--success); font-size:11px; font-weight:500;"><i class="fas fa-truck"></i> SPX: <b>${o.spx_tracking_code}</b></div>` 
                 : ``;
 
             return `
                 <tr>
-                    <td style="text-align: center;"><input type="checkbox" class="order-checkbox" value="${o.id}" data-orderid="${o.order_id || 'N/A'}"></td>
-                    <td style="font-weight:600; color:var(--text-main);">${o.order_id || 'N/A'}</td>
-                    <td>
-                        <div style="font-weight:600; color:var(--text-main);">${c.name || 'N/A'}</div>
-                        <div style="font-size:12px; color:#555; margin-top:3px;"><i class="fas fa-phone-alt" style="color:#aaa; font-size:10px;"></i> ${c.phone || ''}</div>
+                    <td style="text-align: center;">
+                        <input type="checkbox" class="order-checkbox" value="${o.id}" data-orderid="${o.order_id || 'N/A'}" data-total="${o.total_amount || 0}" onclick="window.updateBulkActionBar()">
                     </td>
-                    <td>${itemNames}</td>
-                    <td style="font-weight:bold; color:var(--accent);">${Number(o.total_amount || 0).toLocaleString('vi-VN')} đ</td>
                     <td>
-                        ${statusBadge}
+                        <div style="font-weight:700; color:var(--text-main); font-size:13px;">${o.order_id || 'N/A'}</div>
+                        <div style="font-size:11px; color:var(--text-light); margin-top:3px;">10:32 • Hôm nay</div>
+                    </td>
+                    <td>
+                        <div style="font-weight:600; color:var(--text-main); font-size:13px;">${c.name || 'N/A'}</div>
+                        <div style="font-size:12px; color:var(--text-light); margin-top:3px;"><i class="fas fa-phone-alt" style="color:#aaa; font-size:10px;"></i> ${c.phone || ''}</div>
+                    </td>
+                    <td>
+                        ${itemDisplay}
                         ${spxHtml}
                     </td>
+                    <td style="font-weight:700; color:#e74c3c; font-size:14px;">${Number(o.total_amount || 0).toLocaleString('vi-VN')}đ</td>
+                    <td>${statusBadge}</td>
                     <td>
-                        <button class="btn-icon" title="Cập nhật Trạng thái" onclick="window.updateOrderStatus('${o.id}', '${o.status || ''}', '${o.spx_tracking_code || ''}')"><i class="fas fa-pen"></i></button>
+                        <div class="action-btns">
+                            <button title="Cập nhật Trạng thái" onclick="window.updateOrderStatus('${o.id}', '${o.status || ''}', '${o.spx_tracking_code || ''}')"><i class="fas fa-check"></i></button>
+                            <button title="In hóa đơn/Vận đơn"><i class="fas fa-print"></i></button>
+                            <button title="Thao tác khác"><i class="fas fa-ellipsis-h"></i></button>
+                        </div>
                     </td>
                 </tr>
             `;
@@ -490,15 +519,40 @@ window.loadOrders = async function() {
     }
 }
 
+// Logic kiểm tra và hiển thị Thanh hành động hàng loạt ở mép dưới
+window.updateBulkActionBar = function() {
+    const checkboxes = document.querySelectorAll('.order-checkbox:checked');
+    const bulkBar = document.getElementById('bulk-action-bar');
+    if (!bulkBar) return;
+
+    if (checkboxes.length > 0) {
+        bulkBar.classList.add('show');
+        let totalMoney = 0;
+        checkboxes.forEach(cb => {
+            totalMoney += parseInt(cb.getAttribute('data-total') || 0);
+        });
+        
+        document.getElementById('selected-count').innerText = checkboxes.length;
+        document.getElementById('selected-total').innerText = totalMoney.toLocaleString('vi-VN') + 'đ';
+        
+        document.querySelectorAll('.sel-count').forEach(el => {
+            el.innerText = checkboxes.length;
+        });
+    } else {
+        bulkBar.classList.remove('show');
+    }
+}
+
 window.toggleAllOrders = function(source) {
     const checkboxes = document.querySelectorAll('.order-checkbox');
     checkboxes.forEach(cb => cb.checked = source.checked);
+    window.updateBulkActionBar();
 }
 
 window.applyBulkStatus = async function() {
     const selectedStatus = document.getElementById('bulk-status-select').value;
     if (!selectedStatus) {
-        alert("Vui lòng chọn trạng thái muốn cập nhật từ menu thả xuống!");
+        alert("Vui lòng chọn trạng thái muốn cập nhật!");
         return;
     }
 
@@ -583,7 +637,6 @@ window.exportSPX = function() {
         alert("Chưa có đơn hàng nào để xuất!");
         return;
     }
-    // ... (Giữ nguyên logic xuất CSV cũ của bạn ở đây, vì nội dung xuất file thường không ảnh hưởng giao diện)
     alert("Đang tải file CSV...");
 }
 
