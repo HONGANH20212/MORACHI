@@ -404,6 +404,8 @@ function openCheckoutModal() {
     // Việc này sẽ khắc phục 100% lỗi icon lộn xộn và khung chọn bị ép còn 0px
     setTimeout(() => {
         applySelect2();
+        $('.select2-container').css('width', '100%');
+        $('#chk-province, #chk-district, #chk-ward').trigger('change.select2');
     }, 350);
 }
 
