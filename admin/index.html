@@ -301,7 +301,7 @@
         .tag-pill.blue { color: #3498db; border-color: rgba(52, 152, 219, 0.2); background: #ebf5fb; }
         .tag-pill.green { color: var(--success); border-color: rgba(39, 174, 96, 0.2); background: var(--success-bg); }
 
-        .badge-status { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .badge-status { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-block; text-align: center; }
         .badge-status.yellow { background: #fff9e6; color: #f39c12; }
         .badge-status.blue { background: #eef2ff; color: #4f46e5; }
         .badge-status.purple { background: #f4ecf8; color: #9b59b6; }
@@ -322,7 +322,11 @@
         }
         .bulk-action-bar.show { display: flex; }
         .bulk-info { font-size: 13px; }
-        .bulk-actions-btns { display: flex; gap: 8px; }
+        .bulk-actions-btns { display: flex; gap: 8px; align-items: center; }
+        
+        .bulk-actions-btns select {
+            padding: 8px 15px; border: 1px solid var(--border-color); border-radius: 8px; outline: none; font-size: 13px; font-family: inherit; cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -507,7 +511,7 @@
                     </select>
                     <div style="position: relative; display: flex; align-items: center;">
                         <i class="far fa-calendar-alt" style="position: absolute; left: 12px; color: var(--text-light);"></i>
-                        <input type="text" value="21/06/2025" readonly style="width: 120px; padding-left: 35px; cursor: pointer;">
+                        <input type="text" value="21/06/2026" readonly style="width: 120px; padding-left: 35px; cursor: pointer;">
                     </div>
                     <button class="btn-outline"><i class="fas fa-filter"></i> Lọc</button>
                     <button class="btn-outline" style="border: none; color: var(--text-light);"><i class="fas fa-times"></i> Xóa lọc</button>
@@ -549,13 +553,17 @@
                     <div style="color: var(--text-light); margin-top: 3px;">Tổng tiền: <span id="selected-total" style="color: var(--accent); font-weight: 700;">0đ</span></div>
                 </div>
                 <div class="bulk-actions-btns">
-                    <select id="bulk-status-select" style="display:none;">
-                        <option value="Đã hoàn thành">Đã hoàn thành</option>
+                    <select id="bulk-status-select">
+                        <option value="">-- Chọn trạng thái cập nhật --</option>
+                        <option value="Xác nhận đặt đơn Shipcod thành công">Xác nhận đặt đơn Shipcod thành công</option>
+                        <option value="Chờ xác nhận đã chuyển khoản">Chờ xác nhận đã chuyển khoản</option>
+                        <option value="Đang chuẩn bị hàng">Đang chuẩn bị hàng</option>
+                        <option value="Đang giao hàng">Đang giao hàng (Yêu cầu nhập Mã vận đơn)</option>
+                        <option value="Đã giao hàng">Đã giao hàng</option>
+                        <option value="Đã hủy">Đã hủy</option>
                     </select>
                     
-                    <button class="btn-add" onclick="document.getElementById('bulk-status-select').value='Đã hoàn thành'; applyBulkStatus()" style="background: var(--accent);"><i class="fas fa-check"></i> Xác nhận (<span class="sel-count">0</span>)</button>
-                    <button class="btn-outline"><i class="fas fa-print"></i> In vận đơn (<span class="sel-count">0</span>)</button>
-                    <button class="btn-outline"><i class="fas fa-truck"></i> Giao Shipcod (<span class="sel-count">0</span>)</button>
+                    <button class="btn-add" onclick="applyBulkStatus()" style="background: var(--accent);"><i class="fas fa-sync-alt"></i> Cập nhật (<span class="sel-count">0</span>)</button>
                     <button class="btn-outline" style="color: var(--text-light); border-color: #ddd;" onclick="document.getElementById('check-all-orders').click();"><i class="fas fa-ban"></i> Hủy chọn</button>
                 </div>
             </div>

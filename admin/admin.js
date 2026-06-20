@@ -3,7 +3,7 @@ var isEditing = false;
 var allProductsData = [];
 
 // =========================================================
-// PHẦN 1: QUẢN LÝ KHO SẢN PHẨM & CẬP NHẬT GIAO DIỆN MỚI
+// PHẦN 1: QUẢN LÝ KHO SẢN PHẨM
 // =========================================================
 
 window.loadAdminProducts = async function() {
@@ -17,11 +17,8 @@ window.loadAdminProducts = async function() {
         
         allProductsData = Array.isArray(products) ? products : [];
         
-        // Cập nhật thống kê trên Dashboard
         window.updateDashboardStats(allProductsData);
-        // Load danh sách Brand vào thanh lọc
         window.populateBrandFilter(allProductsData);
-        // Hiển thị bảng
         window.renderTable(allProductsData);
     } catch (err) {
         tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; color:red; padding: 40px;'>Lỗi kết nối API!</td></tr>";
@@ -66,7 +63,6 @@ window.populateBrandFilter = function(products) {
     brands.forEach(b => { html += `<option value="${b}">${b}</option>`; });
     brandSelect.innerHTML = html;
 
-    // Lắng nghe sự kiện lọc
     brandSelect.addEventListener('change', function() {
         const val = this.value;
         const kw = document.getElementById("admin-search-input").value.toLowerCase().trim();
@@ -105,24 +101,19 @@ window.renderTable = function(products) {
 
     tbody.innerHTML = products.map(p => {
         const variants = p.variants || [];
-        
-        // Tính tổng tồn kho
         let totalStock = variants.reduce((sum, v) => sum + (parseInt(v.stock) || 0), 0);
         
-        // Tạo chuỗi HTML cho biến thể
         let variantHtml = '';
         if (variants.length > 0) {
-            let limitVariants = variants.slice(0, 3); // Hiển thị tối đa 3 biến thể
+            let limitVariants = variants.slice(0, 3);
             variantHtml = limitVariants.map(v => `<span class="variant-pill">${v.name}</span>`).join('');
             if (variants.length > 3) {
                 variantHtml += `<span class="variant-pill" style="background:#fff2eb; color:#f57224; border:none;">+${variants.length - 3}</span>`;
             }
         }
 
-        // Cấu hình Badge Hot/Discount
         const badgeHtml = p.discount ? `<span class="badge-hot">${p.discount}</span>` : '';
 
-        // Đánh giá Trạng thái Tồn Kho
         let stockDot = '';
         let stockText = '';
         let statusBadge = '';
@@ -405,7 +396,7 @@ if (form) {
 }
 
 // =========================================================
-// PHẦN 2: QUẢN LÝ ĐƠN HÀNG (CẬP NHẬT HOÀN TOÀN MỚI)
+// PHẦN 2: QUẢN LÝ ĐƠN HÀNG (CẬP NHẬT TRẠNG THÁI MỚI)
 // =========================================================
 
 window.switchTab = function(tabId) {
@@ -455,24 +446,74 @@ window.loadOrders = async function() {
             const c = o.customer_info || {};
             const items = o.items || [];
             
-            // Xử lý hiển thị danh sách sản phẩm thu gọn chuẩn UI ảnh mẫu
+            // Xử lý Ngày và Giờ lấy từ API
+            let timeDisplay = "";
+            let orderDate = o.created_at || o.date; 
+            
+            if (orderDate) {
+                let d = new Date(orderDate);
+                if (!isNaN(d.getTime())) { 
+                    let hours = String(d.getHours()).padStart(2, '0');
+                    let minutes = String(d.getMinutes()).padStart(2, '0');
+                    
+                    let today = new Date();
+                    let yesterday = new Date(today);
+                    yesterday.setDate(yesterday.getDate() - 1);
+                    
+                    let dateStr = "";
+                    if (d.toDateString() === today.toDateString()) {
+                        dateStr = "Hôm nay";
+                    } else if (d.toDateString() === yesterday.toDateString()) {
+                        dateStr = "Hôm qua";
+                    } else {
+                        dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+                    }
+                    timeDisplay = `${hours}:${minutes} • ${dateStr}`;
+                } else {
+                    timeDisplay = "Không có CSDL";
+                }
+            } else {
+                timeDisplay = "Chưa cập nhật";
+            }
+            
+            // Xử lý hiển thị danh sách sản phẩm với Nút bấm mở rộng
             let itemDisplay = '';
             if (items.length > 0) {
                 itemDisplay = `<div style="font-size:13px; font-weight: 500; color: var(--text-main); margin-bottom:3px;">${items[0].title} (${items[0].variant || 'Mặc định'}) x<b>${items[0].quantity}</b></div>`;
+                
                 if (items.length > 1) {
-                    itemDisplay += `<div style="font-size:12px; color:var(--text-light);">+ ${items.length - 1} sản phẩm khác</div>`;
+                    let otherItemsHtml = items.slice(1).map(i => `
+                        <div style="padding: 6px 0; border-bottom: 1px dashed #eaeef2;">
+                            <div style="font-weight: 500;">• ${i.title}</div>
+                            <div style="color: #7a828a; font-size: 11px; margin-top: 2px; padding-left: 10px;">
+                                Phân loại: ${i.variant || 'Mặc định'} - Số lượng: <b style="color:var(--text-main);">${i.quantity}</b>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    itemDisplay += `
+                    <details style="font-size:12px; margin-top: 5px; outline:none; cursor:pointer;">
+                        <summary style="outline:none; color: #3498db; font-weight: 600; list-style-position: inside; transition: 0.2s;">
+                            + ${items.length - 1} sản phẩm khác (Bấm để xem)
+                        </summary>
+                        <div style="background: #f8f9fa; padding: 5px 12px; border-radius: 8px; margin-top: 6px; border: 1px solid #eaeef2; color: var(--text-main);">
+                            ${otherItemsHtml}
+                        </div>
+                    </details>`;
                 }
             }
 
-            // Phân loại màu sắc nhãn Trạng thái giống ảnh mẫu
-            let badgeClass = 'yellow';
+            // Phân loại màu sắc nhãn Trạng thái THEO DANH SÁCH MỚI CỦA BẠN
+            let badgeClass = 'yellow'; // Mặc định
             let statusText = o.status || 'Chờ xác nhận';
             
-            if (statusText === 'Đang chuẩn bị hàng' || statusText === 'Đang đóng gói' || statusText === 'Đã chuyển khoản') {
-                badgeClass = 'blue';
-            } else if (statusText === 'Đang giao hàng' || statusText.includes('Shipcod')) {
+            if (statusText === 'Đang chuẩn bị hàng' || statusText.includes('Chờ xác nhận đã chuyển khoản')) {
+                badgeClass = 'yellow'; 
+            } else if (statusText.includes('Xác nhận đặt đơn Shipcod thành công')) {
                 badgeClass = 'purple';
-            } else if (statusText === 'Đã hoàn thành') {
+            } else if (statusText === 'Đang giao hàng') {
+                badgeClass = 'blue';
+            } else if (statusText === 'Đã giao hàng') {
                 badgeClass = 'green';
             } else if (statusText === 'Đã hủy') {
                 badgeClass = 'red';
@@ -491,7 +532,7 @@ window.loadOrders = async function() {
                     </td>
                     <td>
                         <div style="font-weight:700; color:var(--text-main); font-size:13px;">${o.order_id || 'N/A'}</div>
-                        <div style="font-size:11px; color:var(--text-light); margin-top:3px;">10:32 • Hôm nay</div>
+                        <div style="font-size:11px; color:var(--text-light); margin-top:3px;">${timeDisplay}</div>
                     </td>
                     <td>
                         <div style="font-weight:600; color:var(--text-main); font-size:13px;">${c.name || 'N/A'}</div>
@@ -519,7 +560,6 @@ window.loadOrders = async function() {
     }
 }
 
-// Logic kiểm tra và hiển thị Thanh hành động hàng loạt ở mép dưới
 window.updateBulkActionBar = function() {
     const checkboxes = document.querySelectorAll('.order-checkbox:checked');
     const bulkBar = document.getElementById('bulk-action-bar');
@@ -549,10 +589,12 @@ window.toggleAllOrders = function(source) {
     window.updateBulkActionBar();
 }
 
+// LOGIC CẬP NHẬT TRẠNG THÁI & BẮT BUỘC NHẬP MÃ VẬN ĐƠN
 window.applyBulkStatus = async function() {
     const selectedStatus = document.getElementById('bulk-status-select').value;
+    
     if (!selectedStatus) {
-        alert("Vui lòng chọn trạng thái muốn cập nhật!");
+        alert("Vui lòng chọn trạng thái muốn cập nhật từ danh sách!");
         return;
     }
 
@@ -567,20 +609,24 @@ window.applyBulkStatus = async function() {
         orderId: cb.getAttribute('data-orderid')
     }));
 
-    if (!confirm(`Bạn có chắc chắn muốn chuyển ${selectedOrders.length} đơn hàng sang "${selectedStatus}"?`)) return;
+    if (!confirm(`Bạn có chắc chắn muốn chuyển ${selectedOrders.length} đơn hàng sang trạng thái:\n"${selectedStatus}"?`)) return;
 
     const updatePayloads = [];
     
+    // Nếu chọn Đang giao hàng -> ÉP NHẬP MÃ VẬN ĐƠN
     if (selectedStatus === 'Đang giao hàng') {
         for (let order of selectedOrders) {
-            let spxCode = prompt(`NHẬP MÃ VẬN ĐƠN SPX cho đơn hàng [ ${order.orderId} ]:`, "");
+            let spxCode = prompt(`Trạng thái "Đang giao hàng" BẮT BUỘC có mã vận đơn.\nNhập mã vận đơn cho đơn hàng [ ${order.orderId} ]:`, "");
+            
+            // Bấm Hủy (null) hoặc để trống ("")
             if (spxCode !== null && spxCode.trim() !== "") {
                 updatePayloads.push({ id: order.id, body: { status: selectedStatus, spx_tracking_code: spxCode.trim() } });
             } else {
-                alert(`Bỏ qua đơn hàng ${order.orderId} do chưa nhập mã SPX.`);
+                alert(`❌ Đã bỏ qua cập nhật đơn hàng ${order.orderId} do không nhập mã vận đơn.`);
             }
         }
     } else {
+        // Cập nhật trạng thái khác bình thường
         for (let order of selectedOrders) {
             updatePayloads.push({ id: order.id, body: { status: selectedStatus } });
         }
@@ -600,18 +646,23 @@ window.applyBulkStatus = async function() {
         });
 
         await Promise.all(updatePromises);
-        alert(`Cập nhật thành công ${updatePayloads.length} đơn hàng!`);
+        alert(`✅ Cập nhật thành công ${updatePayloads.length} đơn hàng!`);
+        
+        // Reset checkbox chọn tất cả
+        const checkAllEl = document.getElementById('check-all-orders');
+        if(checkAllEl && checkAllEl.checked) checkAllEl.click(); 
+        
         window.loadOrders(); 
     } catch (err) {
-        alert("Có lỗi xảy ra trong quá trình cập nhật!");
+        alert("Có lỗi xảy ra trong quá trình cập nhật trên máy chủ!");
     }
 }
 
 window.updateOrderStatus = async function(id, currentStatus, currentSpxCode) {
-    const newStatus = prompt("Cập nhật trạng thái (VD: Đang giao hàng, Đã hoàn thành...):", currentStatus || "Đang giao hàng");
+    const newStatus = prompt("Cập nhật trạng thái (VD: Đang giao hàng, Đã giao hàng...):", currentStatus || "Đang giao hàng");
     if (newStatus === null) return;
 
-    const newSpxCode = prompt("Nhập Mã Vận Đơn Shopee Xpress (nếu có):", currentSpxCode || "");
+    const newSpxCode = prompt("Nhập Mã Vận Đơn (nếu có):", currentSpxCode || "");
     if (newSpxCode === null) return;
 
     try {
