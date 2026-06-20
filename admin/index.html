@@ -225,7 +225,7 @@
         .btn-icon { width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border-color); background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-light); transition: 0.2s; }
         .btn-icon:hover { border-color: #ccc; color: var(--text-main); }
 
-        /* Footer Bar (Bulk Actions & Pagination) */
+        /* Footer Bar */
         .table-footer {
             padding: 15px 20px;
             display: flex;
@@ -256,10 +256,9 @@
         .section-view { display: none; }
         .section-view.active { display: block; }
 
-        /* Checkbox styling */
         input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
 
-        /* --- PHẦN CSS CẬP NHẬT CHO ĐƠN HÀNG GIỐNG ẢNH MẪU --- */
+        /* CSS ĐƠN HÀNG MỚI */
         .order-header {
             display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;
         }
@@ -281,7 +280,6 @@
         .order-stat-info { flex: 1; }
         .order-stat-info .title { font-size: 12px; color: var(--text-light); margin-bottom: 6px; font-weight: 500; }
         .order-stat-info .number { font-size: 24px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; line-height: 1; }
-        .order-stat-info .badge { font-size: 11px; padding: 2px 6px; border-radius: 10px; font-weight: 600; }
         .order-stat-info .desc { font-size: 11px; color: #b5b5c3; margin-top: 6px; }
 
         .order-filter-container {
@@ -292,14 +290,20 @@
         .order-filter-top select, .order-filter-top input, .order-filter-top button {
             padding: 9px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 13px; outline: none; background: white; font-family: inherit;
         }
-        .order-filter-quick { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text-main); }
+        .order-filter-quick { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--text-main); flex-wrap: wrap;}
+        
         .tag-pill {
-            padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid var(--border-color); cursor: pointer; color: var(--text-light); transition: 0.2s;
+            padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s; user-select: none;
         }
+        .tag-pill:hover { filter: brightness(0.95); transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .tag-pill:active { transform: translateY(0); }
+        
         .tag-pill.red { color: var(--danger); border-color: rgba(231, 76, 60, 0.2); background: var(--danger-bg); }
         .tag-pill.orange { color: var(--accent); border-color: rgba(245, 114, 36, 0.2); background: #fff2eb; }
         .tag-pill.blue { color: #3498db; border-color: rgba(52, 152, 219, 0.2); background: #ebf5fb; }
         .tag-pill.green { color: var(--success); border-color: rgba(39, 174, 96, 0.2); background: var(--success-bg); }
+        .tag-pill.purple { color: #9b59b6; border-color: rgba(155, 89, 182, 0.2); background: #f4ecf8; }
+        .tag-pill.gray { color: #555; border-color: #ddd; background: #f8f9fa; }
 
         .badge-status { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; display: inline-block; text-align: center; }
         .badge-status.yellow { background: #fff9e6; color: #f39c12; }
@@ -354,6 +358,7 @@
 
     <div class="main">
         
+        <!-- SECTION 1: SẢN PHẨM -->
         <div id="section-products" class="section-view active">
             <div class="top-header">
                 <h1><i class="fas fa-bars"></i> Quản lý kho hàng</h1>
@@ -452,6 +457,7 @@
             </div>
         </div>
 
+        <!-- SECTION 2: ĐƠN HÀNG -->
         <div id="section-orders" class="section-view">
             <div class="order-header">
                 <div class="title">
@@ -465,37 +471,38 @@
                 </div>
             </div>
 
+            <!-- CẬP NHẬT: Thẻ thống kê động (có gán ID) -->
             <div class="order-stats">
                 <div class="order-stat-card">
                     <div class="order-stat-icon" style="color: var(--accent); background: #fff2eb;"><i class="far fa-clock"></i></div>
                     <div class="order-stat-info">
-                        <div class="title">Chờ xác nhận</div>
-                        <div class="number">18 <span class="badge" style="background:#fff2eb; color:var(--accent);">+3</span></div>
-                        <div class="desc">So với hôm qua</div>
+                        <div class="title">Đơn hàng hôm nay</div>
+                        <div class="number" id="stat-order-today">0</div>
+                        <div class="desc">Tổng đơn tạo hôm nay</div>
                     </div>
                 </div>
                 <div class="order-stat-card">
-                    <div class="order-stat-icon" style="color: #4f46e5; background: #eef2ff;"><i class="fas fa-box"></i></div>
+                    <div class="order-stat-icon" style="color: #f39c12; background: #fff9e6;"><i class="fas fa-box"></i></div>
                     <div class="order-stat-info">
-                        <div class="title">Đang đóng gói</div>
-                        <div class="number">12 <span class="badge" style="background:#fdedec; color:var(--danger);">2 quá hạn</span></div>
-                        <div class="desc">So với hôm qua</div>
+                        <div class="title">Đang chuẩn bị hàng</div>
+                        <div class="number" id="stat-order-prep">0</div>
+                        <div class="desc">Cần được đóng gói</div>
                     </div>
                 </div>
                 <div class="order-stat-card">
-                    <div class="order-stat-icon" style="color: #9b59b6; background: #f4ecf8;"><i class="fas fa-truck"></i></div>
+                    <div class="order-stat-icon" style="color: #9b59b6; background: #f4ecf8;"><i class="fas fa-plane"></i></div>
                     <div class="order-stat-info">
-                        <div class="title">Đã gửi hàng</div>
-                        <div class="number">35</div>
-                        <div class="desc">So với hôm qua</div>
+                        <div class="title">Đang chờ hàng về VN</div>
+                        <div class="number" id="stat-order-transit">0</div>
+                        <div class="desc">Hàng order/quốc tế</div>
                     </div>
                 </div>
                 <div class="order-stat-card">
-                    <div class="order-stat-icon" style="color: var(--success); background: var(--success-bg);"><i class="far fa-check-circle"></i></div>
+                    <div class="order-stat-icon" style="color: #3498db; background: #eef2ff;"><i class="fas fa-truck"></i></div>
                     <div class="order-stat-info">
-                        <div class="title">Hoàn tất hôm nay</div>
-                        <div class="number">27 <span class="badge" style="background:var(--success-bg); color:var(--success);">+12%</span></div>
-                        <div class="desc">So với hôm qua</div>
+                        <div class="title">Đang giao hàng</div>
+                        <div class="number" id="stat-order-delivering">0</div>
+                        <div class="desc">Đã giao cho ĐVVC</div>
                     </div>
                 </div>
             </div>
@@ -514,19 +521,21 @@
                         <input type="text" value="21/06/2026" readonly style="width: 120px; padding-left: 35px; cursor: pointer;">
                     </div>
                     <button class="btn-outline"><i class="fas fa-filter"></i> Lọc</button>
-                    <button class="btn-outline" style="border: none; color: var(--text-light);"><i class="fas fa-times"></i> Xóa lọc</button>
+                    <button class="btn-outline" style="border: none; color: var(--text-light);" onclick="filterOrdersByStatus('')"><i class="fas fa-times"></i> Xóa lọc</button>
                     
                     <div style="margin-left: auto; display: flex; gap: 5px;">
                         <button class="btn-outline" style="background: #fff2eb; color: var(--accent); border-color: rgba(245,114,36,0.3);"><i class="fas fa-list"></i> Bảng</button>
                         <button class="btn-outline"><i class="fas fa-th-large"></i> Thẻ</button>
                     </div>
                 </div>
+                
                 <div class="order-filter-quick">
                     Lọc nhanh:
-                    <span class="tag-pill red">Quá hạn</span>
-                    <span class="tag-pill orange">COD</span>
-                    <span class="tag-pill blue">Khách mới</span>
-                    <span class="tag-pill green">Giá trị > 500k</span>
+                    <span class="tag-pill green" onclick="filterOrdersByStatus('Đã giao hàng')">Đã giao hàng</span>
+                    <span class="tag-pill orange" onclick="filterOrdersByStatus('Đang chuẩn bị hàng')">Đang chuẩn bị hàng</span>
+                    <span class="tag-pill purple" onclick="filterOrdersByStatus('Đang chờ hàng về Việt Nam')">Đang chờ hàng về Việt Nam</span>
+                    <span class="tag-pill blue" onclick="filterOrdersByStatus('Đang giao hàng')">Đang giao hàng</span>
+                    <span class="tag-pill gray" onclick="filterOrdersByStatus('')">Tất cả</span>
                 </div>
             </div>
 
@@ -547,17 +556,20 @@
                 </table>
             </div>
 
+            <!-- Thanh Thao Tác Hàng Loạt -->
             <div id="bulk-action-bar" class="bulk-action-bar">
                 <div class="bulk-info">
                     <div style="font-weight: 600; color: var(--text-main); font-size: 14px;">Đang chọn <span id="selected-count" style="color: var(--accent);">0</span> đơn hàng</div>
                     <div style="color: var(--text-light); margin-top: 3px;">Tổng tiền: <span id="selected-total" style="color: var(--accent); font-weight: 700;">0đ</span></div>
                 </div>
                 <div class="bulk-actions-btns">
+                    <!-- Danh sách chọn trạng thái -->
                     <select id="bulk-status-select">
                         <option value="">-- Chọn trạng thái cập nhật --</option>
                         <option value="Xác nhận đặt đơn Shipcod thành công">Xác nhận đặt đơn Shipcod thành công</option>
                         <option value="Chờ xác nhận đã chuyển khoản">Chờ xác nhận đã chuyển khoản</option>
                         <option value="Đang chuẩn bị hàng">Đang chuẩn bị hàng</option>
+                        <option value="Đang chờ hàng về Việt Nam">Đang chờ hàng về Việt Nam</option>
                         <option value="Đang giao hàng">Đang giao hàng (Yêu cầu nhập Mã vận đơn)</option>
                         <option value="Đã giao hàng">Đã giao hàng</option>
                         <option value="Đã hủy">Đã hủy</option>
@@ -571,6 +583,7 @@
 
     </div>
 
+    <!-- MODAL SẢN PHẨM -->
     <div id="productModal" class="modal">
         <div class="modal-content">
             <h2 id="modalTitle" style="margin: 0 0 25px 0; font-size: 18px;">Thông tin sản phẩm</h2>
