@@ -249,8 +249,12 @@ a { text-decoration: none; color: inherit; }
 
 /* Checkbox Thương Hiệu */
 .filter-section label { 
-    display: flex; align-items: center; gap: 10px; 
-    font-size: 14px; margin-bottom: 12px; cursor: pointer; color: var(--text-main); 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    font-size: 14px; 
+    margin-bottom: 12px; /* Tăng khoảng cách giữa các thương hiệu */
+    cursor: pointer; 
 }
 .filter-section label input[type="checkbox"] {
     accent-color: var(--primary-red);
@@ -283,13 +287,14 @@ a { text-decoration: none; color: inherit; }
 .product-card { 
     padding: 15px; 
     border: 1px solid var(--border-color); 
-    border-radius: 12px; 
+    border-radius: 12px; /* Bo góc mềm mại */
     transition: 0.3s; 
     cursor: pointer; 
     position: relative; 
     display: flex; 
     flex-direction: column; 
     background: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05); /* Đổ bóng nhẹ */
 }
 
 .product-card:hover { 
@@ -319,7 +324,7 @@ a { text-decoration: none; color: inherit; }
     position: absolute;
     top: 10px;
     left: 10px;
-    background: var(--primary-red);
+    background: linear-gradient(90deg, #ff416c, #ff4b2b); /* Màu gradient lửa */
     color: white;
     padding: 4px 8px;
     border-radius: 4px;
@@ -327,7 +332,6 @@ a { text-decoration: none; color: inherit; }
     font-weight: bold;
     z-index: 2;
     text-transform: uppercase;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
 }
 
 /* Khu vực ảnh */
