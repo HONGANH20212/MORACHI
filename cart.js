@@ -977,7 +977,14 @@ checkoutStyle.innerHTML = `
     .chk-header-gradient { background: linear-gradient(135deg, #ff8c3a, #9c1515); color: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; }
     .chk-hdr-left { display: flex; align-items: center; gap: 15px; }
     .chk-bag-icon { background: white; color: #9c1515; width: 45px; height: 45px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    .chk-hdr-left h2 { margin: 0 0 4px 0; font-size: 18px; font-weight: 800; letter-spacing: 0.5px; }
+    .chk-hdr-left h2 {
+        margin: 0 0 4px 0;
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 0.2px;
+        line-height: 1.15;
+    }
     .chk-hdr-left p { margin: 0; font-size: 13px; opacity: 0.9; }
     .chk-hdr-right { display: flex; gap: 15px; align-items: center;}
     .chk-action-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; cursor: pointer; opacity: 0.9; transition: 0.2s;}
@@ -1021,6 +1028,10 @@ checkoutStyle.innerHTML = `
         .chk-col-form,
         .chk-payment-full {
             grid-column: 1;
+        }
+        .submit-texts strong {
+            font-size: 16px;
+            letter-spacing: 0.15px;
         }
     }
 
@@ -1092,7 +1103,16 @@ checkoutStyle.innerHTML = `
     .btn-final-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(245, 85, 35, 0.4); }
     .submit-left { display: flex; align-items: center; gap: 15px; text-align: left;}
     .submit-left i { font-size: 22px; }
-    .submit-texts strong { display: block; font-size: 16px; font-weight: 800; letter-spacing: 0.5px; margin-bottom: 2px;}
+    .submit-texts strong {
+        display: block;
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        font-size: 18px;
+        font-weight: 800;
+        letter-spacing: 0.2px;
+        line-height: 1.15;
+        margin-bottom: 3px;
+        text-transform: uppercase;
+    }
     .submit-texts span { font-size: 12px; opacity: 0.9; }
     .right-arr { font-size: 20px; }
 
