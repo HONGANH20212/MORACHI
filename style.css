@@ -984,3 +984,36 @@ button {
         line-height: 1.35;
     }
 }
+/* ==============================
+   FIX MOBILE PRICE NOT WRAP
+   Giá và chữ "đ" luôn cùng 1 dòng
+   ============================== */
+.price-group .current-price,
+.price-group .old-price {
+    white-space: nowrap;
+    word-break: keep-all;
+    overflow-wrap: normal;
+    display: inline-block;
+}
+
+@media (max-width: 768px) {
+    .price-group {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        flex-wrap: nowrap;
+        white-space: nowrap;
+    }
+
+    .current-price {
+        font-size: 15px !important;
+        line-height: 1.2;
+        flex-shrink: 0;
+    }
+
+    .old-price {
+        font-size: 11px !important;
+        line-height: 1.2;
+        flex-shrink: 0;
+    }
+}
