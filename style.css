@@ -1017,23 +1017,3 @@ button {
         flex-shrink: 0;
     }
 }
-
-/* ======================================================
-   ORDER SYNC UPDATE - Mobile polish
-   ====================================================== */
-@media (max-width: 768px) {
-    body.home-products-page .product-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 12px !important;
-    }
-
-    body.home-products-page .product-card {
-        min-width: 0 !important;
-        overflow: hidden !important;
-    }
-
-    body.home-products-page .price-group {
-        min-width: 0 !important;
-        overflow: hidden !important;
-    }
-}
