@@ -532,21 +532,44 @@ async function ensureProvinceDetail(pCode) {
 function applySelect2() {
     if (typeof jQuery === 'undefined' || typeof jQuery.fn.select2 === 'undefined') return;
 
-    const modalEl = $('#checkout-modal');
-    
-    // Khởi tạo/Re-init Select2 cho từng ô
-    $('#chk-province').select2({ width: '100%', dropdownParent: modalEl });
-    $('#chk-district').select2({ width: '100%', dropdownParent: modalEl });
-    $('#chk-ward').select2({ width: '100%', dropdownParent: modalEl });
+    const $selects = $('#chk-province, #chk-district, #chk-ward');
 
-    // Sự kiện quan trọng: ép Select2 cập nhật hiển thị sau khi chọn
-    $('#chk-province').on('select2:select', function(e) {
-        window.loadDistricts();
+    // Nếu Select2 đã khởi tạo rồi thì hủy trước để tránh bị nhân đôi layout/event
+    $selects.each(function () {
+        if ($(this).data('select2')) {
+            $(this).select2('destroy');
+        }
     });
 
-    $('#chk-district').on('select2:select', function(e) {
-        window.loadWards();
+    const select2Options = {
+        width: '100%',
+        dropdownParent: $('body'), // đưa dropdown ra body để không làm modal/card bị co giãn
+        dropdownAutoWidth: false,
+        minimumResultsForSearch: 8
+    };
+
+    $('#chk-province').select2(select2Options);
+    $('#chk-district').select2(select2Options);
+    $('#chk-ward').select2(select2Options);
+
+    $('.select2-container').css({
+        width: '100%',
+        minWidth: '0',
+        maxWidth: '100%'
     });
+
+    // Gỡ event cũ trước khi gắn event mới để không bị gọi nhiều lần
+    $('#chk-province')
+        .off('select2:select.morachi')
+        .on('select2:select.morachi', function () {
+            window.loadDistricts();
+        });
+
+    $('#chk-district')
+        .off('select2:select.morachi')
+        .on('select2:select.morachi', function () {
+            window.loadWards();
+        });
 }
 
 window.loadDistricts = async function() {
@@ -1058,7 +1081,87 @@ checkoutStyle.innerHTML = `
     .select2-container--open { z-index: 999999 !important; }
     .select2-dropdown { border-color: #9c1515; border-radius: 8px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.15); z-index: 999999 !important; }
     .select2-container--default .select2-results__option--highlighted[aria-selected], .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable { background-color: #9c1515 !important; color: white !important;}
+    /* FIX SELECT2 KHÔNG LÀM NHẢY / CO GIÃN KHỐI ĐỊA CHỈ */
+    .chk-select-row {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+        align-items: start !important;
+    }
 
+    .chk-select-row .chk-input-group {
+        min-width: 0 !important;
+        width: 100% !important;
+        height: 46px !important;
+        margin-bottom: 12px !important;
+        flex: none !important;
+    }
+
+    .chk-select-wrap {
+        height: 46px !important;
+        overflow: visible !important;
+    }
+
+    .chk-select-wrap select {
+        width: 100% !important;
+        height: 46px !important;
+    }
+
+    .chk-select-wrap .select2-container {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        display: block !important;
+    }
+
+    .chk-select-wrap .select2-container--default .select2-selection--single {
+        height: 46px !important;
+        min-height: 46px !important;
+        max-height: 46px !important;
+        display: flex !important;
+        align-items: center !important;
+        overflow: hidden !important;
+    }
+
+    .chk-select-wrap .select2-selection__rendered {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        padding-right: 28px !important;
+        box-sizing: border-box !important;
+    }
+
+    .chk-select-wrap .select2-selection__arrow {
+        height: 46px !important;
+    }
+
+    .select2-container--open {
+        z-index: 10000000 !important;
+    }
+
+    .select2-dropdown {
+        z-index: 10000000 !important;
+        box-sizing: border-box !important;
+    }
+
+    .select2-results__options {
+        max-height: 220px !important;
+    }
+
+    /* Mobile: mỗi ô địa chỉ xuống 1 dòng, không làm bể layout */
+    @media (max-width: 768px) {
+        .chk-select-row {
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+        }
+
+        .chk-select-row .chk-input-group {
+            height: 46px !important;
+            margin-bottom: 0 !important;
+        }
+    }
     .chk-alert-box { display: flex; gap: 12px; padding: 12px 15px; border-radius: 8px; font-size: 12.5px; margin-top: 15px; }
     .chk-alert-box i { font-size: 18px; margin-top: 2px; }
     .chk-alert-box strong { display: block; margin-bottom: 2px; font-size: 13px; }
