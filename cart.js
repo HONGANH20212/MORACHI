@@ -219,7 +219,7 @@ function openCheckoutModal() {
     const BANK_ACCOUNT = "2470168848012";
     const ACCOUNT_NAME = "VO THI HONG ANH";
 
-    const qrUrl = `https://img.vietqr.io/image/${BANK_ID}-${BANK_ACCOUNT}-compact2.jpg?amount=${total}&addInfo=${encodeURIComponent(currentCheckoutOrderId)}&accountName=${encodeURIComponent(ACCOUNT_NAME)}`;
+    const qrUrl = 'images/Screenshot_222.png';
     const cartItemsHtml = renderCheckoutItemsHtml(checkoutItems);
 
     let modal = document.getElementById('checkout-modal');
