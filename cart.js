@@ -558,18 +558,37 @@ function applySelect2() {
         maxWidth: '100%'
     });
 
+    function updateSelect2FullTitle() {
+        $('#chk-province, #chk-district, #chk-ward').each(function () {
+            const text = $(this).find('option:selected').text() || '';
+            const $rendered = $(this)
+                .next('.select2-container')
+                .find('.select2-selection__rendered');
+
+            $rendered.attr('title', text);
+        });
+    }
+
     // Gỡ event cũ trước khi gắn event mới để không bị gọi nhiều lần
     $('#chk-province')
         .off('select2:select.morachi')
-        .on('select2:select.morachi', function () {
-            window.loadDistricts();
+        .on('select2:select.morachi', async function () {
+            await window.loadDistricts();
+            updateSelect2FullTitle();
         });
 
     $('#chk-district')
         .off('select2:select.morachi')
         .on('select2:select.morachi', function () {
             window.loadWards();
+            updateSelect2FullTitle();
         });
+
+    $('#chk-province, #chk-district, #chk-ward')
+        .off('change.morachiTitle')
+        .on('change.morachiTitle', updateSelect2FullTitle);
+
+    updateSelect2FullTitle();
 }
 
 window.loadDistricts = async function() {
@@ -595,7 +614,7 @@ window.loadDistricts = async function() {
     }
     
     // Ép Select2 cập nhật giao diện
-    dSelect.trigger('change.select2'); 
+    dSelect.trigger('change'); 
     dSelect.prop('disabled', false);
 };
 
@@ -619,7 +638,7 @@ window.loadWards = function() {
             wSelect.append(new Option(w.name, w.code));
         });
     }
-    wSelect.trigger('change.select2');
+    wSelect.trigger('change');
 };
 
 // ==========================================
@@ -1162,6 +1181,117 @@ checkoutStyle.innerHTML = `
             margin-bottom: 0 !important;
         }
     }
+
+    /* FIX HIỂN THỊ ĐỦ TÊN ĐỊA CHỈ NHƯNG KHÔNG LÀM NHẢY LAYOUT */
+    .chk-select-row {
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        gap: 10px !important;
+        align-items: start !important;
+    }
+
+    .chk-select-row .chk-input-group,
+    .chk-select-wrap {
+        min-width: 0 !important;
+        width: 100% !important;
+        height: 58px !important;
+        flex: none !important;
+        overflow: visible !important;
+        margin-bottom: 12px !important;
+    }
+
+    .chk-select-wrap select {
+        width: 100% !important;
+        height: 58px !important;
+    }
+
+    .chk-select-wrap .select2-container {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        display: block !important;
+    }
+
+    .chk-select-wrap .select2-container--default .select2-selection--single {
+        height: 58px !important;
+        min-height: 58px !important;
+        max-height: 58px !important;
+        display: flex !important;
+        align-items: center !important;
+        overflow: hidden !important;
+        border: 1px solid #e0e0e0 !important;
+        border-radius: 8px !important;
+        background: #fff !important;
+        box-sizing: border-box !important;
+    }
+
+    .chk-select-wrap .select2-selection__rendered {
+        width: 100% !important;
+        max-width: 100% !important;
+        padding-left: 40px !important;
+        padding-right: 30px !important;
+        padding-top: 8px !important;
+        padding-bottom: 6px !important;
+        box-sizing: border-box !important;
+        line-height: 1.25 !important;
+        white-space: normal !important;
+        overflow: hidden !important;
+        text-overflow: clip !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
+        font-size: 13px !important;
+        color: #333 !important;
+    }
+
+    .chk-select-wrap .select2-selection__arrow {
+        height: 58px !important;
+        right: 8px !important;
+    }
+
+    .select2-container--open {
+        z-index: 10000000 !important;
+    }
+
+    .select2-dropdown {
+        z-index: 10000000 !important;
+        box-sizing: border-box !important;
+    }
+
+    .select2-results__options {
+        max-height: 220px !important;
+    }
+
+    /* Mobile: mỗi ô địa chỉ 1 dòng riêng, dễ đọc đầy đủ hơn */
+    @media (max-width: 768px) {
+        .chk-select-row {
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+        }
+
+        .chk-select-row .chk-input-group,
+        .chk-select-wrap {
+            height: 56px !important;
+            margin-bottom: 0 !important;
+        }
+
+        .chk-select-wrap .select2-container--default .select2-selection--single {
+            height: 56px !important;
+            min-height: 56px !important;
+            max-height: 56px !important;
+        }
+
+        .chk-select-wrap .select2-selection__rendered {
+            font-size: 14px !important;
+            padding-top: 8px !important;
+            padding-bottom: 6px !important;
+        }
+
+        .chk-select-wrap .select2-selection__arrow {
+            height: 56px !important;
+        }
+    }
+
     .chk-alert-box { display: flex; gap: 12px; padding: 12px 15px; border-radius: 8px; font-size: 12.5px; margin-top: 15px; }
     .chk-alert-box i { font-size: 18px; margin-top: 2px; }
     .chk-alert-box strong { display: block; margin-bottom: 2px; font-size: 13px; }
