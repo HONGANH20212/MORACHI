@@ -81,6 +81,30 @@ window.sortProductsForAdmin = function(products) {
     });
 };
 
+
+window.verifyProductOrderSavedToServer = async function(expectedIds) {
+    try {
+        const res = await fetch(`${API_BASE_URL}/products?t=${Date.now()}&verify_order=1`, {
+            cache: "no-store",
+            headers: { "Cache-Control": "no-cache" }
+        });
+        if (!res.ok) return false;
+        const products = await res.json();
+        if (!Array.isArray(products)) return false;
+
+        const byId = new Map(products.map(p => [String(p.id), p]));
+        return expectedIds.every((id, index) => {
+            const product = byId.get(String(id));
+            if (!product) return false;
+            const order = Number(product.display_order ?? product.sort_order ?? product.position);
+            return Number.isFinite(order) && order === index + 1;
+        });
+    } catch (e) {
+        console.warn("Không kiểm tra được display_order từ server:", e);
+        return false;
+    }
+};
+
 // Alias để giữ tương thích với code đang gọi tên cũ
 function getDisplayOrder(product, index = 0) {
     return window.getProductDisplayOrder(product, index + 1);
@@ -216,9 +240,14 @@ window.persistProductOrder = async function() {
         }
 
         if (savedToServer) {
-            window.showReorderStatus('<i class="fas fa-check-circle"></i> Đã lưu thứ tự hiển thị sản phẩm!', 'success');
+            const verified = await window.verifyProductOrderSavedToServer(allIdsInNewOrder);
+            if (verified) {
+                window.showReorderStatus('<i class="fas fa-check-circle"></i> Đã lưu thứ tự lên server. Điện thoại sẽ hiển thị đúng sau khi tải lại!', 'success');
+            } else {
+                window.showReorderStatus('<i class="fas fa-exclamation-triangle"></i> Admin đã đổi thứ tự, nhưng API chưa trả về display_order. Cần cập nhật backend để điện thoại thấy đúng.', 'warning');
+            }
         } else {
-            window.showReorderStatus('<i class="fas fa-info-circle"></i> Đã lưu thứ tự trên trình duyệt. Backend chưa lưu display_order.', 'warning');
+            window.showReorderStatus('<i class="fas fa-info-circle"></i> Đã lưu thứ tự trên trình duyệt này. Backend chưa lưu display_order nên điện thoại chưa đồng bộ.', 'warning');
         }
 
         window.renderTable(window.sortProductsForAdmin(allProductsData));

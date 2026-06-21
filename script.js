@@ -385,22 +385,6 @@ async function loadProducts() {
 
     const cacheKey = 'morachi_products_cache';
     const cacheTimeKey = 'morachi_products_cache_time';
-    const cachedData = sessionStorage.getItem(cacheKey);
-    const cachedTime = sessionStorage.getItem(cacheTimeKey);
-
-    const isCacheValid = cachedData && cachedTime && (new Date().getTime() - parseInt(cachedTime) < 300000);
-
-    if (isCacheValid) {
-        try {
-            const products = JSON.parse(cachedData);
-            state.allProducts = Array.isArray(products) ? applyAdminSavedProductOrder(products) : [];
-            renderBrandFilters(state.allProducts);
-            applyClientFilters(); 
-            return; 
-        } catch(e) {
-            console.error("Lỗi đọc cache:", e);
-        }
-    }
 
     productList.innerHTML = Array(8).fill(`
         <div class="skel-card">
@@ -412,20 +396,40 @@ async function loadProducts() {
     `).join('');
 
     try {
-        const response = await fetch(`${API_BASE_URL}/products?t=${new Date().getTime()}`);
+        // Luôn lấy dữ liệu mới để điện thoại không giữ cache thứ tự cũ.
+        // Thứ tự đúng cho mọi thiết bị chỉ hoạt động khi API trả về display_order.
+        const response = await fetch(`${API_BASE_URL}/products?t=${Date.now()}&order_sync=1`, {
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache' }
+        });
         if (!response.ok) throw new Error(`API lỗi: ${response.status}`);
 
         const products = await response.json();
-        
-        sessionStorage.setItem(cacheKey, JSON.stringify(products));
-        sessionStorage.setItem(cacheTimeKey, new Date().getTime().toString());
+
+        try {
+            sessionStorage.setItem(cacheKey, JSON.stringify(products));
+            sessionStorage.setItem(cacheTimeKey, Date.now().toString());
+        } catch (e) {}
 
         state.allProducts = Array.isArray(products) ? applyAdminSavedProductOrder(products) : [];
 
         renderBrandFilters(state.allProducts);
-        applyClientFilters(); 
+        applyClientFilters();
     } catch (error) {
         console.error("Lỗi tải sản phẩm:", error);
+
+        // Chỉ dùng cache khi API lỗi, không dùng cache cho lần tải bình thường.
+        try {
+            const cachedData = sessionStorage.getItem(cacheKey);
+            if (cachedData) {
+                const products = JSON.parse(cachedData);
+                state.allProducts = Array.isArray(products) ? applyAdminSavedProductOrder(products) : [];
+                renderBrandFilters(state.allProducts);
+                applyClientFilters();
+                return;
+            }
+        } catch (e) {}
+
         productList.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 50px; color:red;">Không tải được dữ liệu. Vui lòng tải lại trang.</p>`;
     }
 }
