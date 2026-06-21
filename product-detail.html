@@ -315,7 +315,9 @@
         let currentVariant = null;
 
         function formatVND(val) {
-            return Number(val || 0).toLocaleString('vi-VN') + ' đ';
+            const cleaned = String(val ?? '').replace(/[^\d]/g, '');
+            const number = cleaned ? Number(cleaned) : 0;
+            return number.toLocaleString('vi-VN') + ' đ';
         }
 
         function renderSpecsTable(text) {
@@ -588,12 +590,17 @@
                 quantity: 1
             };
 
-            if (typeof openCheckoutModal === 'function') {
-                const oldCart = [...cart];   // lưu giỏ hàng cũ
-                cart = [buyNowItem];         // chỉ thanh toán 1 sản phẩm
+            if (typeof openBuyNowCheckout === 'function') {
+                openBuyNowCheckout(buyNowItem);
+            } else if (typeof openCheckoutModal === 'function') {
+                // Fallback an toàn nếu trình duyệt đang cache file cart.js cũ
+                const oldCart = Array.isArray(cart) ? [...cart] : [];
+                cart = [buyNowItem];
                 openCheckoutModal();
-                cart = oldCart;              // trả lại giỏ hàng cũ
-                updateCartUI();
+                cart = oldCart;
+                if (typeof updateCartUI === 'function') updateCartUI();
+            } else {
+                alert('Lỗi: File cart.js chưa được tải!');
             }
         }
 

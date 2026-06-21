@@ -17,6 +17,11 @@ try {
 let currentCheckoutOrderId = ""; 
 let vnProvinces = []; // Biến chứa dữ liệu địa chỉ toàn cục
 
+// Dữ liệu dùng riêng cho popup thanh toán.
+// Giúp nút "Mua ngay" chỉ đặt đúng 1 sản phẩm và không bị lẫn với giỏ hàng hiện có.
+let checkoutItems = [];
+let isBuyNowMode = false;
+
 // 2. Lưu giỏ hàng
 function saveCart() {
     localStorage.setItem('morachi_cart', JSON.stringify(cart));
@@ -121,40 +126,99 @@ function changeCartQty(index, delta) {
     saveCart();
 }
 
+
 function removeCartItem(index) {
     cart.splice(index, 1);
     saveCart();
 }
+
+function toPriceNumber(value) {
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    const cleaned = String(value ?? '').replace(/[^\d]/g, '');
+    return cleaned ? Number(cleaned) : 0;
+}
+
+function normalizeCartItem(item) {
+    const quantity = Number(item && item.quantity) > 0 ? Number(item.quantity) : 1;
+    return {
+        ...(item || {}),
+        price: toPriceNumber(item && item.price),
+        quantity
+    };
+}
+
+function cloneCheckoutItems(items) {
+    return (Array.isArray(items) ? items : []).map(normalizeCartItem);
+}
+
+function getCheckoutSubtotal() {
+    return checkoutItems.reduce((sum, item) => sum + (toPriceNumber(item.price) * Number(item.quantity || 1)), 0);
+}
+
+function renderCheckoutItemsHtml(items) {
+    return cloneCheckoutItems(items).map(item => `
+        <div class="chk-item-row">
+            <img src="${item.image || 'images/icon-logo.png'}" alt="${item.title || 'Sản phẩm'}" onerror="this.src='images/icon-logo.png'">
+            <div class="chk-item-info">
+                <div class="chk-item-title">${item.title || 'Sản phẩm'}</div>
+                <div class="chk-item-variant">Phân loại: ${item.variant || 'Mặc định'}</div>
+                <div class="chk-item-qty-label">SL: ${item.quantity || 1}</div>
+            </div>
+            <div class="chk-item-price">
+                <div class="price">${toPriceNumber(item.price).toLocaleString('vi-VN')} đ</div>
+                <div class="qty">x ${item.quantity || 1}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Hàm dùng cho nút "Mua ngay" ở trang chi tiết sản phẩm.
+// Hàm này chỉ đưa 1 sản phẩm vào popup thanh toán, sau đó trả lại giỏ hàng cũ.
+window.openBuyNowCheckout = function(item) {
+    if (!item) return;
+
+    const oldCart = cloneCheckoutItems(cart);
+    isBuyNowMode = true;
+    cart = [normalizeCartItem(item)];
+
+    openCheckoutModal();
+
+    cart = oldCart;
+    updateCartUI();
+};
 
 // ==============================================================
 // 9. GIAO DIỆN & TÍNH NĂNG THANH TOÁN (CHECKOUT)
 // ==============================================================
 
 function openCheckoutModal() {
-    if (cart.length === 0) {
+    if (!Array.isArray(cart) || cart.length === 0) {
         alert("Giỏ hàng của bạn đang trống!");
         return;
     }
-    
+
+    checkoutItems = cloneCheckoutItems(cart);
+
     const drawer = document.getElementById('cart-drawer');
     const overlay = document.getElementById('cart-overlay');
-    if(drawer) drawer.classList.remove('active');
-    if(overlay) overlay.classList.remove('active');
+    if (drawer) drawer.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
 
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const shippingFee = 15000;
+    const subtotal = getCheckoutSubtotal();
     const total = subtotal + shippingFee;
 
     const timestamp = new Date().getTime().toString();
     const randomNum = Math.floor(10 + Math.random() * 90);
     currentCheckoutOrderId = 'MO' + timestamp.slice(-4) + randomNum;
-    
+
     // THÔNG TIN NGÂN HÀNG
-    const BANK_ID = "MB"; 
-    const BANK_ACCOUNT = "2470168848012"; 
-    const ACCOUNT_NAME = "VO THI HONG ANH"; 
-    
+    const BANK_ID = "MB";
+    const BANK_ACCOUNT = "2470168848012";
+    const ACCOUNT_NAME = "VO THI HONG ANH";
+
     const qrUrl = `https://img.vietqr.io/image/${BANK_ID}-${BANK_ACCOUNT}-compact2.jpg?amount=${total}&addInfo=${encodeURIComponent(currentCheckoutOrderId)}&accountName=${encodeURIComponent(ACCOUNT_NAME)}`;
+    const cartItemsHtml = renderCheckoutItemsHtml(checkoutItems);
 
     let modal = document.getElementById('checkout-modal');
     if (!modal) {
@@ -162,234 +226,193 @@ function openCheckoutModal() {
         modal.id = 'checkout-modal';
         modal.className = 'checkout-modal';
         document.body.appendChild(modal);
-
-        const cartItemsHtml = cart.map(item => `
-            <div class="chk-item-row">
-                <img src="${item.image}" alt="${item.title}" onerror="this.src='images/icon-logo.png'">
-                <div class="chk-item-info">
-                    <div class="chk-item-title">${item.title}</div>
-                    <div class="chk-item-variant">Màu/Phân loại: ${item.variant}</div>
-                    <div class="chk-item-qty-label">SL: ${item.quantity}</div>
-                </div>
-                <div class="chk-item-price">
-                    <div class="price">${Number(item.price).toLocaleString('vi-VN')} đ</div>
-                    <div class="qty">x ${item.quantity}</div>
-                </div>
-            </div>
-        `).join('');
-
-        modal.innerHTML = `
-            <div class="checkout-box new-checkout-layout">
-                <div class="chk-header-gradient">
-                    <div class="chk-hdr-left">
-                        <div class="chk-bag-icon"><i class="fas fa-shopping-bag"></i></div>
-                        <div>
-                            <h2>THÔNG TIN ĐƠN HÀNG</h2>
-                            <p>Vui lòng kiểm tra thông tin và xác nhận đặt hàng</p>
-                        </div>
-                    </div>
-                    <div class="chk-hdr-right">
-                        <div class="chk-action-btn" title="Chia sẻ"><i class="fas fa-share-alt"></i><span>Chia sẻ</span></div>
-                        <div class="chk-action-btn" title="Lưu đơn"><i class="fas fa-file-invoice"></i><span>Lưu đơn</span></div>
-                        <div class="chk-action-btn" title="Tải xuống"><i class="fas fa-download"></i><span>Tải xuống</span></div>
-                        <button class="close-modal-btn" onclick="closeCheckoutModal()"><i class="fas fa-times"></i></button>
-                    </div>
-                </div>
-
-                <div class="chk-body-wrapper">
-
-                    <div class="chk-col-summary">
-                        <div class="chk-card-section chk-summary-section">
-                            <div class="chk-sec-title">
-                                <div class="step-circle">1</div>
-                                <div>
-                                    <h3>THÔNG TIN SẢN PHẨM</h3>
-                                    <p>Kiểm tra lại sản phẩm và chi phí</p>
-                                </div>
-                            </div>
-
-                            <div class="chk-product-list">
-                                ${cartItemsHtml}
-                            </div>
-
-                            <div class="chk-cost-lines">
-                                <div class="cost-line">
-                                    <span>Tạm tính</span>
-                                    <strong id="chk-subtotal">${subtotal.toLocaleString('vi-VN')} đ</strong>
-                                </div>
-                                <div class="cost-line">
-                                    <span>Phí giao hàng</span>
-                                    <strong>15.000 đ</strong>
-                                </div>
-                                <div class="cost-line free-ship-notice">
-                                    <i class="fas fa-truck"></i> Phí ship đồng giá 15k toàn quốc
-                                </div>
-                            </div>
-
-                            <div class="chk-total-wrapper">
-                                <span>TỔNG CỘNG</span>
-                                <span class="total-price-big" id="chk-total">${total.toLocaleString('vi-VN')} đ</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="chk-col-form">
-                        <div class="chk-card-section">
-                            <div class="chk-sec-title">
-                                <div class="step-circle">2</div>
-                                <div>
-                                    <h3>THÔNG TIN GIAO HÀNG</h3>
-                                    <p>Nhập thông tin địa chỉ trước sát nhập</p>
-                                </div>
-                            </div>
-                            
-                            <div class="chk-form-area">
-                                <div class="chk-input-group">
-                                    <i class="fas fa-user"></i>
-                                    <input type="text" id="chk-name" placeholder="Họ và tên" required>
-                                </div>
-                                <div class="chk-input-group">
-                                    <i class="fas fa-phone-alt"></i>
-                                    <input type="tel" id="chk-phone" placeholder="Số điện thoại" required>
-                                </div>
-                                
-                                <div class="chk-select-row">
-                                    <div class="chk-input-group chk-select-wrap">
-                                        <i class="fas fa-map-marker-alt"></i>
-                                        <select id="chk-province" style="width: 100%;"><option value="">Tỉnh/Thành phố</option></select>
-                                    </div>
-                                    <div class="chk-input-group chk-select-wrap">
-                                        <i class="fas fa-building"></i>
-                                        <select id="chk-district" style="width: 100%;"><option value="">Quận/Huyện</option></select>
-                                    </div>
-                                    <div class="chk-input-group chk-select-wrap">
-                                        <i class="fas fa-home"></i>
-                                        <select id="chk-ward" style="width: 100%;"><option value="">Phường/Xã</option></select>
-                                    </div>
-                                </div>
-                                
-                                <div class="chk-input-group" style="position: relative;">
-                                    <i class="fas fa-map"></i>
-                                    <input type="text" id="chk-address" placeholder="Địa chỉ cụ thể (Số nhà, đường, tòa nhà...)" required autocomplete="off">
-                                    <div id="address-suggestions" style="position: absolute; background: white; border: 1px solid #ddd; width: 100%; max-height: 220px; overflow-y: auto; z-index: 1000; display: none; box-shadow: 0 10px 20px rgba(0,0,0,0.15); border-radius: 6px; top: calc(100% - 2px); left: 0;"></div>
-                                </div>
-                            </div>
-
-                            <div class="chk-alert-box alert-orange">
-                                <i class="fas fa-shield-alt"></i>
-                                <div>
-                                    <strong>Thông tin của bạn được bảo mật</strong>
-                                    <span>Chúng tôi cam kết bảo vệ thông tin cá nhân của bạn</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="chk-payment-full">
-                            <div class="chk-card-section">
-                                <div class="chk-sec-title">
-                                    <div class="step-circle">3</div>
-                                    <div>
-                                        <h3>PHƯƠNG THỨC THANH TOÁN</h3>
-                                        <p>Chọn phương thức thanh toán phù hợp</p>
-                                    </div>
-                                </div>
-                            
-                            <div class="chk-payment-options">
-                                <label class="payment-card">
-                                    <i class="fas fa-money-bill-wave" style="color: #2ecc71;"></i>
-                                    <div class="pay-info">
-                                        <strong>Thanh toán khi nhận hàng (COD)</strong>
-                                        <span>Thanh toán bằng tiền mặt khi nhận hàng</span>
-                                    </div>
-                                    <input type="radio" name="chk-payment" value="cod" checked onchange="toggleBankInfo()">
-                                    <span class="custom-radio"></span>
-                                </label>
-                                
-                                <label class="payment-card">
-                                    <i class="fas fa-university" style="color: #3498db;"></i>
-                                    <div class="pay-info">
-                                        <strong>Chuyển khoản qua VietQR</strong>
-                                        <span>Mã QR tự động điền số tiền & nội dung đơn hàng</span>
-                                    </div>
-                                    <input type="radio" name="chk-payment" value="bank" onchange="toggleBankInfo()">
-                                    <span class="custom-radio"></span>
-                                </label>
-                            </div>
-
-                            <div id="bank-info-box" style="display: none; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px dashed #f57224; margin-top: 10px; margin-bottom: 15px; font-size: 13px;">
-                                <div style="color: #f57224; font-weight: bold; margin-bottom: 15px; text-align: center; font-size: 15px; border-bottom: 1px dashed #ccc; padding-bottom: 10px;">
-                                    MÃ ĐƠN HÀNG: <span id="chk-order-id" style="font-size: 18px;">${currentCheckoutOrderId}</span>
-                                </div>
-                                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-                                    <div style="flex: 1; min-width: 200px; line-height: 1.6;">
-                                        <strong>Ngân hàng:</strong> MB Quân Đội<br>
-                                        <strong>Chủ tài khoản:</strong> ${ACCOUNT_NAME}<br>
-                                        <strong>Số tài khoản:</strong> ${BANK_ACCOUNT}<br>
-                                        <strong>Số tiền:</strong> <span id="chk-qr-amount" style="color: #e74c3c; font-weight:bold; font-size:15px;">${total.toLocaleString('vi-VN')} đ</span><br>
-                                        <strong>Nội dung CK:</strong> <span id="chk-qr-content" style="color: #e74c3c; font-weight:bold; font-size:15px;">${currentCheckoutOrderId}</span>
-                                    </div>
-                                    <div style="text-align: center; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                                        <img id="chk-qr-img" src="${qrUrl}" alt="QR Ngân Hàng" style="width: 130px; height: 130px; border-radius: 4px; object-fit: contain;">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="chk-alert-box alert-gray">
-                                <i class="fas fa-info-circle"></i>
-                                <div>
-                                    <strong>Lưu ý</strong>
-                                    <span>Đơn hàng sẽ được xử lý và giao đến bạn trong thời gian sớm nhất.</span>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                <div class="chk-footer-area">
-                    <button class="btn-final-submit btn-checkout-confirm" onclick="submitOrder()">
-                        <div class="submit-left">
-                            <i class="fas fa-lock"></i>
-                            <div class="submit-texts">
-                                <strong>HOÀN TẤT ĐẶT HÀNG</strong>
-                                <span>Xác nhận thông tin và đặt hàng ngay</span>
-                            </div>
-                        </div>
-                        <i class="fas fa-arrow-right right-arr"></i>
-                    </button>
-                    
-                    <p class="terms-text">Bằng việc nhấn nút "Hoàn tất đặt hàng", bạn đồng ý với Điều khoản sử dụng và Chính sách bảo mật của chúng tôi.</p>
-                </div>
-
-            </div>
-        `;
-        
-        setupAddressAutocomplete(); 
-    } else {
-        document.getElementById('chk-subtotal').innerText = subtotal.toLocaleString('vi-VN') + ' đ';
-        document.getElementById('chk-total').innerText = total.toLocaleString('vi-VN') + ' đ';
-        document.getElementById('chk-order-id').innerText = currentCheckoutOrderId;
-        document.getElementById('chk-qr-amount').innerText = total.toLocaleString('vi-VN') + ' đ';
-        document.getElementById('chk-qr-content').innerText = currentCheckoutOrderId;
-        document.getElementById('chk-qr-img').src = qrUrl;
-        
-        const listContainer = modal.querySelector('.chk-product-list');
-        if (listContainer) {
-            listContainer.innerHTML = cart.map(item => `
-                <div class="chk-item-row">
-                    <img src="${item.image}" alt="${item.title}" onerror="this.src='images/icon-logo.png'">
-                    <div class="chk-item-info">
-                        <div class="chk-item-title">${item.title}</div>
-                        <div class="chk-item-variant">Phân loại: ${item.variant}</div>
-                        <div class="chk-item-qty-label">SL: ${item.quantity}</div>
-                    </div>
-                    <div class="chk-item-price">
-                        <div class="price">${Number(item.price).toLocaleString('vi-VN')} đ</div>
-                        <div class="qty">x ${item.quantity}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
     }
+
+    modal.innerHTML = `
+        <div class="checkout-box new-checkout-layout">
+            <div class="chk-header-gradient">
+                <div class="chk-hdr-left">
+                    <div class="chk-bag-icon"><i class="fas fa-shopping-bag"></i></div>
+                    <div>
+                        <h2>THÔNG TIN ĐƠN HÀNG</h2>
+                        <p>Vui lòng kiểm tra thông tin và xác nhận đặt hàng</p>
+                    </div>
+                </div>
+                <div class="chk-hdr-right">
+                    <div class="chk-action-btn" title="Chia sẻ"><i class="fas fa-share-alt"></i><span>Chia sẻ</span></div>
+                    <div class="chk-action-btn" title="Lưu đơn"><i class="fas fa-file-invoice"></i><span>Lưu đơn</span></div>
+                    <div class="chk-action-btn" title="Tải xuống"><i class="fas fa-download"></i><span>Tải xuống</span></div>
+                    <button class="close-modal-btn" onclick="closeCheckoutModal()"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+
+            <div class="chk-body-wrapper">
+                <div class="chk-col-summary">
+                    <div class="chk-card-section chk-summary-section">
+                        <div class="chk-sec-title">
+                            <div class="step-circle">1</div>
+                            <div>
+                                <h3>THÔNG TIN SẢN PHẨM</h3>
+                                <p>Kiểm tra lại sản phẩm và chi phí</p>
+                            </div>
+                        </div>
+
+                        <div class="chk-product-list">
+                            ${cartItemsHtml}
+                        </div>
+
+                        <div class="chk-cost-lines">
+                            <div class="cost-line">
+                                <span>Tạm tính</span>
+                                <strong id="chk-subtotal">${subtotal.toLocaleString('vi-VN')} đ</strong>
+                            </div>
+                            <div class="cost-line">
+                                <span>Phí giao hàng</span>
+                                <strong>15.000 đ</strong>
+                            </div>
+                            <div class="cost-line free-ship-notice">
+                                <i class="fas fa-truck"></i> Phí ship đồng giá 15k toàn quốc
+                            </div>
+                        </div>
+
+                        <div class="chk-total-wrapper">
+                            <span>TỔNG CỘNG</span>
+                            <span class="total-price-big" id="chk-total">${total.toLocaleString('vi-VN')} đ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chk-col-form">
+                    <div class="chk-card-section">
+                        <div class="chk-sec-title">
+                            <div class="step-circle">2</div>
+                            <div>
+                                <h3>THÔNG TIN GIAO HÀNG</h3>
+                                <p>Nhập thông tin địa chỉ trước sát nhập</p>
+                            </div>
+                        </div>
+
+                        <div class="chk-form-area">
+                            <div class="chk-input-group">
+                                <i class="fas fa-user"></i>
+                                <input type="text" id="chk-name" placeholder="Họ và tên" required>
+                            </div>
+                            <div class="chk-input-group">
+                                <i class="fas fa-phone-alt"></i>
+                                <input type="tel" id="chk-phone" placeholder="Số điện thoại" required>
+                            </div>
+
+                            <div class="chk-select-row">
+                                <div class="chk-input-group chk-select-wrap">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <select id="chk-province" style="width: 100%;"><option value="">Tỉnh/Thành phố</option></select>
+                                </div>
+                                <div class="chk-input-group chk-select-wrap">
+                                    <i class="fas fa-building"></i>
+                                    <select id="chk-district" style="width: 100%;"><option value="">Quận/Huyện</option></select>
+                                </div>
+                                <div class="chk-input-group chk-select-wrap">
+                                    <i class="fas fa-home"></i>
+                                    <select id="chk-ward" style="width: 100%;"><option value="">Phường/Xã</option></select>
+                                </div>
+                            </div>
+
+                            <div class="chk-input-group" style="position: relative;">
+                                <i class="fas fa-map"></i>
+                                <input type="text" id="chk-address" placeholder="Địa chỉ cụ thể (Số nhà, đường, tòa nhà...)" required autocomplete="off">
+                                <div id="address-suggestions" style="position: absolute; background: white; border: 1px solid #ddd; width: 100%; max-height: 220px; overflow-y: auto; z-index: 1000; display: none; box-shadow: 0 10px 20px rgba(0,0,0,0.15); border-radius: 6px; top: calc(100% - 2px); left: 0;"></div>
+                            </div>
+                        </div>
+
+                        <div class="chk-alert-box alert-orange">
+                            <i class="fas fa-shield-alt"></i>
+                            <div>
+                                <strong>Thông tin của bạn được bảo mật</strong>
+                                <span>Chúng tôi cam kết bảo vệ thông tin cá nhân của bạn</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chk-payment-full">
+                    <div class="chk-card-section">
+                        <div class="chk-sec-title">
+                            <div class="step-circle">3</div>
+                            <div>
+                                <h3>PHƯƠNG THỨC THANH TOÁN</h3>
+                                <p>Chọn phương thức thanh toán phù hợp</p>
+                            </div>
+                        </div>
+
+                        <div class="chk-payment-options">
+                            <label class="payment-card">
+                                <i class="fas fa-money-bill-wave" style="color: #2ecc71;"></i>
+                                <div class="pay-info">
+                                    <strong>Thanh toán khi nhận hàng (COD)</strong>
+                                    <span>Thanh toán bằng tiền mặt khi nhận hàng</span>
+                                </div>
+                                <input type="radio" name="chk-payment" value="cod" checked onchange="toggleBankInfo()">
+                                <span class="custom-radio"></span>
+                            </label>
+
+                            <label class="payment-card">
+                                <i class="fas fa-university" style="color: #3498db;"></i>
+                                <div class="pay-info">
+                                    <strong>Chuyển khoản qua VietQR</strong>
+                                    <span>Mã QR tự động điền số tiền & nội dung đơn hàng</span>
+                                </div>
+                                <input type="radio" name="chk-payment" value="bank" onchange="toggleBankInfo()">
+                                <span class="custom-radio"></span>
+                            </label>
+                        </div>
+
+                        <div id="bank-info-box" style="display: none; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px dashed #f57224; margin-top: 10px; margin-bottom: 15px; font-size: 13px;">
+                            <div style="color: #f57224; font-weight: bold; margin-bottom: 15px; text-align: center; font-size: 15px; border-bottom: 1px dashed #ccc; padding-bottom: 10px;">
+                                MÃ ĐƠN HÀNG: <span id="chk-order-id" style="font-size: 18px;">${currentCheckoutOrderId}</span>
+                            </div>
+                            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                                <div style="flex: 1; min-width: 200px; line-height: 1.6;">
+                                    <strong>Ngân hàng:</strong> MB Quân Đội<br>
+                                    <strong>Chủ tài khoản:</strong> ${ACCOUNT_NAME}<br>
+                                    <strong>Số tài khoản:</strong> ${BANK_ACCOUNT}<br>
+                                    <strong>Số tiền:</strong> <span id="chk-qr-amount" style="color: #e74c3c; font-weight:bold; font-size:15px;">${total.toLocaleString('vi-VN')} đ</span><br>
+                                    <strong>Nội dung CK:</strong> <span id="chk-qr-content" style="color: #e74c3c; font-weight:bold; font-size:15px;">${currentCheckoutOrderId}</span>
+                                </div>
+                                <div style="text-align: center; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                                    <img id="chk-qr-img" src="${qrUrl}" alt="QR Ngân Hàng" style="width: 130px; height: 130px; border-radius: 4px; object-fit: contain;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="chk-alert-box alert-gray">
+                            <i class="fas fa-info-circle"></i>
+                            <div>
+                                <strong>Lưu ý</strong>
+                                <span>Đơn hàng sẽ được xử lý và giao đến bạn trong thời gian sớm nhất.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chk-footer-area">
+                <button class="btn-final-submit btn-checkout-confirm" onclick="submitOrder()">
+                    <div class="submit-left">
+                        <i class="fas fa-lock"></i>
+                        <div class="submit-texts">
+                            <strong>HOÀN TẤT ĐẶT HÀNG</strong>
+                            <span>Xác nhận thông tin và đặt hàng ngay</span>
+                        </div>
+                    </div>
+                    <i class="fas fa-arrow-right right-arr"></i>
+                </button>
+
+                <p class="terms-text">Bằng việc nhấn nút "Hoàn tất đặt hàng", bạn đồng ý với Điều khoản sử dụng và Chính sách bảo mật của chúng tôi.</p>
+            </div>
+        </div>
+    `;
+
+    setupAddressAutocomplete();
 
     // Đổ dữ liệu Tỉnh thành vào (nếu đã tải xong ở Background)
     const pSelect = document.getElementById('chk-province');
@@ -400,19 +423,22 @@ function openCheckoutModal() {
     }
 
     modal.classList.add('active');
-    
-    // KHÓA ĐỘ TRỄ: Đợi đúng 350ms (Cho Popup mở xong hoàn toàn) mới vẽ Select2
-    // Việc này sẽ khắc phục 100% lỗi icon lộn xộn và khung chọn bị ép còn 0px
+
+    // Đợi popup mở xong mới vẽ Select2 để tránh khung chọn bị ép 0px.
     setTimeout(() => {
-        applySelect2();
-        $('.select2-container').css('width', '100%');
-        $('#chk-province, #chk-district, #chk-ward').trigger('change.select2');
+        if (typeof applySelect2 === 'function') applySelect2();
+        if (typeof window.jQuery !== 'undefined') {
+            $('.select2-container').css('width', '100%');
+            $('#chk-province, #chk-district, #chk-ward').trigger('change.select2');
+        }
     }, 350);
 }
 
 window.closeCheckoutModal = function() {
     const modal = document.getElementById('checkout-modal');
     if (modal) modal.classList.remove('active');
+    checkoutItems = [];
+    isBuyNowMode = false;
 };
 
 window.toggleBankInfo = function() {
@@ -649,11 +675,23 @@ window.submitOrder = async function() {
         return;
     }
 
+    // Phòng trường hợp trình duyệt bị cache hoặc popup bị mở lại, không để đơn hàng gửi lên bị rỗng sản phẩm.
+    if ((!checkoutItems || checkoutItems.length === 0) && Array.isArray(cart) && cart.length > 0) {
+        checkoutItems = cloneCheckoutItems(cart);
+    }
+
+    if (!checkoutItems || checkoutItems.length === 0) {
+        alert("Không tìm thấy sản phẩm trong đơn hàng. Vui lòng thử lại!");
+        if(textNode) textNode.innerText = "HOÀN TẤT ĐẶT HÀNG";
+        btn.disabled = false;
+        return;
+    }
+
     // Kiểm tra xem có hàng Order không
     let hasOrderItems = false;
     let orderDetails = [];
     
-    cart.forEach(item => {
+    checkoutItems.forEach(item => {
         if (item.status === 'order' || item.status === 'out') {
             hasOrderItems = true;
             orderDetails.push(`
@@ -696,13 +734,19 @@ async function executeOrderSubmit(btn, name, phone, address) {
     const orderId = currentCheckoutOrderId;
     const checkedPayment = document.querySelector('input[name="chk-payment"]:checked');
     const method = checkedPayment ? checkedPayment.value : 'cod';
-    const totalAmount = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0) + 15000;
+    const orderItems = cloneCheckoutItems(checkoutItems);
+    const totalAmount = orderItems.reduce((sum, item) => sum + (toPriceNumber(item.price) * Number(item.quantity || 1)), 0) + 15000;
     
     const orderData = {
         order_id: orderId,
-        customer_info: { name, phone, address, prov, dist, ward }, 
-        items: cart,
+        customer_info: { name, phone, address, prov, dist, ward },
+        customer_name: name,
+        customer_phone: phone,
+        customer_address: `${address}, ${ward}, ${dist}, ${prov}`.replace(/^,\s*|,\s*$/g, ''),
+        items: orderItems,
+        products: orderItems,
         total_amount: totalAmount,
+        total: totalAmount,
         payment_method: method,
         status: method === 'bank' ? 'Chờ xác nhận đã chuyển khoản' : 'Xác nhận đặt đơn Shipcod thành công'
     };
@@ -736,8 +780,13 @@ async function executeOrderSubmit(btn, name, phone, address) {
 
         showSuccessModal(name, orderId, method);
 
-        cart = [];
-        saveCart();
+        if (!isBuyNowMode) {
+            cart = [];
+            saveCart();
+        }
+
+        checkoutItems = [];
+        isBuyNowMode = false;
         closeCheckoutModal();
         
         if(textNode) textNode.innerText = "HOÀN TẤT ĐẶT HÀNG";
@@ -1041,7 +1090,7 @@ checkoutStyle.innerHTML = `
     .terms-text { text-align: center; font-size: 11px; color: #999; margin: 15px 0 0 0; }
 
     @media (max-width: 850px) {
-        .chk-body-wrapper { flex-direction: column; padding: 15px; }
+        .chk-body-wrapper { grid-template-columns: 1fr; padding: 15px; }
         .chk-select-row { flex-direction: column; }
         .chk-header-gradient { padding: 15px; flex-direction: column; gap: 15px; align-items: flex-start;}
         .chk-hdr-right { width: 100%; justify-content: space-between; }
