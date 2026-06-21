@@ -197,10 +197,46 @@ function openCheckoutModal() {
                 </div>
 
                 <div class="chk-body-wrapper">
-                    <div class="chk-col-left">
-                        <div class="chk-card-section">
+
+                    <div class="chk-col-summary">
+                        <div class="chk-card-section chk-summary-section">
                             <div class="chk-sec-title">
                                 <div class="step-circle">1</div>
+                                <div>
+                                    <h3>TÓM TẮT ĐƠN HÀNG</h3>
+                                    <p>Kiểm tra lại sản phẩm và chi phí</p>
+                                </div>
+                            </div>
+
+                            <div class="chk-product-list">
+                                ${cartItemsHtml}
+                            </div>
+
+                            <div class="chk-cost-lines">
+                                <div class="cost-line">
+                                    <span>Tạm tính</span>
+                                    <strong id="chk-subtotal">${subtotal.toLocaleString('vi-VN')} đ</strong>
+                                </div>
+                                <div class="cost-line">
+                                    <span>Phí giao hàng</span>
+                                    <strong>15.000 đ</strong>
+                                </div>
+                                <div class="cost-line free-ship-notice">
+                                    <i class="fas fa-truck"></i> Phí ship đồng giá 15k toàn quốc
+                                </div>
+                            </div>
+
+                            <div class="chk-total-wrapper">
+                                <span>TỔNG CỘNG</span>
+                                <span class="total-price-big" id="chk-total">${total.toLocaleString('vi-VN')} đ</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chk-col-form">
+                        <div class="chk-card-section">
+                            <div class="chk-sec-title">
+                                <div class="step-circle">2</div>
                                 <div>
                                     <h3>THÔNG TIN GIAO HÀNG</h3>
                                     <p>Nhập thông tin người nhận và địa chỉ giao hàng</p>
@@ -248,14 +284,15 @@ function openCheckoutModal() {
                             </div>
                         </div>
 
-                        <div class="chk-card-section" style="margin-top: 20px;">
-                            <div class="chk-sec-title">
-                                <div class="step-circle">2</div>
-                                <div>
-                                    <h3>PHƯƠNG THỨC THANH TOÁN</h3>
-                                    <p>Chọn phương thức thanh toán phù hợp</p>
+                        <div class="chk-payment-full">
+                            <div class="chk-card-section">
+                                <div class="chk-sec-title">
+                                    <div class="step-circle">3</div>
+                                    <div>
+                                        <h3>PHƯƠNG THỨC THANH TOÁN</h3>
+                                        <p>Chọn phương thức thanh toán phù hợp</p>
+                                    </div>
                                 </div>
-                            </div>
                             
                             <div class="chk-payment-options">
                                 <label class="payment-card">
@@ -927,9 +964,43 @@ checkoutStyle.innerHTML = `
     .close-modal-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; margin-left: 10px; opacity: 0.8; }
     .close-modal-btn:hover { opacity: 1; }
 
-    .chk-body-wrapper { display: flex; gap: 20px; padding: 20px 30px; overflow-y: auto; flex: 1; }
-    .chk-col-left { flex: 1.6; display: flex; flex-direction: column; }
-    .chk-col-right { flex: 1; display: flex; flex-direction: column; }
+    .chk-body-wrapper {
+        display: grid;
+        grid-template-columns: 0.9fr 1.6fr;
+        gap: 20px;
+        padding: 20px 30px;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .chk-col-summary {
+        grid-column: 1;
+    }
+
+    .chk-col-form {
+        grid-column: 2;
+    }
+
+    .chk-payment-full {
+        grid-column: 1 / -1;
+    }
+
+    .chk-summary-section {
+        height: 100%;
+    }
+
+    @media (max-width: 768px) {
+        .chk-body-wrapper {
+            grid-template-columns: 1fr;
+            padding: 15px;
+        }
+
+        .chk-col-summary,
+        .chk-col-form,
+        .chk-payment-full {
+            grid-column: 1;
+        }
+    }
 
     .chk-card-section { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
     .chk-sec-title { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
