@@ -147,6 +147,13 @@ function renderProducts(products) {
     }).join("");
 }
 
+
+function getDisplayOrder(item) {
+    const raw = item.display_order ?? item.sort_order ?? item.position;
+    const number = Number(raw);
+    return Number.isFinite(number) && number > 0 ? number : 999999;
+}
+
 // --- Logic lọc và sắp xếp tự động ---
 function applyClientFilters() {
     let products = [...state.allProducts];
@@ -181,14 +188,23 @@ function applyClientFilters() {
         products.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
     } else if (state.sort === "bestseller") {
         products.sort((a, b) => {
+            const orderA = getDisplayOrder(a);
+            const orderB = getDisplayOrder(b);
+
+            // Ưu tiên thứ tự kéo thả từ admin. Số nhỏ hiển thị trước.
+            if (orderA !== orderB) return orderA - orderB;
+
             const aIsBest = (a.discount || "").toLowerCase().includes("bán chạy") ? 1 : 0;
             const bIsBest = (b.discount || "").toLowerCase().includes("bán chạy") ? 1 : 0;
-            
+
             if (aIsBest !== bIsBest) return bIsBest - aIsBest;
-            
+
             const soldA = parseFloat((a.sold_text || "0").replace(/[^\d.]/g, '')) || 0;
             const soldB = parseFloat((b.sold_text || "0").replace(/[^\d.]/g, '')) || 0;
-            return soldB - soldA;
+
+            if (soldA !== soldB) return soldB - soldA;
+
+            return new Date(b.created_at || 0) - new Date(a.created_at || 0);
         });
     }
 

@@ -4,13 +4,249 @@ var allProductsData = [];
 var allOrdersData = [];
 
 // =========================================================
+// TÍNH NĂNG SẮP XẾP SẢN PHẨM BẰNG KÉO THẢ
+// =========================================================
+window.getProductDisplayOrder = function(product, fallbackIndex = 999999) {
+    const raw = product.display_order ?? product.sort_order ?? product.position;
+    const number = Number(raw);
+    return Number.isFinite(number) && number > 0 ? number : fallbackIndex;
+};
+
+window.sortProductsForAdmin = function(products) {
+    return [...products].sort((a, b) => {
+        const orderA = window.getProductDisplayOrder(a, 999999);
+        const orderB = window.getProductDisplayOrder(b, 999999);
+
+        if (orderA !== orderB) return orderA - orderB;
+
+        const dateA = new Date(a.created_at || a.updated_at || 0).getTime() || 0;
+        const dateB = new Date(b.created_at || b.updated_at || 0).getTime() || 0;
+        return dateB - dateA;
+    });
+};
+
+window.getNextProductDisplayOrder = function() {
+    if (!allProductsData || allProductsData.length === 0) return 1;
+
+    const maxOrder = allProductsData.reduce((max, item, index) => {
+        const order = window.getProductDisplayOrder(item, index + 1);
+        return Math.max(max, order);
+    }, 0);
+
+    return maxOrder + 1;
+};
+
+window.clearShopProductCache = function() {
+    try {
+        sessionStorage.removeItem('morachi_products_cache');
+        sessionStorage.removeItem('morachi_products_cache_time');
+    } catch (e) {}
+};
+
+window.showReorderStatus = function(message, type = "info") {
+    let el = document.getElementById("reorder-status");
+
+    if (!el) {
+        el = document.createElement("div");
+        el.id = "reorder-status";
+        el.className = "reorder-status";
+        document.body.appendChild(el);
+    }
+
+    el.className = "reorder-status show " + type;
+    el.innerHTML = message;
+
+    clearTimeout(window.__reorderStatusTimer);
+    window.__reorderStatusTimer = setTimeout(() => {
+        el.classList.remove("show");
+    }, 2500);
+};
+
+window.buildProductPayloadForOrderSave = function(product) {
+    return {
+        title: product.title || "",
+        brand: product.brand || "",
+        current_price: product.current_price || "",
+        old_price: product.old_price || "",
+        discount: product.discount || "",
+        description: product.description || "",
+        specifications: product.specifications || "",
+        ingredients: product.ingredients || "",
+        usage_manual: product.usage_manual || "",
+        thumbnail: product.thumbnail || "",
+        status: product.status || "active",
+        variants: Array.isArray(product.variants) ? product.variants : [],
+        display_order: Number(product.display_order) || 999999
+    };
+};
+
+window.persistProductOrder = async function() {
+    const tbody = document.getElementById("admin-product-list");
+    if (!tbody) return;
+
+    const visibleIds = [...tbody.querySelectorAll("tr[data-product-id]")]
+        .map(row => String(row.dataset.productId))
+        .filter(Boolean);
+
+    if (visibleIds.length <= 1) return;
+
+    const productById = new Map(allProductsData.map(p => [String(p.id), p]));
+    const visibleSet = new Set(visibleIds);
+
+    // Giữ nguyên vị trí các sản phẩm đang bị lọc ẩn, chỉ đổi thứ tự các dòng đang hiển thị.
+    const currentGlobalOrder = window.sortProductsForAdmin(allProductsData);
+    const visibleQueue = [...visibleIds];
+
+    const newGlobalOrder = currentGlobalOrder.map(product => {
+        const id = String(product.id);
+        if (!visibleSet.has(id)) return product;
+
+        const nextVisibleId = visibleQueue.shift();
+        return productById.get(String(nextVisibleId)) || product;
+    });
+
+    const changedProducts = [];
+    newGlobalOrder.forEach((product, index) => {
+        const newOrder = index + 1;
+        if (Number(product.display_order) !== newOrder) {
+            product.display_order = newOrder;
+            changedProducts.push(product);
+        } else {
+            product.display_order = newOrder;
+        }
+    });
+
+    allProductsData = newGlobalOrder;
+
+    if (changedProducts.length === 0) return;
+
+    window.showReorderStatus('<i class="fas fa-spinner fa-spin"></i> Đang lưu thứ tự sản phẩm...', 'info');
+
+    const orders = allProductsData.map(product => ({
+        id: product.id,
+        display_order: Number(product.display_order) || 999999
+    }));
+
+    try {
+        // Ưu tiên endpoint riêng nếu backend có hỗ trợ.
+        let saved = false;
+        try {
+            const bulkRes = await fetch(`${API_BASE_URL}/products/reorder`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ orders, items: orders })
+            });
+
+            if (bulkRes.ok) {
+                saved = true;
+            }
+        } catch (e) {
+            saved = false;
+        }
+
+        // Nếu backend chưa có /products/reorder thì dùng API cập nhật sản phẩm hiện có.
+        if (!saved) {
+            for (const product of changedProducts) {
+                const res = await fetch(`${API_BASE_URL}/products/${product.id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(window.buildProductPayloadForOrderSave(product))
+                });
+
+                if (!res.ok) {
+                    throw new Error("Không lưu được thứ tự sản phẩm");
+                }
+            }
+        }
+
+        window.clearShopProductCache();
+        window.showReorderStatus('<i class="fas fa-check-circle"></i> Đã lưu thứ tự hiển thị sản phẩm!', 'success');
+        window.renderTable(window.sortProductsForAdmin(allProductsData));
+    } catch (err) {
+        console.error(err);
+        window.showReorderStatus('<i class="fas fa-exclamation-triangle"></i> Lưu thứ tự thất bại. Vui lòng thử lại!', 'error');
+        window.loadAdminProducts();
+    }
+};
+
+window.getDragAfterElement = function(container, y) {
+    const draggableElements = [...container.querySelectorAll("tr.drag-sort-row:not(.dragging)")];
+
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+
+        if (offset < 0 && offset > closest.offset) {
+            return { offset, element: child };
+        }
+
+        return closest;
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+};
+
+window.enableProductDragSort = function() {
+    const tbody = document.getElementById("admin-product-list");
+    if (!tbody) return;
+
+    let draggedRow = null;
+    const rows = [...tbody.querySelectorAll("tr[data-product-id]")];
+
+    rows.forEach(row => {
+        const handle = row.querySelector(".drag-handle");
+        if (!handle) return;
+
+        row.draggable = false;
+
+        handle.addEventListener("mousedown", () => {
+            row.draggable = true;
+        });
+
+        handle.addEventListener("mouseup", () => {
+            row.draggable = false;
+        });
+
+        handle.addEventListener("touchstart", () => {
+            row.draggable = true;
+        }, { passive: true });
+
+        row.addEventListener("dragstart", (event) => {
+            draggedRow = row;
+            row.classList.add("dragging");
+            event.dataTransfer.effectAllowed = "move";
+            event.dataTransfer.setData("text/plain", row.dataset.productId || "");
+        });
+
+        row.addEventListener("dragend", () => {
+            row.classList.remove("dragging");
+            row.draggable = false;
+            draggedRow = null;
+            window.persistProductOrder();
+        });
+    });
+
+    tbody.addEventListener("dragover", (event) => {
+        if (!draggedRow) return;
+
+        event.preventDefault();
+        const afterElement = window.getDragAfterElement(tbody, event.clientY);
+
+        if (afterElement == null) {
+            tbody.appendChild(draggedRow);
+        } else {
+            tbody.insertBefore(draggedRow, afterElement);
+        }
+    });
+};
+
+
+// =========================================================
 // PHẦN 1: QUẢN LÝ KHO SẢN PHẨM
 // =========================================================
 
 window.loadAdminProducts = async function() {
     const tbody = document.getElementById("admin-product-list");
     if (!tbody) return;
-    tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; padding: 40px;'><i class='fas fa-spinner fa-spin'></i> Đang tải dữ liệu...</td></tr>";
+    tbody.innerHTML = "<tr><td colspan='8' style='text-align:center; padding: 40px;'><i class='fas fa-spinner fa-spin'></i> Đang tải dữ liệu...</td></tr>";
 
     try {
         const response = await fetch(`${API_BASE_URL}/products?t=${new Date().getTime()}`);
@@ -22,7 +258,7 @@ window.loadAdminProducts = async function() {
         window.populateBrandFilter(allProductsData);
         window.renderTable(allProductsData);
     } catch (err) {
-        tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; color:red; padding: 40px;'>Lỗi kết nối API!</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='8' style='text-align:center; color:red; padding: 40px;'>Lỗi kết nối API!</td></tr>";
     }
 }
 
@@ -77,7 +313,7 @@ window.filterProducts = function(keyword, brandFilter) {
         const brandMatch = brandFilter ? p.brand === brandFilter : true;
         return titleMatch && brandMatch;
     });
-    window.renderTable(filtered);
+    window.renderTable(window.sortProductsForAdmin(filtered));
 }
 
 window.bindAdminSearch = function() {
@@ -94,16 +330,18 @@ window.bindAdminSearch = function() {
 window.renderTable = function(products) {
     const tbody = document.getElementById("admin-product-list");
     if (!tbody) return;
-    
-    if (products.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; padding: 40px; color:#888;'>Không tìm thấy sản phẩm phù hợp.</td></tr>";
+
+    const sortedProducts = window.sortProductsForAdmin(products || []);
+
+    if (sortedProducts.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='8' style='text-align:center; padding: 40px; color:#888;'>Không tìm thấy sản phẩm phù hợp.</td></tr>";
         return;
     }
 
-    tbody.innerHTML = products.map(p => {
+    tbody.innerHTML = sortedProducts.map((p, index) => {
         const variants = p.variants || [];
         let totalStock = variants.reduce((sum, v) => sum + (parseInt(v.stock) || 0), 0);
-        
+
         let variantHtml = '';
         if (variants.length > 0) {
             let limitVariants = variants.slice(0, 3);
@@ -118,7 +356,7 @@ window.renderTable = function(products) {
         let stockDot = '';
         let stockText = '';
         let statusBadge = '';
-        
+
         if (totalStock > 10) {
             stockDot = '<div class="dot green"></div>';
             stockText = `<div style="color:var(--success);">${totalStock} <br><span style="font-size:11px; font-weight:normal; color:#888;">Còn hàng</span></div>`;
@@ -134,7 +372,13 @@ window.renderTable = function(products) {
         }
 
         return `
-            <tr>
+            <tr class="drag-sort-row" data-product-id="${p.id}">
+                <td class="sort-cell">
+                    <button type="button" class="drag-handle" title="Giữ chuột và kéo để đổi thứ tự">
+                        <i class="fas fa-grip-vertical"></i>
+                    </button>
+                    <span class="sort-number">${window.getProductDisplayOrder(p, index + 1)}</span>
+                </td>
                 <td style="text-align: center;"><input type="checkbox"></td>
                 <td>
                     <div class="product-cell">
@@ -162,6 +406,8 @@ window.renderTable = function(products) {
             </tr>
         `;
     }).join("");
+
+    window.enableProductDragSort();
 }
 
 window.deleteProduct = async function(id, brand) {
@@ -169,8 +415,7 @@ window.deleteProduct = async function(id, brand) {
     try {
         const res = await fetch(`${API_BASE_URL}/products/${id}`, { method: "DELETE" });
         if (res.ok) { 
-            sessionStorage.removeItem('morachi_products_cache');
-            sessionStorage.removeItem('morachi_products_cache_time');
+            window.clearShopProductCache();
             window.loadAdminProducts(); 
         }
     } catch (err) { alert("Lỗi hệ thống khi xóa!"); }
@@ -364,7 +609,11 @@ if (form) {
                 usage_manual: document.getElementById("usage_manual") ? document.getElementById("usage_manual").value.trim() : "",
                 
                 status: "active",
-                variants: variantsArray
+                variants: variantsArray,
+                display_order: (() => {
+                    const existingProduct = allProductsData.find(item => String(item.id) === String(id));
+                    return existingProduct ? window.getProductDisplayOrder(existingProduct, 999999) : window.getNextProductDisplayOrder();
+                })()
             };
 
             if (imageUrl) {
@@ -386,8 +635,7 @@ if (form) {
                 msg.innerText = isEditing ? "Cập nhật thành công!" : "Thêm mới thành công!";
                 msg.style.color = "var(--success)";
                 
-                sessionStorage.removeItem('morachi_products_cache');
-                sessionStorage.removeItem('morachi_products_cache_time');
+                window.clearShopProductCache();
                 
                 setTimeout(() => { window.closeModal(); window.loadAdminProducts(); }, 1200);
             } else {

@@ -328,6 +328,95 @@
         .bulk-info { font-size: 13px; }
         .bulk-actions-btns { display: flex; gap: 8px; align-items: center; }
         
+
+        /* Drag & drop sắp xếp sản phẩm */
+        .sort-cell {
+            width: 70px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .drag-handle {
+            width: 30px;
+            height: 30px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: white;
+            color: var(--text-light);
+            cursor: grab;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 6px;
+            transition: 0.2s;
+        }
+        .drag-handle:hover {
+            color: var(--accent);
+            border-color: rgba(245, 114, 36, 0.45);
+            background: #fff2eb;
+        }
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+        .sort-number {
+            font-size: 11px;
+            color: var(--text-light);
+            font-weight: 600;
+        }
+        .drag-sort-row.dragging {
+            opacity: 0.55;
+            background: #fff7f1 !important;
+            box-shadow: 0 8px 24px rgba(245, 114, 36, 0.12);
+        }
+        .drag-sort-row {
+            transition: background 0.15s ease;
+        }
+        .reorder-hint {
+            margin: -8px 0 16px 0;
+            color: var(--text-light);
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .reorder-hint i {
+            color: var(--accent);
+        }
+        .reorder-status {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            z-index: 3000;
+            background: white;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+        .reorder-status.show {
+            display: flex;
+        }
+        .reorder-status.success {
+            color: var(--success);
+            border-color: rgba(39, 174, 96, 0.2);
+            background: var(--success-bg);
+        }
+        .reorder-status.error {
+            color: var(--danger);
+            border-color: rgba(231, 76, 60, 0.2);
+            background: var(--danger-bg);
+        }
+        .reorder-status.info {
+            color: var(--accent);
+            border-color: rgba(245, 114, 36, 0.2);
+            background: #fff2eb;
+        }
+
         .bulk-actions-btns select {
             padding: 8px 15px; border: 1px solid var(--border-color); border-radius: 8px; outline: none; font-size: 13px; font-family: inherit; cursor: pointer;
         }
@@ -422,11 +511,16 @@
                 <select><option>Sắp xếp</option></select>
                 <button class="btn-add" onclick="openModal()"><i class="fas fa-plus"></i> Thêm sản phẩm</button>
             </div>
+            <div class="reorder-hint">
+                <i class="fas fa-grip-vertical"></i>
+                Giữ chuột vào biểu tượng kéo ở đầu dòng sản phẩm, kéo lên/xuống để đổi thứ tự hiển thị ngoài website.
+            </div>
 
             <div class="card">
                 <table>
                     <thead>
                         <tr>
+                            <th style="width: 70px; text-align: center;">Sắp xếp</th>
                             <th style="width: 40px; text-align: center;"><input type="checkbox"></th>
                             <th>Sản phẩm</th>
                             <th>Thương hiệu</th>
