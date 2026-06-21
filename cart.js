@@ -184,7 +184,7 @@ function openCheckoutModal() {
                     <div class="chk-hdr-left">
                         <div class="chk-bag-icon"><i class="fas fa-shopping-bag"></i></div>
                         <div>
-                            <h2>HOÀN TẤT ĐƠN HÀNG</h2>
+                            <h2>THÔNG TIN ĐƠN HÀNG</h2>
                             <p>Vui lòng kiểm tra thông tin và xác nhận đặt hàng</p>
                         </div>
                     </div>
@@ -203,7 +203,7 @@ function openCheckoutModal() {
                             <div class="chk-sec-title">
                                 <div class="step-circle">1</div>
                                 <div>
-                                    <h3>TÓM TẮT ĐƠN HÀNG</h3>
+                                    <h3>THÔNG TIN SẢN PHẨM</h3>
                                     <p>Kiểm tra lại sản phẩm và chi phí</p>
                                 </div>
                             </div>
@@ -239,14 +239,14 @@ function openCheckoutModal() {
                                 <div class="step-circle">2</div>
                                 <div>
                                     <h3>THÔNG TIN GIAO HÀNG</h3>
-                                    <p>Nhập thông tin người nhận và địa chỉ giao hàng</p>
+                                    <p>Nhập thông tin địa chỉ trước sát nhập</p>
                                 </div>
                             </div>
                             
                             <div class="chk-form-area">
                                 <div class="chk-input-group">
                                     <i class="fas fa-user"></i>
-                                    <input type="text" id="chk-name" placeholder="Họ và tên người nhận" required>
+                                    <input type="text" id="chk-name" placeholder="Họ và tên" required>
                                 </div>
                                 <div class="chk-input-group">
                                     <i class="fas fa-phone-alt"></i>
@@ -345,15 +345,15 @@ function openCheckoutModal() {
 
                     </div>
 
-                    <div class="chk-col-right">
-                        <div class="chk-card-section chk-summary-section">
-                            <div class="chk-sec-title">
-                                <div class="step-circle">3</div>
-                                <div>
-                                    <h3>TÓM TẮT ĐƠN HÀNG</h3>
-                                    <p>Kiểm tra lại sản phẩm và chi phí</p>
-                                </div>
-                            </div>
+                    // <div class="chk-col-right">
+                    //     <div class="chk-card-section chk-summary-section">
+                    //         <div class="chk-sec-title">
+                    //             <div class="step-circle">3</div>
+                    //             <div>
+                    //                 <h3>TÓM TẮT ĐƠN HÀNG</h3>
+                    //                 <p>Kiểm tra lại sản phẩm và chi phí</p>
+                    //             </div>
+                    //         </div>
 
                             <div class="chk-product-list">
                                 ${cartItemsHtml}
@@ -415,7 +415,7 @@ function openCheckoutModal() {
                     <img src="${item.image}" alt="${item.title}" onerror="this.src='images/icon-logo.png'">
                     <div class="chk-item-info">
                         <div class="chk-item-title">${item.title}</div>
-                        <div class="chk-item-variant">Màu/Phân loại: ${item.variant}</div>
+                        <div class="chk-item-variant">Phân loại: ${item.variant}</div>
                         <div class="chk-item-qty-label">SL: ${item.quantity}</div>
                     </div>
                     <div class="chk-item-price">
