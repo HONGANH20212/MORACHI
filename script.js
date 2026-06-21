@@ -260,6 +260,12 @@ function renderBrandFilters(products) {
 // =========================================================
 // MOBILE FILTER COMPACT: Thu gọn Khoảng giá / Thương hiệu
 // =========================================================
+function markHomeProductsPage() {
+    if (document.getElementById("product-list")) {
+        document.body.classList.add("home-products-page");
+    }
+}
+
 function setupMobileFilterCompact() {
     const isMobile = window.innerWidth <= 768;
     const sections = document.querySelectorAll(".sidebar .filter-section");
@@ -535,6 +541,7 @@ window.addEventListener("resize", () => {
 
 // --- Khởi chạy ---
 document.addEventListener("DOMContentLoaded", () => {
+    markHomeProductsPage();
     bindSortTabs();
     bindSearch();
     bindPriceFilter();
