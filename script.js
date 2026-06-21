@@ -9,6 +9,45 @@ const state = {
     minPrice: null,
     maxPrice: null
 };
+// Đồng bộ thứ tự kéo thả từ trang admin nếu admin lưu fallback vào localStorage.
+// Lưu ý: để khách ở mọi thiết bị đều thấy đúng, backend vẫn cần lưu và trả về display_order.
+const MORACHI_PRODUCT_ORDER_KEY = "morachi_product_order_ids";
+
+function getAdminSavedProductOrderIds() {
+    try {
+        const raw = localStorage.getItem(MORACHI_PRODUCT_ORDER_KEY);
+        const ids = JSON.parse(raw || "[]");
+        return Array.isArray(ids) ? ids.map(String).filter(Boolean) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function applyAdminSavedProductOrder(products) {
+    const list = Array.isArray(products) ? products.map(item => ({ ...item })) : [];
+    const savedIds = getAdminSavedProductOrderIds();
+
+    if (!savedIds.length) {
+        return list;
+    }
+
+    const orderMap = new Map(savedIds.map((id, index) => [String(id), index + 1]));
+    const maxSavedOrder = savedIds.length;
+
+    return list.map((item, index) => {
+        const savedOrder = orderMap.get(String(item.id));
+        const apiOrder = Number(item.display_order ?? item.sort_order ?? item.position);
+        const fallbackOrder = Number.isFinite(apiOrder) && apiOrder > 0
+            ? apiOrder
+            : maxSavedOrder + index + 1;
+
+        return {
+            ...item,
+            display_order: savedOrder || fallbackOrder
+        };
+    });
+}
+
 
 // --- Các hàm tiện ích ---
 function parsePrice(value) {
@@ -354,7 +393,7 @@ async function loadProducts() {
     if (isCacheValid) {
         try {
             const products = JSON.parse(cachedData);
-            state.allProducts = Array.isArray(products) ? products : [];
+            state.allProducts = Array.isArray(products) ? applyAdminSavedProductOrder(products) : [];
             renderBrandFilters(state.allProducts);
             applyClientFilters(); 
             return; 
@@ -381,7 +420,7 @@ async function loadProducts() {
         sessionStorage.setItem(cacheKey, JSON.stringify(products));
         sessionStorage.setItem(cacheTimeKey, new Date().getTime().toString());
 
-        state.allProducts = Array.isArray(products) ? products : [];
+        state.allProducts = Array.isArray(products) ? applyAdminSavedProductOrder(products) : [];
 
         renderBrandFilters(state.allProducts);
         applyClientFilters(); 
