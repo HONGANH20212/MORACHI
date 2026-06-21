@@ -884,3 +884,103 @@ button {
         margin-top: 0 !important;
     }
 }
+/* ==============================
+   FIX MOBILE HEADER SPACING
+   Logo / Search / Cart không sát lề
+   ============================== */
+@media (max-width: 768px) {
+    .modern-header {
+        overflow: hidden;
+    }
+
+    .modern-header .container,
+    .main-header .container,
+    .red-banner .container {
+        padding-left: 14px !important;
+        padding-right: 14px !important;
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    .main-header-inner {
+        padding: 12px 14px 10px !important;
+        gap: 10px !important;
+        flex-wrap: wrap !important;
+        align-items: center !important;
+    }
+
+    .logo-area {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .logo-area a {
+        gap: 8px !important;
+    }
+
+    .logo-icon {
+        height: 38px !important;
+    }
+
+    .logo-text h1 {
+        font-size: 21px !important;
+        letter-spacing: 1px !important;
+    }
+
+    .logo-text p {
+        font-size: 8px !important;
+        letter-spacing: 3px !important;
+    }
+
+    .header-actions {
+        gap: 8px !important;
+        flex-shrink: 0;
+    }
+
+    .header-actions .action-item {
+        gap: 0 !important;
+    }
+
+    .header-actions .action-text {
+        display: none !important;
+    }
+
+    .action-icon {
+        width: 42px !important;
+        height: 42px !important;
+        font-size: 17px !important;
+    }
+
+    .search-bar {
+        order: 3;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin-top: 8px !important;
+        height: 44px !important;
+        border-radius: 999px !important;
+    }
+
+    .search-bar input {
+        font-size: 16px !important;
+        padding: 10px 14px !important;
+        min-width: 0 !important;
+    }
+
+    .search-bar button {
+        width: 46px !important;
+        min-width: 46px !important;
+        height: 40px !important;
+    }
+
+    .red-banner {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    .red-banner .container {
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+        line-height: 1.35;
+    }
+}
