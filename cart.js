@@ -53,12 +53,14 @@ function toggleCart() {
 
 // 4. Thêm sản phẩm vào giỏ hàng
 function addToCart(product) {
-    const existingItem = cart.find(item => item.id === product.id && item.variant === product.variant);
+    const qtyToAdd = Math.max(1, Number(product && product.quantity) || 1);
+    const normalizedProduct = normalizeCartItem({ ...(product || {}), quantity: qtyToAdd });
+    const existingItem = cart.find(item => item.id === normalizedProduct.id && item.variant === normalizedProduct.variant);
     
     if (existingItem) {
-        existingItem.quantity += 1; 
+        existingItem.quantity = Math.max(1, Number(existingItem.quantity) || 1) + qtyToAdd;
     } else {
-        cart.push({ ...product, quantity: 1 }); 
+        cart.push(normalizedProduct); 
     }
     
     saveCart(); 

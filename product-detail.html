@@ -144,6 +144,369 @@
         .guarantee-box {
             background: #ffffff !important;
         }
+
+
+        /* =============================================================
+           MOBILE PRODUCT DETAIL - BỐ CỤC MUA HÀNG NHANH
+           ============================================================= */
+        .pd-hero-card {
+            background: #fff;
+            border-radius: 16px;
+        }
+        .pd-meta-line {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            color: #777;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+        .pd-meta-line i { color: #ffb400; }
+        .pd-save-text {
+            color: var(--primary-red);
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: -8px;
+            margin-bottom: 12px;
+        }
+        .pd-main-img { position: relative; background: #fff; }
+        .pd-sale-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: var(--primary-red);
+            color: #fff;
+            border-radius: 999px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            z-index: 2;
+        }
+        .pd-img-count {
+            position: absolute;
+            left: 10px;
+            bottom: 10px;
+            background: var(--primary-red);
+            color: #fff;
+            border-radius: 999px;
+            padding: 3px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            z-index: 2;
+        }
+        .pd-quantity-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 12px 0 12px;
+            font-size: 13px;
+        }
+        .pd-qty-control {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            background: #fff;
+            height: 34px;
+        }
+        .pd-qty-control button {
+            width: 34px;
+            height: 34px;
+            border: none;
+            background: #fff;
+            cursor: pointer;
+            color: #333;
+            font-weight: 700;
+        }
+        .pd-qty-control input {
+            width: 36px;
+            height: 34px;
+            border: none;
+            text-align: center;
+            outline: none;
+            font-weight: 700;
+            color: #333;
+            background: #fff;
+        }
+        .pd-stock-label {
+            color: #27ae60;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .pd-mobile-guarantee-card {
+            display: none;
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 14px;
+            margin: 14px 0;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.03);
+        }
+        .pd-mobile-guarantee-card h3 {
+            font-size: 14px;
+            margin: 0 0 12px;
+            color: var(--primary-red);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+        }
+        .pd-mobile-guarantee-card .guarantee-grid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+        .pd-accordion-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 14px;
+        }
+        .pd-accordion-item {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .pd-accordion-item summary {
+            list-style: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            font-weight: 700;
+            color: #333;
+            font-size: 14px;
+        }
+        .pd-accordion-item summary::-webkit-details-marker { display: none; }
+        .pd-accordion-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .pd-accordion-title i { color: #555; width: 16px; text-align: center; }
+        .pd-accordion-item summary > i {
+            transition: transform 0.2s ease;
+            color: #777;
+        }
+        .pd-accordion-item[open] summary > i { transform: rotate(90deg); }
+        .pd-accordion-item .pd-section-content {
+            padding: 0 16px 16px;
+            white-space: normal;
+        }
+        .pd-mobile-service-strip {
+            display: none;
+            grid-template-columns: repeat(3, 1fr);
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 12px 0 14px;
+        }
+        .pd-mobile-service-strip div {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 6px;
+            font-size: 11px;
+            color: #555;
+            border-right: 1px solid var(--border-color);
+            text-align: center;
+        }
+        .pd-mobile-service-strip div:last-child { border-right: none; }
+        .pd-mobile-service-strip i { color: var(--primary-red); }
+
+        @media (min-width: 769px) {
+            .pd-desc-tabs { display: none; }
+        }
+
+        @media (max-width: 768px) {
+            body { padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
+            .breadcrumb { display: none !important; }
+            .main-layout.container {
+                padding-top: 10px !important;
+                padding-bottom: 20px !important;
+                gap: 0 !important;
+            }
+            .main-layout > .sidebar { display: none !important; }
+            .main-layout > .content {
+                padding: 0 !important;
+                border-radius: 0 !important;
+                background: transparent !important;
+                box-shadow: none !important;
+            }
+            .pd-wrapper.pd-hero-card {
+                display: grid !important;
+                grid-template-columns: 44% 1fr;
+                gap: 12px !important;
+                align-items: start;
+                padding: 0 !important;
+                margin-bottom: 0 !important;
+                border-radius: 0 !important;
+                background: #fff !important;
+                overflow: visible !important;
+            }
+            .pd-gallery {
+                width: 100% !important;
+                min-width: 0;
+            }
+            .pd-main-img {
+                height: auto !important;
+                aspect-ratio: 1 / 1.45;
+                border-radius: 12px;
+                padding: 8px;
+                margin-bottom: 8px;
+            }
+            .pd-main-img img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
+            .pd-thumbs {
+                gap: 6px;
+                padding-bottom: 0;
+            }
+            .pd-thumb {
+                width: 42px;
+                height: 42px;
+                border-radius: 8px;
+                padding: 2px;
+            }
+            .pd-info {
+                min-width: 0;
+                padding-top: 2px;
+            }
+            .pd-brand {
+                font-size: 10px;
+                margin-bottom: 4px;
+                letter-spacing: .5px;
+            }
+            .pd-title {
+                font-size: 17px !important;
+                line-height: 1.25;
+                margin-bottom: 8px;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+            .pd-meta-line {
+                font-size: 10.5px;
+                gap: 6px;
+                margin-bottom: 8px;
+            }
+            .pd-price-box {
+                gap: 8px;
+                margin-bottom: 6px;
+                flex-wrap: wrap;
+            }
+            .pd-price-now {
+                font-size: 20px !important;
+                line-height: 1.2;
+            }
+            .pd-price-old { font-size: 12px; }
+            .pd-save-text {
+                font-size: 11px;
+                margin: 0 0 10px;
+            }
+            .pd-variant-label {
+                font-size: 12px;
+                margin-bottom: 6px;
+            }
+            .pd-variant-list { gap: 6px; }
+            .pd-btn-v {
+                font-size: 11px !important;
+                padding: 7px 10px;
+                border-radius: 8px;
+                background: #f7f7f7;
+            }
+            .pd-quantity-row {
+                gap: 8px;
+                margin: 10px 0;
+                font-size: 12px;
+            }
+            .pd-qty-control,
+            .pd-qty-control button,
+            .pd-qty-control input {
+                height: 32px;
+            }
+            .pd-qty-control button { width: 32px; }
+            .pd-qty-control input { width: 34px; }
+            .pd-status {
+                font-size: 11px;
+                margin-bottom: 0;
+                display: none;
+            }
+            .pd-mobile-guarantee-card { display: block; }
+            .pd-mobile-guarantee-card .guarantee-box {
+                min-height: 72px;
+                padding: 10px 4px;
+                border-radius: 12px;
+            }
+            .pd-mobile-guarantee-card .guarantee-box i { font-size: 21px; }
+            .pd-mobile-guarantee-card .guarantee-box span {
+                font-size: 9.5px;
+                line-height: 1.35;
+            }
+            .pd-actions {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 1500;
+                display: grid !important;
+                grid-template-columns: 1fr 1.1fr;
+                gap: 8px !important;
+                padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+                background: rgba(255,255,255,0.98);
+                box-shadow: 0 -8px 24px rgba(0,0,0,0.08);
+                border-top: 1px solid #eee;
+            }
+            .pd-btn-cart,
+            .pd-btn-buy {
+                height: 48px;
+                border-radius: 8px !important;
+                font-size: 13px !important;
+                padding: 8px !important;
+                flex-direction: column;
+                gap: 2px;
+                line-height: 1.15;
+            }
+            .pd-btn-buy::after {
+                content: 'Giao nhanh trong 10-15 ngày';
+                display: block;
+                font-size: 10px;
+                font-weight: 500;
+                opacity: .95;
+            }
+            .pd-desc-container {
+                margin-top: 12px !important;
+            }
+            .pd-section-block,
+            .pd-accordion-item {
+                margin-top: 0 !important;
+                padding: 0 !important;
+                border-radius: 12px !important;
+            }
+            .pd-section-block h3::before { display: none; }
+            .pd-mobile-service-strip { display: grid; }
+            .floating-contact {
+                bottom: 92px !important;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .pd-wrapper.pd-hero-card { grid-template-columns: 43% 1fr; gap: 10px !important; }
+            .pd-title { font-size: 16px !important; }
+            .pd-price-now { font-size: 19px !important; }
+            .pd-mobile-guarantee-card .guarantee-grid { gap: 6px; }
+        }
+
     </style>
 </head>
 
@@ -315,9 +678,7 @@
         let currentVariant = null;
 
         function formatVND(val) {
-            const cleaned = String(val ?? '').replace(/[^\d]/g, '');
-            const number = cleaned ? Number(cleaned) : 0;
-            return number.toLocaleString('vi-VN') + ' đ';
+            return Number(val || 0).toLocaleString('vi-VN') + ' đ';
         }
 
         function renderSpecsTable(text) {
@@ -404,31 +765,46 @@
             let safeUsage = (p.usage_manual || 'Đang cập nhật...').replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n|\\n/g, '<br>').replace(/\\n/g, '<br>');
             let specsHTML = renderSpecsTable(p.specifications);
 
+            const discountText = p.discount || '';
+            const soldText = p.sold_text || p.sold || '';
+            const ratingText = p.rating || '4.9';
+            const oldPriceNumber = Number(String(p.old_price || '').replace(/[^\d]/g, '')) || 0;
+            const currentPriceNumber = Number(String(p.current_price || '').replace(/[^\d]/g, '')) || 0;
+            const savePercent = oldPriceNumber > currentPriceNumber && currentPriceNumber > 0 ? Math.round((oldPriceNumber - currentPriceNumber) / oldPriceNumber * 100) : 0;
+
             let html = `
-                <div class="pd-wrapper">
+                <div class="pd-wrapper pd-hero-card">
                     <div class="pd-gallery">
                         <div class="pd-main-img">
-                            <img src="${p.thumbnail || 'images/icon-logo.png'}" id="pd-main-image" onerror="this.src='images/icon-logo.png'">
+                            ${discountText ? `<span class="pd-sale-badge">${discountText}</span>` : ''}
+                            <img src="${p.thumbnail || 'images/icon-logo.png'}" id="pd-main-image" alt="${p.title || 'Sản phẩm'}" onerror="this.src='images/icon-logo.png'">
+                            <span class="pd-img-count">1/${Math.max(images.length, 1)}</span>
                         </div>
                         <div class="pd-thumbs">
                             ${images.map((img, index) => `
-                                <img src="${img || 'images/icon-logo.png'}" class="pd-thumb ${index === 0 ? 'active' : ''}" onclick="switchImage('${img}', this)" onerror="this.style.display='none'">
+                                <img src="${img || 'images/icon-logo.png'}" class="pd-thumb ${index === 0 ? 'active' : ''}" onclick="switchImage('${img}', this, ${index + 1}, ${Math.max(images.length, 1)})" onerror="this.style.display='none'">
                             `).join('')}
                         </div>
                     </div>
 
                     <div class="pd-info">
-                        <div class="pd-brand">${p.brand}</div>
-                        <h1 class="pd-title">${p.title}</h1>
+                        <div class="pd-brand">${p.brand || ''}</div>
+                        <h1 class="pd-title">${p.title || ''}</h1>
+
+                        <div class="pd-meta-line">
+                            <span><i class="fa-solid fa-star"></i> ${ratingText} ${p.review_count ? `(${p.review_count} đánh giá)` : ''}</span>
+                            ${soldText ? `<span>Đã bán ${soldText}</span>` : ''}
+                        </div>
 
                         <div class="pd-price-box">
                             <span class="pd-price-now" id="pd-price-view">${formatVND(p.current_price)}</span>
                             ${p.old_price ? `<span class="pd-price-old">${formatVND(p.old_price)}</span>` : ''}
                         </div>
+                        ${savePercent ? `<div class="pd-save-text">Tiết kiệm ${formatVND(oldPriceNumber - currentPriceNumber)} (${savePercent}%)</div>` : ''}
 
                         ${variants.length > 0 ? `
                             <div class="pd-variants">
-                                <span class="pd-variant-label">Dung tích / Phân loại:</span>
+                                <span class="pd-variant-label">Dung tích / Phân loại</span>
                                 <div class="pd-variant-list">
                                     ${variants.map((v, i) => `
                                         <button class="pd-btn-v ${i === 0 ? 'active' : ''}" onclick="selectVariant(${JSON.stringify(v).replace(/"/g, '&quot;')}, this, '${p.current_price}')">
@@ -439,6 +815,16 @@
                             </div>
                         ` : ''}
 
+                        <div class="pd-quantity-row">
+                            <span>Số lượng</span>
+                            <div class="pd-qty-control">
+                                <button type="button" onclick="changeProductQty(-1)">−</button>
+                                <input type="text" id="pd-qty" value="1" inputmode="numeric" aria-label="Số lượng">
+                                <button type="button" onclick="changeProductQty(1)">+</button>
+                            </div>
+                            <span class="pd-stock-label" id="pd-stock-label">Còn hàng</span>
+                        </div>
+
                         <div class="pd-status" id="pd-status-view"></div>
 
                         <div class="pd-actions">
@@ -448,33 +834,54 @@
                     </div>
                 </div>
 
-                <div class="pd-desc-container">
-                    <div class="pd-desc-tabs" id="pd-tabs-nav">
-                        <a href="#sec-desc" class="pd-tab-link active">Mô tả sản phẩm</a>
-                        <a href="#sec-spec" class="pd-tab-link">Thông số</a>
-                        <a href="#sec-ingr" class="pd-tab-link">Thành phần</a>
-                        <a href="#sec-usage" class="pd-tab-link">HDSD</a>
+                <div class="pd-mobile-guarantee-card">
+                    <h3><i class="fa-solid fa-tag"></i> Ưu đãi</h3>
+                    <div class="guarantee-grid">
+                        <div class="guarantee-box">
+                            <i class="fa-solid fa-award"></i>
+                            <span>Chính hãng<br>Nhật Bản 100%</span>
+                        </div>
+                        <div class="guarantee-box">
+                            <i class="fa-solid fa-truck-fast"></i>
+                            <span>Giao hàng<br>15.000đ</span>
+                        </div>
+                        <div class="guarantee-box">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <span>Đền bù 100%<br>hàng giả</span>
+                        </div>
+                        <div class="guarantee-box">
+                            <i class="fa-solid fa-handshake-angle"></i>
+                            <span>Cam kết<br>chính hãng</span>
+                        </div>
                     </div>
-                    
-                    <div id="sec-desc" class="pd-section-block">
-                        <h3>Mô tả sản phẩm</h3>
+                </div>
+
+                <div class="pd-desc-container pd-accordion-list">
+                    <details id="sec-desc" class="pd-accordion-item" open>
+                        <summary><span class="pd-accordion-title"><i class="fa-regular fa-clipboard"></i> Mô tả sản phẩm</span><i class="fa-solid fa-chevron-right"></i></summary>
                         <div class="pd-section-content">${safeDescription}</div>
-                    </div>
+                    </details>
 
-                    <div id="sec-spec" class="pd-section-block">
-                        <h3>Thông số</h3>
+                    <details id="sec-spec" class="pd-accordion-item">
+                        <summary><span class="pd-accordion-title"><i class="fa-solid fa-list-ul"></i> Thông số sản phẩm</span><i class="fa-solid fa-chevron-right"></i></summary>
                         <div class="pd-section-content">${specsHTML}</div>
-                    </div>
+                    </details>
 
-                    <div id="sec-ingr" class="pd-section-block">
-                        <h3>Thành phần</h3>
+                    <details id="sec-ingr" class="pd-accordion-item">
+                        <summary><span class="pd-accordion-title"><i class="fa-solid fa-flask"></i> Thành phần</span><i class="fa-solid fa-chevron-right"></i></summary>
                         <div class="pd-section-content">${safeIngr}</div>
-                    </div>
+                    </details>
 
-                    <div id="sec-usage" class="pd-section-block">
-                        <h3>HDSD</h3>
+                    <details id="sec-usage" class="pd-accordion-item">
+                        <summary><span class="pd-accordion-title"><i class="fa-solid fa-circle-info"></i> Hướng dẫn sử dụng</span><i class="fa-solid fa-chevron-right"></i></summary>
                         <div class="pd-section-content">${safeUsage}</div>
-                    </div>
+                    </details>
+                </div>
+
+                <div class="pd-mobile-service-strip">
+                    <div><i class="fa-solid fa-truck-fast"></i> Giao hàng 10-15 ngày</div>
+                    <div><i class="fa-solid fa-money-bill-wave"></i> 15.000đ</div>
+                    <div><i class="fa-regular fa-clock"></i> Theo dõi đơn</div>
                 </div>
             `;
 
@@ -536,6 +943,20 @@
             });
         }
 
+        function getSelectedQuantity() {
+            const input = document.getElementById('pd-qty');
+            const qty = Math.max(1, parseInt(input?.value || '1', 10) || 1);
+            if (input) input.value = qty;
+            return qty;
+        }
+
+        function changeProductQty(delta) {
+            const input = document.getElementById('pd-qty');
+            if (!input) return;
+            const current = Math.max(1, parseInt(input.value || '1', 10) || 1);
+            input.value = Math.max(1, current + delta);
+        }
+
         function handleAddToCart() {
             if (!currentProduct) return;
             const v = currentVariant || {};
@@ -548,7 +969,8 @@
                 variant: v.name || 'Mặc định',
                 price: v.price || currentProduct.current_price,
                 status: v.status || 'instock', 
-                date: v.date || v.expected_date || 'Đang cập nhật'
+                date: v.date || v.expected_date || 'Đang cập nhật',
+                quantity: getSelectedQuantity()
             };
             
             if(typeof addToCart === 'function') {
@@ -587,27 +1009,25 @@
                 price: v.price || currentProduct.current_price,
                 status: v.status || 'instock',
                 date: v.date || v.expected_date || 'Đang cập nhật',
-                quantity: 1
+                quantity: getSelectedQuantity()
             };
 
             if (typeof openBuyNowCheckout === 'function') {
                 openBuyNowCheckout(buyNowItem);
             } else if (typeof openCheckoutModal === 'function') {
-                // Fallback an toàn nếu trình duyệt đang cache file cart.js cũ
-                const oldCart = Array.isArray(cart) ? [...cart] : [];
-                cart = [buyNowItem];
-                openCheckoutModal();
-                cart = oldCart;
-                if (typeof updateCartUI === 'function') updateCartUI();
+                openCheckoutModal([buyNowItem], 'buy-now');
             } else {
                 alert('Lỗi: File cart.js chưa được tải!');
             }
         }
 
-        function switchImage(url, el) {
-            document.getElementById('pd-main-image').src = url;
+        function switchImage(url, el, index = 1, total = 1) {
+            const mainImage = document.getElementById('pd-main-image');
+            if (mainImage) mainImage.src = url;
             document.querySelectorAll('.pd-thumb').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
+            if (el) el.classList.add('active');
+            const counter = document.querySelector('.pd-img-count');
+            if (counter) counter.innerText = `${index}/${total}`;
         }
 
         function selectVariant(v, el, basePrice) {
@@ -617,11 +1037,19 @@
             el.classList.add('active');
 
             if (v.image) {
-                document.getElementById('pd-main-image').src = v.image;
-                document.querySelectorAll('.pd-thumb').forEach(t => {
+                const mainImage = document.getElementById('pd-main-image');
+                if (mainImage) mainImage.src = v.image;
+                let activeIndex = 1;
+                const thumbs = document.querySelectorAll('.pd-thumb');
+                thumbs.forEach((t, idx) => {
                     t.classList.remove('active');
-                    if(t.src.includes(v.image)) t.classList.add('active');
+                    if(t.src.includes(v.image)) {
+                        t.classList.add('active');
+                        activeIndex = idx + 1;
+                    }
                 });
+                const counter = document.querySelector('.pd-img-count');
+                if (counter) counter.innerText = `${activeIndex}/${Math.max(thumbs.length, 1)}`;
             }
 
             const displayPrice = v.price ? v.price : basePrice;
@@ -634,7 +1062,12 @@
             const box = document.getElementById('pd-status-view');
             if (!box) return;
 
+            const stockLabel = document.getElementById('pd-stock-label');
             if (v.status === 'instock') {
+                if (stockLabel) {
+                    stockLabel.innerText = 'Còn hàng';
+                    stockLabel.style.color = '#27ae60';
+                }
                 box.innerHTML = `
                     <div style="margin-bottom: 5px; display: flex; align-items: center; gap: 6px;">
                         <i class="fas fa-check-circle pd-text-green"></i> 
@@ -644,6 +1077,10 @@
                 `;
             } else if (v.status === 'order' || v.status === 'out') {
                 const expectedDate = v.date || v.expected_date || 'Đang cập nhật';
+                if (stockLabel) {
+                    stockLabel.innerText = 'Hàng order';
+                    stockLabel.style.color = 'var(--primary-red)';
+                }
                 
                 box.innerHTML = `
                     <div style="margin-bottom: 5px; display: flex; align-items: center; gap: 6px;">
@@ -653,6 +1090,10 @@
                     <div>Dự kiến có hàng lại: <strong class="pd-text-red">${expectedDate}</strong></div>
                 `;
             } else {
+                if (stockLabel) {
+                    stockLabel.innerText = 'Hết hàng';
+                    stockLabel.style.color = '#999';
+                }
                 box.innerHTML = `<div><i class="fas fa-times-circle" style="color:#999;"></i> <strong>Hết hàng tạm thời</strong></div>`;
             }
         }
