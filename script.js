@@ -9,43 +9,19 @@ const state = {
     minPrice: null,
     maxPrice: null
 };
-// Đồng bộ thứ tự kéo thả từ trang admin nếu admin lưu fallback vào localStorage.
-// Lưu ý: để khách ở mọi thiết bị đều thấy đúng, backend vẫn cần lưu và trả về display_order.
-const MORACHI_PRODUCT_ORDER_KEY = "morachi_product_order_ids";
-
-function getAdminSavedProductOrderIds() {
-    try {
-        const raw = localStorage.getItem(MORACHI_PRODUCT_ORDER_KEY);
-        const ids = JSON.parse(raw || "[]");
-        return Array.isArray(ids) ? ids.map(String).filter(Boolean) : [];
-    } catch (e) {
-        return [];
-    }
+// Trang chủ chỉ lấy thứ tự sản phẩm từ API/backend.
+// Không dùng localStorage ở trang khách để điện thoại/máy tính luôn đồng bộ cùng một thứ tự admin đã lưu.
+function normalizeProductsFromApi(products) {
+    return (Array.isArray(products) ? products : []).map((item, index) => ({
+        ...item,
+        __api_index: index
+    }));
 }
 
-function applyAdminSavedProductOrder(products) {
-    const list = Array.isArray(products) ? products.map(item => ({ ...item })) : [];
-    const savedIds = getAdminSavedProductOrderIds();
-
-    if (!savedIds.length) {
-        return list;
-    }
-
-    const orderMap = new Map(savedIds.map((id, index) => [String(id), index + 1]));
-    const maxSavedOrder = savedIds.length;
-
-    return list.map((item, index) => {
-        const savedOrder = orderMap.get(String(item.id));
-        const apiOrder = Number(item.display_order ?? item.sort_order ?? item.position);
-        const fallbackOrder = Number.isFinite(apiOrder) && apiOrder > 0
-            ? apiOrder
-            : maxSavedOrder + index + 1;
-
-        return {
-            ...item,
-            display_order: savedOrder || fallbackOrder
-        };
-    });
+function hasDisplayOrder(item) {
+    const raw = item && (item.display_order ?? item.sort_order ?? item.position);
+    const number = Number(raw);
+    return Number.isFinite(number) && number > 0;
 }
 
 
@@ -188,9 +164,13 @@ function renderProducts(products) {
 
 
 function getDisplayOrder(item) {
-    const raw = item.display_order ?? item.sort_order ?? item.position;
+    const raw = item && (item.display_order ?? item.sort_order ?? item.position);
     const number = Number(raw);
-    return Number.isFinite(number) && number > 0 ? number : 999999;
+    if (Number.isFinite(number) && number > 0) return number;
+
+    // Nếu dữ liệu cũ chưa có display_order, giữ nguyên thứ tự API trả về để không làm đảo lộn sản phẩm.
+    const apiIndex = Number(item && item.__api_index);
+    return 999999 + (Number.isFinite(apiIndex) ? apiIndex : 0);
 }
 
 // --- Logic lọc và sắp xếp tự động ---
@@ -227,11 +207,17 @@ function applyClientFilters() {
         products.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
     } else if (state.sort === "bestseller") {
         products.sort((a, b) => {
+            const aHasOrder = hasDisplayOrder(a);
+            const bHasOrder = hasDisplayOrder(b);
             const orderA = getDisplayOrder(a);
             const orderB = getDisplayOrder(b);
 
-            // Ưu tiên thứ tự kéo thả từ admin. Số nhỏ hiển thị trước.
-            if (orderA !== orderB) return orderA - orderB;
+            // Tab mặc định trên trang chủ ưu tiên đúng thứ tự admin đã kéo thả.
+            // Nếu backend đã có display_order, mọi thiết bị sẽ hiển thị giống admin.
+            if (aHasOrder || bHasOrder) {
+                if (aHasOrder !== bHasOrder) return aHasOrder ? -1 : 1;
+                if (orderA !== orderB) return orderA - orderB;
+            }
 
             const aIsBest = (a.discount || "").toLowerCase().includes("bán chạy") ? 1 : 0;
             const bIsBest = (b.discount || "").toLowerCase().includes("bán chạy") ? 1 : 0;
@@ -383,24 +369,12 @@ async function loadProducts() {
     const productList = document.getElementById("product-list");
     if (!productList) return;
 
-    const cacheKey = 'morachi_products_cache';
-    const cacheTimeKey = 'morachi_products_cache_time';
-    const cachedData = sessionStorage.getItem(cacheKey);
-    const cachedTime = sessionStorage.getItem(cacheTimeKey);
-
-    const isCacheValid = cachedData && cachedTime && (new Date().getTime() - parseInt(cachedTime) < 300000);
-
-    if (isCacheValid) {
-        try {
-            const products = JSON.parse(cachedData);
-            state.allProducts = Array.isArray(products) ? applyAdminSavedProductOrder(products) : [];
-            renderBrandFilters(state.allProducts);
-            applyClientFilters(); 
-            return; 
-        } catch(e) {
-            console.error("Lỗi đọc cache:", e);
-        }
-    }
+    // Xóa cache cũ nếu trình duyệt đã từng lưu phiên bản trước đó.
+    // Việc này giúp sau khi admin đổi thứ tự, trang chủ tải lại sẽ lấy thứ tự mới từ server ngay.
+    try {
+        sessionStorage.removeItem('morachi_products_cache');
+        sessionStorage.removeItem('morachi_products_cache_time');
+    } catch (e) {}
 
     productList.innerHTML = Array(8).fill(`
         <div class="skel-card">
@@ -412,15 +386,14 @@ async function loadProducts() {
     `).join('');
 
     try {
-        const response = await fetch(`${API_BASE_URL}/products?t=${new Date().getTime()}`);
+        const response = await fetch(`${API_BASE_URL}/products?t=${Date.now()}`, {
+            cache: "no-store",
+            headers: { "Cache-Control": "no-cache" }
+        });
         if (!response.ok) throw new Error(`API lỗi: ${response.status}`);
 
         const products = await response.json();
-        
-        sessionStorage.setItem(cacheKey, JSON.stringify(products));
-        sessionStorage.setItem(cacheTimeKey, new Date().getTime().toString());
-
-        state.allProducts = Array.isArray(products) ? applyAdminSavedProductOrder(products) : [];
+        state.allProducts = normalizeProductsFromApi(products);
 
         renderBrandFilters(state.allProducts);
         applyClientFilters(); 

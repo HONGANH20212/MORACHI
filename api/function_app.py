@@ -59,6 +59,23 @@ def get_blob_container_client():
     blob_service_client = BlobServiceClient.from_connection_string(BLOB_CONNECTION_STRING)
     return blob_service_client.get_container_client(BLOB_CONTAINER_NAME)
 
+def to_display_order(value, default=999999):
+    """Chuẩn hóa thứ tự hiển thị sản phẩm. Số nhỏ sẽ hiển thị trước."""
+    try:
+        number = int(float(value))
+        return number if number > 0 else default
+    except (TypeError, ValueError):
+        return default
+
+def to_sort_timestamp(value):
+    """Chuyển created_at/updated_at sang timestamp để sort phụ, lỗi thì trả 0."""
+    try:
+        if not value:
+            return 0
+        return datetime.fromisoformat(str(value).replace("Z", "+00:00")).timestamp()
+    except Exception:
+        return 0
+
 def normalize_product(data, existing=None):
     """Chuẩn hóa dữ liệu sản phẩm, hỗ trợ xóa rỗng dữ liệu tùy chọn"""
     existing = existing or {}
@@ -90,7 +107,12 @@ def normalize_product(data, existing=None):
         "ingredients": get_field("ingredients"),
         "usage_manual": get_field("usage_manual"),
         "status": get_field("status", "active"),
-        "variants": data.get("variants") if "variants" in data else existing.get("variants", [])
+        "variants": data.get("variants") if "variants" in data else existing.get("variants", []),
+        # Trường này dùng để đồng bộ thứ tự kéo thả từ admin ra trang chủ trên mọi thiết bị.
+        "display_order": to_display_order(
+            data.get("display_order") if "display_order" in data else existing.get("display_order"),
+            to_display_order(existing.get("display_order"), 999999)
+        )
     }
 
 def parse_multipart_file(req: func.HttpRequest):
@@ -142,8 +164,11 @@ def products(req: func.HttpRequest) -> func.HttpResponse:
             # Lấy danh sách sản phẩm (Bỏ qua các bản ghi đơn hàng)
             query = "SELECT * FROM c WHERE c.status = 'active' AND NOT IS_DEFINED(c.type)"
             items = list(container.query_items(query=query, enable_cross_partition_query=True))
-            # Sắp xếp mới nhất lên đầu
-            items.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+            # Ưu tiên thứ tự admin đã kéo thả. Sản phẩm chưa có display_order sẽ nằm sau, mới hơn lên trước.
+            items.sort(key=lambda x: (
+                to_display_order(x.get("display_order"), 999999),
+                -to_sort_timestamp(x.get("created_at"))
+            ))
             return json_response(items)
 
         if req.method == "POST":
@@ -157,6 +182,60 @@ def products(req: func.HttpRequest) -> func.HttpResponse:
             })
             container.create_item(body=product)
             return json_response({"message": "Tạo sản phẩm thành công", "item": product}, 201)
+
+    except Exception as e:
+        return json_response({"error": str(e)}, 500)
+
+@app.route(route="products/reorder", methods=["PUT", "OPTIONS"])
+def reorder_products(req: func.HttpRequest) -> func.HttpResponse:
+    """Lưu thứ tự kéo thả sản phẩm từ admin vào Cosmos DB."""
+    if req.method == "OPTIONS": return options_response()
+    container = get_cosmos_container()
+    try:
+        body = req.get_json()
+        raw_orders = body.get("orders") or body.get("items") or []
+        if not isinstance(raw_orders, list) or not raw_orders:
+            return json_response({"error": "Thiếu danh sách thứ tự sản phẩm"}, 400)
+
+        normalized_orders = []
+        for index, row in enumerate(raw_orders):
+            if not isinstance(row, dict):
+                continue
+            product_id = str(row.get("id", "")).strip()
+            if not product_id:
+                continue
+            normalized_orders.append({
+                "id": product_id,
+                "display_order": to_display_order(row.get("display_order"), index + 1)
+            })
+
+        if not normalized_orders:
+            return json_response({"error": "Danh sách thứ tự không hợp lệ"}, 400)
+
+        updated_count = 0
+        now = datetime.utcnow().isoformat() + "Z"
+
+        for order_item in normalized_orders:
+            query = "SELECT * FROM c WHERE c.id = @id AND NOT IS_DEFINED(c.type)"
+            items = list(container.query_items(
+                query=query,
+                parameters=[{"name": "@id", "value": order_item["id"]}],
+                enable_cross_partition_query=True
+            ))
+            if not items:
+                continue
+
+            product = items[0]
+            product["display_order"] = order_item["display_order"]
+            product["updated_at"] = now
+            container.replace_item(item=product["id"], body=product)
+            updated_count += 1
+
+        return json_response({
+            "message": "Đã lưu thứ tự sản phẩm",
+            "updated": updated_count,
+            "total": len(normalized_orders)
+        })
 
     except Exception as e:
         return json_response({"error": str(e)}, 500)
