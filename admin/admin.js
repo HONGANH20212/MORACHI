@@ -5,7 +5,63 @@ var allOrdersData = [];
 
 // =========================================================
 // TÍNH NĂNG SẮP XẾP SẢN PHẨM BẰNG KÉO THẢ
+// - Lưu vào API nếu backend hỗ trợ display_order
+// - Đồng thời lưu localStorage để refresh không bị quay về thứ tự cũ
 // =========================================================
+const MORACHI_PRODUCT_ORDER_KEY = "morachi_product_order_ids";
+
+window.clearShopProductCache = function() {
+    try {
+        sessionStorage.removeItem("morachi_products_cache");
+        sessionStorage.removeItem("morachi_products_cache_time");
+    } catch (e) {}
+};
+
+window.getSavedProductOrderIds = function() {
+    try {
+        const raw = localStorage.getItem(MORACHI_PRODUCT_ORDER_KEY);
+        const ids = JSON.parse(raw || "[]");
+        return Array.isArray(ids) ? ids.map(String).filter(Boolean) : [];
+    } catch (e) {
+        return [];
+    }
+};
+
+window.saveProductOrderIdsLocal = function(ids) {
+    try {
+        const cleanIds = [...new Set((ids || []).map(String).filter(Boolean))];
+        localStorage.setItem(MORACHI_PRODUCT_ORDER_KEY, JSON.stringify(cleanIds));
+    } catch (e) {
+        console.warn("Không lưu được thứ tự sản phẩm vào localStorage:", e);
+    }
+};
+
+window.applySavedProductOrder = function(products) {
+    const list = Array.isArray(products) ? products.map(p => ({ ...p })) : [];
+    const savedIds = window.getSavedProductOrderIds();
+
+    if (!savedIds.length) {
+        return list.map((p, index) => ({
+            ...p,
+            display_order: Number(p.display_order || p.sort_order || p.position || index + 1)
+        }));
+    }
+
+    const orderMap = new Map(savedIds.map((id, index) => [String(id), index + 1]));
+    const maxSavedOrder = savedIds.length;
+
+    return list.map((p, index) => {
+        const savedOrder = orderMap.get(String(p.id));
+        const apiOrder = Number(p.display_order || p.sort_order || p.position);
+        const fallbackOrder = Number.isFinite(apiOrder) && apiOrder > 0 ? apiOrder : maxSavedOrder + index + 1;
+
+        return {
+            ...p,
+            display_order: savedOrder || fallbackOrder
+        };
+    });
+};
+
 window.getProductDisplayOrder = function(product, fallbackIndex = 999999) {
     const raw = product.display_order ?? product.sort_order ?? product.position;
     const number = Number(raw);
@@ -13,7 +69,7 @@ window.getProductDisplayOrder = function(product, fallbackIndex = 999999) {
 };
 
 window.sortProductsForAdmin = function(products) {
-    return [...products].sort((a, b) => {
+    return [...(products || [])].sort((a, b) => {
         const orderA = window.getProductDisplayOrder(a, 999999);
         const orderB = window.getProductDisplayOrder(b, 999999);
 
@@ -25,6 +81,15 @@ window.sortProductsForAdmin = function(products) {
     });
 };
 
+// Alias để giữ tương thích với code đang gọi tên cũ
+function getDisplayOrder(product, index = 0) {
+    return window.getProductDisplayOrder(product, index + 1);
+}
+
+function sortProductsByDisplayOrder(products) {
+    return window.sortProductsForAdmin(window.applySavedProductOrder(products));
+}
+
 window.getNextProductDisplayOrder = function() {
     if (!allProductsData || allProductsData.length === 0) return 1;
 
@@ -34,13 +99,6 @@ window.getNextProductDisplayOrder = function() {
     }, 0);
 
     return maxOrder + 1;
-};
-
-window.clearShopProductCache = function() {
-    try {
-        sessionStorage.removeItem('morachi_products_cache');
-        sessionStorage.removeItem('morachi_products_cache_time');
-    } catch (e) {}
 };
 
 window.showReorderStatus = function(message, type = "info") {
@@ -59,7 +117,7 @@ window.showReorderStatus = function(message, type = "info") {
     clearTimeout(window.__reorderStatusTimer);
     window.__reorderStatusTimer = setTimeout(() => {
         el.classList.remove("show");
-    }, 2500);
+    }, 3000);
 };
 
 window.buildProductPayloadForOrderSave = function(product) {
@@ -105,31 +163,29 @@ window.persistProductOrder = async function() {
         return productById.get(String(nextVisibleId)) || product;
     });
 
-    const changedProducts = [];
+    // Đánh lại thứ tự từ 1 -> n
     newGlobalOrder.forEach((product, index) => {
-        const newOrder = index + 1;
-        if (Number(product.display_order) !== newOrder) {
-            product.display_order = newOrder;
-            changedProducts.push(product);
-        } else {
-            product.display_order = newOrder;
-        }
+        product.display_order = index + 1;
     });
 
     allProductsData = newGlobalOrder;
 
-    if (changedProducts.length === 0) return;
+    // LƯU LOCAL TRƯỚC: giúp refresh không bị quay về thứ tự cũ dù backend chưa hỗ trợ display_order
+    const allIdsInNewOrder = newGlobalOrder.map(p => String(p.id));
+    window.saveProductOrderIdsLocal(allIdsInNewOrder);
+    window.clearShopProductCache();
 
     window.showReorderStatus('<i class="fas fa-spinner fa-spin"></i> Đang lưu thứ tự sản phẩm...', 'info');
 
-    const orders = allProductsData.map(product => ({
+    const orders = newGlobalOrder.map(product => ({
         id: product.id,
         display_order: Number(product.display_order) || 999999
     }));
 
+    let savedToServer = false;
+
     try {
         // Ưu tiên endpoint riêng nếu backend có hỗ trợ.
-        let saved = false;
         try {
             const bulkRes = await fetch(`${API_BASE_URL}/products/reorder`, {
                 method: "PUT",
@@ -138,34 +194,39 @@ window.persistProductOrder = async function() {
             });
 
             if (bulkRes.ok) {
-                saved = true;
+                savedToServer = true;
             }
         } catch (e) {
-            saved = false;
+            savedToServer = false;
         }
 
         // Nếu backend chưa có /products/reorder thì dùng API cập nhật sản phẩm hiện có.
-        if (!saved) {
-            for (const product of changedProducts) {
+        if (!savedToServer) {
+            const results = [];
+            for (const product of newGlobalOrder) {
                 const res = await fetch(`${API_BASE_URL}/products/${product.id}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(window.buildProductPayloadForOrderSave(product))
                 });
-
-                if (!res.ok) {
-                    throw new Error("Không lưu được thứ tự sản phẩm");
-                }
+                results.push(res);
             }
+
+            savedToServer = results.every(res => res.ok);
         }
 
-        window.clearShopProductCache();
-        window.showReorderStatus('<i class="fas fa-check-circle"></i> Đã lưu thứ tự hiển thị sản phẩm!', 'success');
+        if (savedToServer) {
+            window.showReorderStatus('<i class="fas fa-check-circle"></i> Đã lưu thứ tự hiển thị sản phẩm!', 'success');
+        } else {
+            window.showReorderStatus('<i class="fas fa-info-circle"></i> Đã lưu thứ tự trên trình duyệt. Backend chưa lưu display_order.', 'warning');
+        }
+
         window.renderTable(window.sortProductsForAdmin(allProductsData));
     } catch (err) {
         console.error(err);
-        window.showReorderStatus('<i class="fas fa-exclamation-triangle"></i> Lưu thứ tự thất bại. Vui lòng thử lại!', 'error');
-        window.loadAdminProducts();
+        // Không reload lại vì sẽ làm người dùng tưởng bị mất thứ tự. LocalStorage vẫn giữ thứ tự đã kéo.
+        window.showReorderStatus('<i class="fas fa-info-circle"></i> Đã giữ thứ tự trên trình duyệt. API chưa lưu được.', 'warning');
+        window.renderTable(window.sortProductsForAdmin(allProductsData));
     }
 };
 
@@ -252,8 +313,10 @@ window.loadAdminProducts = async function() {
         const response = await fetch(`${API_BASE_URL}/products?t=${new Date().getTime()}`);
         const products = await response.json();
         
-        allProductsData = Array.isArray(products) ? products : [];
-        
+        allProductsData = Array.isArray(products)
+            ? sortProductsByDisplayOrder(products)
+            : [];
+
         window.updateDashboardStats(allProductsData);
         window.populateBrandFilter(allProductsData);
         window.renderTable(allProductsData);
@@ -313,7 +376,7 @@ window.filterProducts = function(keyword, brandFilter) {
         const brandMatch = brandFilter ? p.brand === brandFilter : true;
         return titleMatch && brandMatch;
     });
-    window.renderTable(window.sortProductsForAdmin(filtered));
+    window.renderTable(sortProductsByDisplayOrder(filtered));
 }
 
 window.bindAdminSearch = function() {

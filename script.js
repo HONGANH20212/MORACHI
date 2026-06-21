@@ -10,6 +10,39 @@ const state = {
     maxPrice: null
 };
 
+const MORACHI_PRODUCT_ORDER_KEY = "morachi_product_order_ids";
+
+function getSavedProductOrderIds() {
+    try {
+        const raw = localStorage.getItem(MORACHI_PRODUCT_ORDER_KEY);
+        const ids = JSON.parse(raw || "[]");
+        return Array.isArray(ids) ? ids.map(String).filter(Boolean) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function applySavedProductOrder(products) {
+    const list = Array.isArray(products) ? products.map(p => ({ ...p })) : [];
+    const savedIds = getSavedProductOrderIds();
+
+    if (!savedIds.length) return list;
+
+    const orderMap = new Map(savedIds.map((id, index) => [String(id), index + 1]));
+    const maxSavedOrder = savedIds.length;
+
+    return list.map((p, index) => {
+        const savedOrder = orderMap.get(String(p.id));
+        const apiOrder = Number(p.display_order || p.sort_order || p.position);
+        const fallbackOrder = Number.isFinite(apiOrder) && apiOrder > 0 ? apiOrder : maxSavedOrder + index + 1;
+
+        return {
+            ...p,
+            display_order: savedOrder || fallbackOrder
+        };
+    });
+}
+
 // --- Các hàm tiện ích ---
 function parsePrice(value) {
     if (value === null || value === undefined) return 0;
@@ -269,7 +302,7 @@ async function loadProducts() {
     if (isCacheValid) {
         try {
             const products = JSON.parse(cachedData);
-            state.allProducts = Array.isArray(products) ? products : [];
+            state.allProducts = applySavedProductOrder(Array.isArray(products) ? products : []);
             renderBrandFilters(state.allProducts);
             applyClientFilters(); 
             return; 
@@ -296,7 +329,7 @@ async function loadProducts() {
         sessionStorage.setItem(cacheKey, JSON.stringify(products));
         sessionStorage.setItem(cacheTimeKey, new Date().getTime().toString());
 
-        state.allProducts = Array.isArray(products) ? products : [];
+        state.allProducts = applySavedProductOrder(Array.isArray(products) ? products : []);
 
         renderBrandFilters(state.allProducts);
         applyClientFilters(); 
