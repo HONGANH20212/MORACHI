@@ -293,6 +293,104 @@ def brands(req: func.HttpRequest) -> func.HttpResponse:
     except Exception as e:
         return json_response({"error": str(e)}, 500)
 
+
+def clean_customer_text(value):
+    """Làm sạch dữ liệu text khách hàng nhưng không làm thay đổi logic đơn hàng."""
+    if value is None:
+        return ""
+    text = str(value).strip()
+    if not text or text.lower() in ("undefined", "null", "none"):
+        return ""
+    return text
+
+def first_customer_value(*values):
+    """Lấy giá trị đầu tiên không rỗng từ nhiều tên field khác nhau."""
+    for value in values:
+        text = clean_customer_text(value)
+        if text:
+            return text
+    return ""
+
+def join_address_parts(*parts):
+    """Ghép địa chỉ và hạn chế lặp lại phường/quận/tỉnh nếu đơn đã gửi địa chỉ đầy đủ."""
+    result = []
+    for part in parts:
+        text = clean_customer_text(part)
+        if not text:
+            continue
+        normalized = " ".join(text.lower().split())
+        exists = False
+        for current in result:
+            current_normalized = " ".join(str(current).lower().split())
+            if normalized in current_normalized or current_normalized in normalized:
+                exists = True
+                break
+        if not exists:
+            result.append(text)
+    return ", ".join(result)
+
+def normalize_customer_info_for_order(body):
+    """Giữ nguyên customer_info cũ và bổ sung address chuẩn để admin hiển thị được."""
+    body = body or {}
+    customer_info = body.get("customer_info", {})
+    if not isinstance(customer_info, dict):
+        customer_info = {}
+
+    normalized = dict(customer_info)
+
+    name = first_customer_value(
+        customer_info.get("name"), body.get("customer_name"), body.get("name")
+    )
+    phone = first_customer_value(
+        customer_info.get("phone"), body.get("customer_phone"), body.get("phone")
+    )
+
+    detail_address = first_customer_value(
+        customer_info.get("address"),
+        customer_info.get("address_detail"),
+        customer_info.get("detail_address"),
+        customer_info.get("street"),
+        body.get("address"),
+        body.get("address_detail"),
+        body.get("detail_address"),
+        body.get("street")
+    )
+    ward = first_customer_value(
+        customer_info.get("ward"), customer_info.get("ward_name"),
+        body.get("ward"), body.get("ward_name")
+    )
+    district = first_customer_value(
+        customer_info.get("district"), customer_info.get("dist"), customer_info.get("district_name"),
+        body.get("district"), body.get("dist"), body.get("district_name")
+    )
+    province = first_customer_value(
+        customer_info.get("province"), customer_info.get("prov"), customer_info.get("city"), customer_info.get("province_name"),
+        body.get("province"), body.get("prov"), body.get("city"), body.get("province_name")
+    )
+    full_address = first_customer_value(
+        customer_info.get("full_address"), customer_info.get("shipping_address"), customer_info.get("customer_address"),
+        body.get("full_address"), body.get("shipping_address"), body.get("customer_address")
+    )
+
+    address = join_address_parts(full_address or detail_address, ward, district, province)
+
+    if name:
+        normalized["name"] = name
+    if phone:
+        normalized["phone"] = phone
+    if address:
+        normalized["address"] = address
+    if detail_address:
+        normalized["address_detail"] = detail_address
+    if ward:
+        normalized["ward"] = ward
+    if district:
+        normalized["district"] = district
+    if province:
+        normalized["province"] = province
+
+    return normalized
+
 # --- ROUTES ĐƠN HÀNG & TRỪ KHO ---
 
 @app.route(route="orders", methods=["GET", "POST", "OPTIONS"])
@@ -341,12 +439,15 @@ def orders_api(req: func.HttpRequest) -> func.HttpResponse:
 
             # --- TẠO BẢN GHI ĐƠN HÀNG ---
             now = datetime.utcnow().isoformat() + "Z"
+            customer_info = normalize_customer_info_for_order(body)
+
             order_data = {
                 "id": str(uuid.uuid4()),
                 "brand": "ORDER", # Gom tất cả đơn hàng vào 1 Partition Key để dễ truy vấn
                 "type": "order",
                 "order_id": body.get("order_id"),
-                "customer_info": body.get("customer_info", {}),
+                "customer_info": customer_info,
+                "customer_address": customer_info.get("address", ""),
                 "items": items_list,
                 "total_amount": body.get("total_amount", 0),
                 "payment_method": body.get("payment_method", "cod"),

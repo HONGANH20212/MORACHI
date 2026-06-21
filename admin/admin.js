@@ -741,6 +741,112 @@ if (form) {
     });
 }
 
+
+// =========================================================
+// HỖ TRỢ HIỂN THỊ ĐỊA CHỈ ĐƠN HÀNG
+// Chỉ đọc dữ liệu sẵn có từ đơn hàng, không thay đổi logic đơn hàng.
+// Hỗ trợ nhiều tên field để tránh đơn cũ/đơn mới bị thiếu địa chỉ.
+// =========================================================
+window.escapeAdminHtml = window.escapeAdminHtml || function(value) {
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+};
+
+window.cleanOrderText = window.cleanOrderText || function(value) {
+    const text = String(value ?? "").trim();
+    if (!text || text.toLowerCase() === "undefined" || text.toLowerCase() === "null") return "";
+    return text;
+};
+
+window.firstOrderValue = window.firstOrderValue || function(...values) {
+    for (const value of values) {
+        const text = window.cleanOrderText(value);
+        if (text) return text;
+    }
+    return "";
+};
+
+window.buildOrderAddress = window.buildOrderAddress || function(order) {
+    const o = order || {};
+    const c = o.customer_info || {};
+
+    const detail = window.firstOrderValue(
+        c.address,
+        c.address_detail,
+        c.detail_address,
+        c.street,
+        o.customer_address,
+        o.address,
+        o.address_detail,
+        o.detail_address,
+        o.street
+    );
+
+    const ward = window.firstOrderValue(
+        c.ward,
+        c.ward_name,
+        c.customer_ward,
+        o.ward,
+        o.ward_name,
+        o.customer_ward
+    );
+
+    const district = window.firstOrderValue(
+        c.district,
+        c.dist,
+        c.district_name,
+        c.customer_district,
+        o.district,
+        o.dist,
+        o.district_name,
+        o.customer_district
+    );
+
+    const province = window.firstOrderValue(
+        c.province,
+        c.prov,
+        c.city,
+        c.province_name,
+        c.customer_province,
+        o.province,
+        o.prov,
+        o.city,
+        o.province_name,
+        o.customer_province
+    );
+
+    const fullAddress = window.firstOrderValue(
+        c.full_address,
+        c.shipping_address,
+        c.customer_address,
+        o.full_address,
+        o.shipping_address
+    );
+
+    const parts = [];
+    const addPart = (value) => {
+        const text = window.cleanOrderText(value);
+        if (!text) return;
+        const normalized = text.toLowerCase().replace(/\s+/g, " ");
+        const exists = parts.some(part => {
+            const current = part.toLowerCase().replace(/\s+/g, " ");
+            return current.includes(normalized) || normalized.includes(current);
+        });
+        if (!exists) parts.push(text);
+    };
+
+    addPart(fullAddress || detail);
+    addPart(ward);
+    addPart(district);
+    addPart(province);
+
+    return parts.join(", ");
+};
+
 // =========================================================
 // PHẦN 2: QUẢN LÝ ĐƠN HÀNG
 // =========================================================
@@ -918,6 +1024,11 @@ window.renderOrdersTable = function(ordersList) {
             ? `<div style="margin-top:4px; color:var(--success); font-size:11px; font-weight:500;"><i class="fas fa-truck"></i> SPX: <b>${o.spx_tracking_code}</b></div>` 
             : ``;
 
+        const addressText = window.buildOrderAddress(o);
+        const addressHtml = addressText
+            ? `<div style="font-size:12px; color:#555; margin-top:5px; line-height:1.45; max-width: 280px;"><i class="fas fa-map-marker-alt" style="color:#aaa; font-size:10px; margin-right:4px;"></i>${window.escapeAdminHtml(addressText)}</div>`
+            : `<div style="font-size:12px; color:#bbb; margin-top:5px; line-height:1.45;"><i class="fas fa-map-marker-alt" style="font-size:10px; margin-right:4px;"></i>Chưa có địa chỉ</div>`;
+
         return `
             <tr>
                 <td style="text-align: center;">
@@ -928,8 +1039,9 @@ window.renderOrdersTable = function(ordersList) {
                     <div style="font-size:11px; color:var(--text-light); margin-top:3px;">${timeDisplay}</div>
                 </td>
                 <td>
-                    <div style="font-weight:600; color:var(--text-main); font-size:13px;">${c.name || 'N/A'}</div>
-                    <div style="font-size:12px; color:var(--text-light); margin-top:3px;"><i class="fas fa-phone-alt" style="color:#aaa; font-size:10px;"></i> ${c.phone || ''}</div>
+                    <div style="font-weight:600; color:var(--text-main); font-size:13px;">${window.escapeAdminHtml(c.name || 'N/A')}</div>
+                    <div style="font-size:12px; color:var(--text-light); margin-top:3px;"><i class="fas fa-phone-alt" style="color:#aaa; font-size:10px;"></i> ${window.escapeAdminHtml(c.phone || '')}</div>
+                    ${addressHtml}
                 </td>
                 <td>
                     ${itemDisplay}
@@ -1097,12 +1209,13 @@ window.exportSPX = function() {
     }
 
     let csvContent = "\uFEFF";
-    csvContent += "Mã Đơn,Tên Khách Hàng,Số Điện Thoại,Sản Phẩm Chi Tiết,Tổng Tiền,Trạng Thái,Mã Vận Đơn,Ngày Đặt\n";
+    csvContent += "Mã Đơn,Tên Khách Hàng,Số Điện Thoại,Địa Chỉ Giao Hàng,Sản Phẩm Chi Tiết,Tổng Tiền,Trạng Thái,Mã Vận Đơn,Ngày Đặt\n";
 
     orders.forEach(o => {
         let orderId = o.order_id || "";
         let customerName = o.customer_info ? (o.customer_info.name || "") : "";
         let phone = o.customer_info ? (o.customer_info.phone || "") : "";
+        let address = window.buildOrderAddress(o);
         
         let productsStr = "";
         if (o.items && o.items.length > 0) {
@@ -1128,6 +1241,7 @@ window.exportSPX = function() {
             escapeCSV(orderId),
             escapeCSV(customerName),
             escapeCSV(phone),
+            escapeCSV(address),
             escapeCSV(productsStr),
             total,
             escapeCSV(status),
