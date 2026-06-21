@@ -10,39 +10,6 @@ const state = {
     maxPrice: null
 };
 
-const MORACHI_PRODUCT_ORDER_KEY = "morachi_product_order_ids";
-
-function getSavedProductOrderIds() {
-    try {
-        const raw = localStorage.getItem(MORACHI_PRODUCT_ORDER_KEY);
-        const ids = JSON.parse(raw || "[]");
-        return Array.isArray(ids) ? ids.map(String).filter(Boolean) : [];
-    } catch (e) {
-        return [];
-    }
-}
-
-function applySavedProductOrder(products) {
-    const list = Array.isArray(products) ? products.map(p => ({ ...p })) : [];
-    const savedIds = getSavedProductOrderIds();
-
-    if (!savedIds.length) return list;
-
-    const orderMap = new Map(savedIds.map((id, index) => [String(id), index + 1]));
-    const maxSavedOrder = savedIds.length;
-
-    return list.map((p, index) => {
-        const savedOrder = orderMap.get(String(p.id));
-        const apiOrder = Number(p.display_order || p.sort_order || p.position);
-        const fallbackOrder = Number.isFinite(apiOrder) && apiOrder > 0 ? apiOrder : maxSavedOrder + index + 1;
-
-        return {
-            ...p,
-            display_order: savedOrder || fallbackOrder
-        };
-    });
-}
-
 // --- Các hàm tiện ích ---
 function parsePrice(value) {
     if (value === null || value === undefined) return 0;
@@ -285,6 +252,85 @@ function renderBrandFilters(products) {
 
         brandSection.appendChild(label);
     });
+
+    setupMobileFilterCompact();
+}
+
+
+// =========================================================
+// MOBILE FILTER COMPACT: Thu gọn Khoảng giá / Thương hiệu
+// =========================================================
+function setupMobileFilterCompact() {
+    const isMobile = window.innerWidth <= 768;
+    const sections = document.querySelectorAll(".sidebar .filter-section");
+
+    sections.forEach((section, index) => {
+        const title = section.querySelector("h3");
+        if (!title) return;
+
+        let content = section.querySelector(".filter-content");
+
+        // Bọc phần nội dung bên dưới tiêu đề vào .filter-content để mobile có thể mở/đóng
+        if (!content) {
+            content = document.createElement("div");
+            content.className = "filter-content";
+
+            const children = [...section.children].filter(el => el.tagName !== "H3");
+            children.forEach(el => content.appendChild(el));
+            section.appendChild(content);
+        }
+
+        if (isMobile) {
+            // Mặc định mở Khoảng giá, đóng Thương hiệu để trang gọn hơn
+            if (!section.dataset.mobileInit) {
+                section.classList.toggle("open", index === 0);
+                section.dataset.mobileInit = "true";
+            }
+
+            if (!title.dataset.boundClick) {
+                title.dataset.boundClick = "true";
+                title.addEventListener("click", function () {
+                    if (window.innerWidth <= 768) {
+                        section.classList.toggle("open");
+                    }
+                });
+            }
+        } else {
+            section.classList.remove("open");
+            section.dataset.mobileInit = "";
+        }
+    });
+
+    // Danh sách thương hiệu: mobile hiển thị 2 cột + chỉ hiện 6 brand đầu
+    const brandSection = sections[1];
+    if (!brandSection) return;
+
+    const content = brandSection.querySelector(".filter-content");
+    if (!content) return;
+
+    content.classList.add("brand-list");
+    const labels = content.querySelectorAll("label");
+    let btn = brandSection.querySelector(".btn-show-more-brands");
+
+    if (isMobile && labels.length > 6) {
+        content.classList.add("compact");
+
+        if (!btn) {
+            btn = document.createElement("button");
+            btn.type = "button";
+            btn.className = "btn-show-more-brands";
+            btn.textContent = "Xem thêm thương hiệu";
+            brandSection.appendChild(btn);
+
+            btn.addEventListener("click", function () {
+                content.classList.toggle("expanded");
+                btn.textContent = content.classList.contains("expanded") ? "Thu gọn" : "Xem thêm thương hiệu";
+            });
+        }
+    } else {
+        content.classList.remove("compact", "expanded");
+        if (btn) btn.remove();
+    }
 }
 
 // --- Gọi API lấy dữ liệu (Đã tích hợp Caching & Skeleton chống lưu cache cũ) ---
@@ -302,7 +348,7 @@ async function loadProducts() {
     if (isCacheValid) {
         try {
             const products = JSON.parse(cachedData);
-            state.allProducts = applySavedProductOrder(Array.isArray(products) ? products : []);
+            state.allProducts = Array.isArray(products) ? products : [];
             renderBrandFilters(state.allProducts);
             applyClientFilters(); 
             return; 
@@ -329,7 +375,7 @@ async function loadProducts() {
         sessionStorage.setItem(cacheKey, JSON.stringify(products));
         sessionStorage.setItem(cacheTimeKey, new Date().getTime().toString());
 
-        state.allProducts = applySavedProductOrder(Array.isArray(products) ? products : []);
+        state.allProducts = Array.isArray(products) ? products : [];
 
         renderBrandFilters(state.allProducts);
         applyClientFilters(); 
@@ -483,12 +529,17 @@ function initFloatingContact() {
     document.body.appendChild(container);
 }
 
+window.addEventListener("resize", () => {
+    setupMobileFilterCompact();
+});
+
 // --- Khởi chạy ---
 document.addEventListener("DOMContentLoaded", () => {
     bindSortTabs();
     bindSearch();
     bindPriceFilter();
     loadProducts();
+    setupMobileFilterCompact();
     initFloatingContact(); 
 
     document.querySelectorAll('.price-inputs input').forEach(input => {

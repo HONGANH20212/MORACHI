@@ -695,3 +695,152 @@ button {
         overflow-x: hidden !important;
     }
 }
+
+/* =============================================================
+   MOBILE FILTER COMPACT - Khoảng giá / Thương hiệu gọn hơn
+   ============================================================= */
+@media (max-width: 768px) {
+    .main-layout {
+        display: block !important;
+    }
+
+    .sidebar {
+        width: 100% !important;
+        margin-bottom: 14px !important;
+    }
+
+    .sidebar-wrapper {
+        padding: 12px !important;
+        border-radius: 14px !important;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.03) !important;
+    }
+
+    .filter-divider {
+        display: none !important;
+    }
+
+    .filter-section {
+        margin-bottom: 10px !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+        background: #fff !important;
+    }
+
+    .filter-section h3 {
+        margin: 0 !important;
+        padding: 13px 15px !important;
+        font-size: 15px !important;
+        font-weight: 800 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        cursor: pointer !important;
+        user-select: none !important;
+    }
+
+    .filter-section h3::before {
+        width: 4px !important;
+        height: 16px !important;
+        margin-right: 10px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .filter-section h3::after {
+        content: "+" !important;
+        font-size: 22px !important;
+        font-weight: 800 !important;
+        color: var(--primary-red) !important;
+        line-height: 1 !important;
+        margin-left: auto !important;
+    }
+
+    .filter-section.open h3::after {
+        content: "−" !important;
+    }
+
+    .filter-content {
+        display: none !important;
+        padding: 0 15px 15px !important;
+    }
+
+    .filter-section.open .filter-content {
+        display: block !important;
+    }
+
+    .filter-content .price-inputs,
+    .price-inputs {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 10px !important;
+        margin-bottom: 12px !important;
+    }
+
+    .price-inputs .price-divider {
+        display: none !important;
+    }
+
+    .price-inputs input {
+        min-height: 42px !important;
+        padding: 10px 10px 10px 34px !important;
+        font-size: 16px !important;
+    }
+
+    .input-wrap i {
+        left: 12px !important;
+    }
+
+    .btn-apply {
+        margin-top: 4px !important;
+        padding: 12px !important;
+        font-size: 15px !important;
+        border-radius: 10px !important;
+    }
+
+    .brand-list {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px 12px !important;
+    }
+
+    .brand-list label {
+        margin-bottom: 0 !important;
+        font-size: 14px !important;
+        line-height: 1.35 !important;
+        min-height: 34px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+
+    .brand-list label input[type="checkbox"] {
+        width: 18px !important;
+        height: 18px !important;
+        flex-shrink: 0 !important;
+    }
+
+    .brand-list.compact label:nth-child(n+7) {
+        display: none !important;
+    }
+
+    .brand-list.expanded label:nth-child(n+7) {
+        display: flex !important;
+    }
+
+    .btn-show-more-brands {
+        margin: 10px 15px 15px !important;
+        width: calc(100% - 30px) !important;
+        padding: 10px 12px !important;
+        border: 1px solid var(--border-color) !important;
+        border-radius: 10px !important;
+        background: #fff !important;
+        color: var(--primary-red) !important;
+        font-weight: 700 !important;
+        font-size: 14px !important;
+        cursor: pointer !important;
+    }
+
+    .btn-show-more-brands:hover {
+        background: #fff5f5 !important;
+    }
+}
