@@ -438,9 +438,24 @@
             .pd-qty-control button { width: 32px; }
             .pd-qty-control input { width: 34px; }
             .pd-status {
+                display: block !important;
                 font-size: 11px;
-                margin-bottom: 0;
-                display: none;
+                margin: 8px 0 0;
+                padding: 8px 10px;
+                line-height: 1.45;
+                border: 1px solid #ffd9d9;
+                background: #fffafa;
+                border-radius: 9px;
+                color: #333;
+            }
+            .pd-status > div {
+                margin-bottom: 3px !important;
+            }
+            .pd-status > div:last-child {
+                margin-bottom: 0 !important;
+            }
+            .pd-status strong {
+                font-size: 12px;
             }
             .pd-mobile-guarantee-card { display: block; }
             .pd-mobile-guarantee-card .guarantee-box {
@@ -1065,7 +1080,7 @@
             const stockLabel = document.getElementById('pd-stock-label');
             if (v.status === 'instock') {
                 if (stockLabel) {
-                    stockLabel.innerText = 'Còn hàng';
+                    stockLabel.innerText = v.stock ? `Còn ${v.stock} sp` : 'Còn hàng';
                     stockLabel.style.color = '#27ae60';
                 }
                 box.innerHTML = `
@@ -1078,7 +1093,7 @@
             } else if (v.status === 'order' || v.status === 'out') {
                 const expectedDate = v.date || v.expected_date || 'Đang cập nhật';
                 if (stockLabel) {
-                    stockLabel.innerText = 'Hàng order';
+                    stockLabel.innerText = expectedDate && expectedDate !== 'Đang cập nhật' ? `Order: ${expectedDate}` : 'Hàng order';
                     stockLabel.style.color = 'var(--primary-red)';
                 }
                 
