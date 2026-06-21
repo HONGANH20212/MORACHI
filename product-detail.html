@@ -555,8 +555,10 @@
 
         function handleBuyNow() {
             if (!currentProduct) return;
+
             const v = currentVariant || {};
-            const cartItem = {
+
+            const buyNowItem = {
                 id: currentProduct.id,
                 title: currentProduct.title,
                 brand: currentProduct.brand,
@@ -564,13 +566,16 @@
                 variant: v.name || 'Mặc định',
                 price: v.price || currentProduct.current_price,
                 status: v.status || 'instock',
-                date: v.date || v.expected_date || 'Đang cập nhật'
+                date: v.date || v.expected_date || 'Đang cập nhật',
+                quantity: 1
             };
-            if(typeof addToCart === 'function') {
-                addToCart(cartItem);
-                if (typeof openCheckoutModal === 'function') {
-                    openCheckoutModal();
-                }
+
+            if (typeof openCheckoutModal === 'function') {
+                const oldCart = [...cart];   // lưu giỏ hàng cũ
+                cart = [buyNowItem];         // chỉ thanh toán 1 sản phẩm
+                openCheckoutModal();
+                cart = oldCart;              // trả lại giỏ hàng cũ
+                updateCartUI();
             }
         }
 
