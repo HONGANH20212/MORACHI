@@ -345,42 +345,6 @@ function openCheckoutModal() {
 
                     </div>
 
-                    // <div class="chk-col-right">
-                    //     <div class="chk-card-section chk-summary-section">
-                    //         <div class="chk-sec-title">
-                    //             <div class="step-circle">3</div>
-                    //             <div>
-                    //                 <h3>TÓM TẮT ĐƠN HÀNG</h3>
-                    //                 <p>Kiểm tra lại sản phẩm và chi phí</p>
-                    //             </div>
-                    //         </div>
-
-                            <div class="chk-product-list">
-                                ${cartItemsHtml}
-                            </div>
-
-                            <div class="chk-cost-lines">
-                                <div class="cost-line">
-                                    <span>Tạm tính</span>
-                                    <strong id="chk-subtotal">${subtotal.toLocaleString('vi-VN')} đ</strong>
-                                </div>
-                                <div class="cost-line">
-                                    <span>Phí giao hàng</span>
-                                    <strong>15.000 đ</strong>
-                                </div>
-                                <div class="cost-line free-ship-notice">
-                                    <i class="fas fa-truck"></i> Phí ship đồng giá 15k toàn quốc
-                                </div>
-                            </div>
-
-                            <div class="chk-total-wrapper">
-                                <span>TỔNG CỘNG</span>
-                                <span class="total-price-big" id="chk-total">${total.toLocaleString('vi-VN')} đ</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <div class="chk-footer-area">
                     <button class="btn-final-submit btn-checkout-confirm" onclick="submitOrder()">
                         <div class="submit-left">
