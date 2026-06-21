@@ -186,11 +186,11 @@ window.addVariantRow = function(data = {}) {
     row.innerHTML = `
         <div>
             <label>Phân loại <span style="color:red">*</span></label>
-            <input type="text" class="v-name" value="${data.name || ''}" placeholder="VD: Đỏ, 50ml" required>
+            <input type="text" class="v-name" autocomplete="off" value="${data.name || ''}" placeholder="VD: Đỏ, 50ml" required>
         </div>
         <div>
             <label>Số lượng</label>
-            <input type="number" class="v-stock" value="${data.stock !== undefined ? data.stock : 0}">
+            <input type="number" class="v-stock" autocomplete="off" value="${data.stock !== undefined ? data.stock : 0}">
         </div>
         <div>
             <label>Trạng thái</label>
@@ -202,11 +202,11 @@ window.addVariantRow = function(data = {}) {
         </div>
         <div>
             <label>Dự kiến</label>
-            <input type="text" class="v-date" value="${data.date || ''}" placeholder="VD: 25/05">
+            <input type="text" class="v-date" autocomplete="off" value="${data.date || ''}" placeholder="VD: 25/05">
         </div>
         <div>
             <label>Giá riêng</label>
-            <input type="number" class="v-price" value="${data.price || ''}" placeholder="Giá VNĐ">
+            <input type="number" class="v-price" autocomplete="off" value="${data.price || ''}" placeholder="Giá VNĐ">
         </div>
         <div>
             <label>Ảnh riêng</label>
@@ -223,7 +223,8 @@ window.addVariantRow = function(data = {}) {
 
 window.editProduct = async function(id) {
     try {
-        const p = allProductsData.find(item => item.id === id);
+        // KHẮC PHỤC: Đảm bảo so sánh chính xác ID tuyệt đối
+        const p = allProductsData.find(item => String(item.id) === String(id));
         
         if (p) {
             document.getElementById("product-id").value = p.id;
@@ -264,11 +265,16 @@ window.openModal = function(isEdit = false) {
     
     const modal = document.getElementById("productModal");
     if(modal) modal.style.display = "flex";
+
+    // KHẮC PHỤC LỖI NHẢY ẢNH: Luôn làm sạch ô chọn file ảnh mỗi khi mở form (chống dính ảnh từ sản phẩm trước)
+    const thumbnailInput = document.getElementById("thumbnail_file");
+    if(thumbnailInput) thumbnailInput.value = "";
     
     if (!isEdit) {
         const formEl = document.getElementById("product-form");
         if(formEl) formEl.reset();
         document.getElementById("product-id").value = "";
+        document.getElementById("product-thumbnail-old").value = ""; // Clear ảnh cũ
         
         const container = document.getElementById("variants-container");
         if (container) {
@@ -420,7 +426,6 @@ window.switchTab = function(tabId) {
     }
 }
 
-// Hàm tính toán và cập nhật các con số thẻ Thống kê phía trên cùng
 window.updateOrderDashboardStats = function(orders) {
     let todayCount = 0;
     let prepCount = 0;
@@ -430,7 +435,6 @@ window.updateOrderDashboardStats = function(orders) {
     let todayString = new Date().toDateString();
 
     orders.forEach(o => {
-        // Đếm tổng số lượng đơn hàng phát sinh trong Hôm Nay
         let orderDate = o.created_at || o.date;
         if (orderDate) {
             let d = new Date(orderDate);
@@ -439,14 +443,12 @@ window.updateOrderDashboardStats = function(orders) {
             }
         }
 
-        // Đếm theo từng trạng thái cụ thể
         let status = o.status || "";
         if (status === "Đang chuẩn bị hàng") prepCount++;
         if (status === "Đang chờ hàng về Việt Nam") transitCount++;
         if (status === "Đang giao hàng") deliveringCount++;
     });
 
-    // In kết quả ra các thẻ HTML
     const statToday = document.getElementById('stat-order-today');
     if(statToday) statToday.innerHTML = todayCount.toLocaleString('vi-VN');
 
@@ -478,9 +480,7 @@ window.loadOrders = async function() {
         if (checkAllEl) checkAllEl.checked = false;
         window.updateBulkActionBar(); 
 
-        // GỌI HÀM CẬP NHẬT SỐ LIỆU THẺ THỐNG KÊ Ở ĐÂY
         window.updateOrderDashboardStats(allOrdersData);
-        
         window.renderOrdersTable(allOrdersData);
         
     } catch (err) {
