@@ -848,6 +848,74 @@ window.buildOrderAddress = window.buildOrderAddress || function(order) {
 };
 
 // =========================================================
+// HIỂN THỊ / XUẤT PHƯƠNG THỨC THANH TOÁN ĐƠN HÀNG
+// Lưu ý: khách chọn chuyển khoản không có nghĩa là tiền đã vào tài khoản.
+// Cần đối soát sao kê theo Mã đơn / Số tiền rồi mới xem là đã chuyển khoản.
+// =========================================================
+window.getOrderPaymentInfo = window.getOrderPaymentInfo || function(order) {
+    const o = order || {};
+    const rawMethod = window.cleanOrderText(
+        o.payment_method || o.paymentMethod || o.payment_type || o.paymentType || o.payment || o.method
+    ).toLowerCase();
+    const rawLabel = window.cleanOrderText(o.payment_label || o.paymentLabel);
+    const rawStatus = window.cleanOrderText(o.payment_status || o.paymentStatus);
+    const statusText = window.cleanOrderText(o.status).toLowerCase();
+
+    let type = 'unknown';
+    if (
+        rawMethod === 'bank' || rawMethod === 'transfer' || rawMethod === 'bank_transfer' ||
+        rawMethod.includes('bank') || rawMethod.includes('vietqr') || rawMethod.includes('chuyển') ||
+        statusText.includes('chuyển khoản')
+    ) {
+        type = 'bank';
+    } else if (
+        rawMethod === 'cod' || rawMethod === 'shipcod' || rawMethod.includes('cod') ||
+        statusText.includes('shipcod') || statusText.includes('thanh toán khi nhận hàng')
+    ) {
+        type = 'cod';
+    }
+
+    if (type === 'bank') {
+        const note = rawStatus || (statusText.includes('đã xác nhận') ? 'Đã đối soát' : 'Cần kiểm tra sao kê');
+        return {
+            type,
+            label: rawLabel || 'Chuyển khoản',
+            exportLabel: 'Chuyển khoản',
+            note,
+            html: `<div style="display:flex; flex-direction:column; gap:4px; align-items:flex-start;">
+                <span style="background:#eaf4ff; color:#1f6fb2; padding:4px 9px; border-radius:999px; font-size:11px; font-weight:700; white-space:nowrap;"><i class="fas fa-university"></i> Chuyển khoản</span>
+                <span style="font-size:11px; color:#7a828a;">${window.escapeAdminHtml(note)}</span>
+            </div>`
+        };
+    }
+
+    if (type === 'cod') {
+        const note = rawStatus || 'Thu tiền khi giao hàng';
+        return {
+            type,
+            label: rawLabel || 'Ship COD',
+            exportLabel: 'Ship COD',
+            note,
+            html: `<div style="display:flex; flex-direction:column; gap:4px; align-items:flex-start;">
+                <span style="background:#e8f8f0; color:#1f8f4d; padding:4px 9px; border-radius:999px; font-size:11px; font-weight:700; white-space:nowrap;"><i class="fas fa-money-bill-wave"></i> COD</span>
+                <span style="font-size:11px; color:#7a828a;">${window.escapeAdminHtml(note)}</span>
+            </div>`
+        };
+    }
+
+    return {
+        type,
+        label: rawLabel || 'Chưa rõ',
+        exportLabel: 'Chưa rõ',
+        note: rawStatus || 'Thiếu payment_method',
+        html: `<div style="display:flex; flex-direction:column; gap:4px; align-items:flex-start;">
+            <span style="background:#f1f3f5; color:#777; padding:4px 9px; border-radius:999px; font-size:11px; font-weight:700; white-space:nowrap;"><i class="fas fa-question-circle"></i> Chưa rõ</span>
+            <span style="font-size:11px; color:#999;">Thiếu payment_method</span>
+        </div>`
+    };
+};
+
+// =========================================================
 // PHẦN 2: QUẢN LÝ ĐƠN HÀNG
 // =========================================================
 
@@ -912,7 +980,7 @@ window.loadOrders = async function() {
     const tbody = document.getElementById('admin-order-list');
     if (!tbody) return;
 
-    tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; padding: 40px;'><i class='fas fa-spinner fa-spin'></i> Đang tải đơn hàng...</td></tr>";
+    tbody.innerHTML = "<tr><td colspan='8' style='text-align:center; padding: 40px;'><i class='fas fa-spinner fa-spin'></i> Đang tải đơn hàng...</td></tr>";
 
     try {
         const response = await fetch(`${API_BASE_URL}/orders?t=${new Date().getTime()}`);
@@ -931,7 +999,7 @@ window.loadOrders = async function() {
         
     } catch (err) {
         console.error("Lỗi lấy đơn hàng:", err);
-        tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; color:red; padding: 40px;'>Lỗi kết nối máy chủ!</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='8' style='text-align:center; color:red; padding: 40px;'>Lỗi kết nối máy chủ!</td></tr>";
     }
 }
 
@@ -940,7 +1008,7 @@ window.renderOrdersTable = function(ordersList) {
     if (!tbody) return;
 
     if (!ordersList || ordersList.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='7' style='text-align:center; padding: 40px; color:#888;'>Không tìm thấy đơn hàng phù hợp với trạng thái này.</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='8' style='text-align:center; padding: 40px; color:#888;'>Không tìm thấy đơn hàng phù hợp với trạng thái này.</td></tr>";
         return;
     }
 
@@ -1006,7 +1074,9 @@ window.renderOrdersTable = function(ordersList) {
         let badgeClass = 'yellow';
         let statusText = o.status || 'Chờ xác nhận';
         
-        if (statusText === 'Đang chuẩn bị hàng' || statusText.includes('Chờ xác nhận đã chuyển khoản')) {
+        if (statusText.includes('Đã xác nhận chuyển khoản')) {
+            badgeClass = 'green';
+        } else if (statusText === 'Đang chuẩn bị hàng' || statusText.includes('Chờ xác nhận đã chuyển khoản')) {
             badgeClass = 'yellow'; 
         } else if (statusText.includes('Xác nhận đặt đơn Shipcod thành công') || statusText === 'Đang chờ hàng về Việt Nam') {
             badgeClass = 'purple';
@@ -1019,6 +1089,7 @@ window.renderOrdersTable = function(ordersList) {
         }
 
         let statusBadge = `<span class="badge-status ${badgeClass}">${statusText}</span>`;
+        const paymentInfo = window.getOrderPaymentInfo(o);
 
         let spxHtml = o.spx_tracking_code 
             ? `<div style="margin-top:4px; color:var(--success); font-size:11px; font-weight:500;"><i class="fas fa-truck"></i> SPX: <b>${o.spx_tracking_code}</b></div>` 
@@ -1048,6 +1119,7 @@ window.renderOrdersTable = function(ordersList) {
                     ${spxHtml}
                 </td>
                 <td style="font-weight:700; color:#e74c3c; font-size:14px;">${Number(o.total_amount || 0).toLocaleString('vi-VN')}đ</td>
+                <td>${paymentInfo.html}</td>
                 <td>${statusBadge}</td>
                 <td>
                     <div class="action-btns">
@@ -1209,7 +1281,7 @@ window.exportSPX = function() {
     }
 
     let csvContent = "\uFEFF";
-    csvContent += "Mã Đơn,Tên Khách Hàng,Số Điện Thoại,Địa Chỉ Giao Hàng,Sản Phẩm Chi Tiết,Tổng Tiền,Trạng Thái,Mã Vận Đơn,Ngày Đặt\n";
+    csvContent += "Mã Đơn,Tên Khách Hàng,Số Điện Thoại,Địa Chỉ Giao Hàng,Sản Phẩm Chi Tiết,Tổng Tiền,Phương Thức Thanh Toán,Tình Trạng Thanh Toán,Trạng Thái,Mã Vận Đơn,Ngày Đặt\n";
 
     orders.forEach(o => {
         let orderId = o.order_id || "";
@@ -1223,6 +1295,7 @@ window.exportSPX = function() {
         }
         
         let total = o.total_amount || 0;
+        let paymentInfo = window.getOrderPaymentInfo(o);
         let status = o.status || "";
         let spxCode = o.spx_tracking_code || "";
         
@@ -1244,6 +1317,8 @@ window.exportSPX = function() {
             escapeCSV(address),
             escapeCSV(productsStr),
             total,
+            escapeCSV(paymentInfo.exportLabel),
+            escapeCSV(paymentInfo.note),
             escapeCSV(status),
             escapeCSV(spxCode),
             escapeCSV(dateStr)

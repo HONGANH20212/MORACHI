@@ -785,6 +785,8 @@ async function executeOrderSubmit(btn, name, phone, address) {
     const orderId = currentCheckoutOrderId;
     const checkedPayment = document.querySelector('input[name="chk-payment"]:checked');
     const method = checkedPayment ? checkedPayment.value : 'cod';
+    const paymentLabel = method === 'bank' ? 'Chuyển khoản VietQR' : 'Ship COD';
+    const paymentStatus = method === 'bank' ? 'Cần kiểm tra sao kê' : 'Thu tiền khi giao hàng';
     const orderItems = cloneCheckoutItems(checkoutItems);
     const totalAmount = orderItems.reduce((sum, item) => sum + (toPriceNumber(item.price) * Number(item.quantity || 1)), 0) + 15000;
     
@@ -799,6 +801,8 @@ async function executeOrderSubmit(btn, name, phone, address) {
         total_amount: totalAmount,
         total: totalAmount,
         payment_method: method,
+        payment_label: paymentLabel,
+        payment_status: paymentStatus,
         status: method === 'bank' ? 'Chờ xác nhận đã chuyển khoản' : 'Xác nhận đặt đơn Shipcod thành công'
     };
 
