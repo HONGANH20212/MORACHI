@@ -583,7 +583,7 @@
 
         function renderCancelBox(order, orderIndex) {
             if (!canCancelOrder(order)) {
-                return `<div class="cancel-note"><i class="fa-solid fa-circle-info"></i> Đơn đã vào giai đoạn chuẩn bị/giao hàng nên không thể hủy hoặc chỉnh sửa trực tiếp trên website.</div>`;
+                return `<div class="cancel-note"><i class="fa-solid fa-circle-info"></i> Đơn hàng đang chuẩn bị giao 1 ngày bạn không thể hủy trên website.</div>`;
             }
 
             const dbId = order.id || order._id || order.order_id || '';
