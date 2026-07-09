@@ -566,6 +566,8 @@
                 <div class="order-header-actions">
                     <button class="btn-outline"><i class="far fa-calendar"></i> Hôm nay</button>
                     <button class="btn-outline" onclick="exportSPX()"><i class="fas fa-download"></i> Xuất Excel</button>
+                    <button class="btn-outline" onclick="document.getElementById('spx-import-file').click()" style="background:#eef2ff; color:#2563eb; border-color:#c7d2fe;"><i class="fas fa-file-import"></i> Nhập tracking SPX</button>
+                    <input type="file" id="spx-import-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="importSPXTrackingFile(this)">
                     <button class="btn-add" style="background: var(--accent);"><i class="fas fa-plus"></i> Tạo đơn</button>
                 </div>
             </div>
@@ -752,6 +754,7 @@
         </div>
     </div>
 
-    <script src="admin/admin.js?v=address-20260621"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="admin/admin.js?v=spx-import-20260709"></script>
 </body>
 </html>

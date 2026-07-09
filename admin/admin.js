@@ -1267,6 +1267,355 @@ window.updateOrderStatus = async function(id, currentStatus, currentSpxCode) {
     }
 }
 
+// =========================================================
+// NHẬP TRACKING SPX HÀNG LOẠT
+// - Nhận file .xlsx/.xls/.csv export từ SPX
+// - Tự tìm cột Tracking No. / Receiver Name / Receiver Phone Number
+// - Match đơn theo Tên khách hàng + Số điện thoại, cập nhật Mã vận đơn
+//   và chuyển trạng thái sang "Đang giao hàng"
+// =========================================================
+window.normalizeVietnameseText = window.normalizeVietnameseText || function(value) {
+    return String(value ?? "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "D")
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+};
+
+window.normalizeOrderPhone = window.normalizeOrderPhone || function(value) {
+    let digits = String(value ?? "").replace(/\D/g, "");
+    if (!digits) return "";
+
+    // SPX/Excel thường làm mất số 0 đầu: 0852268290 -> 852268290
+    if (digits.length === 9) digits = "0" + digits;
+
+    // Trường hợp nhập dạng 84xxxxxxxxx hoặc +84xxxxxxxxx
+    if (digits.startsWith("84") && digits.length >= 11) {
+        digits = "0" + digits.slice(2);
+    }
+
+    return digits;
+};
+
+window.getOrderCustomerName = window.getOrderCustomerName || function(order) {
+    const c = (order && order.customer_info) || {};
+    return window.cleanOrderText(
+        c.name || c.customer_name || order.customer_name || order.name || order.receiver_name || ""
+    );
+};
+
+window.getOrderCustomerPhone = window.getOrderCustomerPhone || function(order) {
+    const c = (order && order.customer_info) || {};
+    return window.normalizeOrderPhone(
+        c.phone || c.customer_phone || order.customer_phone || order.phone || order.receiver_phone || ""
+    );
+};
+
+window.getOrderMatchKey = window.getOrderMatchKey || function(order) {
+    const name = window.normalizeVietnameseText(window.getOrderCustomerName(order));
+    const phone = window.getOrderCustomerPhone(order);
+    return `${name}|${phone}`;
+};
+
+window.parseCsvRows = window.parseCsvRows || function(text) {
+    const rows = [];
+    let row = [];
+    let value = "";
+    let inQuotes = false;
+
+    for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        const next = text[i + 1];
+
+        if (ch === '"' && inQuotes && next === '"') {
+            value += '"';
+            i++;
+            continue;
+        }
+
+        if (ch === '"') {
+            inQuotes = !inQuotes;
+            continue;
+        }
+
+        if (ch === ',' && !inQuotes) {
+            row.push(value);
+            value = "";
+            continue;
+        }
+
+        if ((ch === '\n' || ch === '\r') && !inQuotes) {
+            if (ch === '\r' && next === '\n') i++;
+            row.push(value);
+            if (row.some(cell => String(cell).trim() !== "")) rows.push(row);
+            row = [];
+            value = "";
+            continue;
+        }
+
+        value += ch;
+    }
+
+    row.push(value);
+    if (row.some(cell => String(cell).trim() !== "")) rows.push(row);
+    return rows;
+};
+
+window.readSPXFileRows = window.readSPXFileRows || function(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        const fileName = String(file && file.name || "").toLowerCase();
+
+        reader.onerror = () => reject(new Error("Không đọc được file."));
+
+        if (fileName.endsWith(".csv")) {
+            reader.onload = () => resolve(window.parseCsvRows(String(reader.result || "")));
+            reader.readAsText(file, "utf-8");
+            return;
+        }
+
+        reader.onload = () => {
+            try {
+                if (!window.XLSX) {
+                    reject(new Error("Thiếu thư viện đọc Excel XLSX. Vui lòng kiểm tra kết nối internet hoặc xuất file SPX dạng CSV."));
+                    return;
+                }
+
+                const data = new Uint8Array(reader.result);
+                const workbook = window.XLSX.read(data, { type: "array" });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                const rows = window.XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+                resolve(rows);
+            } catch (err) {
+                reject(err);
+            }
+        };
+
+        reader.readAsArrayBuffer(file);
+    });
+};
+
+window.findColumnIndexByNames = window.findColumnIndexByNames || function(row, names) {
+    const normalizedNames = names.map(window.normalizeVietnameseText);
+    for (let i = 0; i < row.length; i++) {
+        const cell = window.normalizeVietnameseText(row[i]);
+        if (!cell) continue;
+        if (normalizedNames.some(name => cell === name || cell.includes(name) || name.includes(cell))) {
+            return i;
+        }
+    }
+    return -1;
+};
+
+window.extractSPXRecordsFromRows = window.extractSPXRecordsFromRows || function(rows) {
+    const trackingNames = ["Tracking No.", "Tracking No", "Mã vận đơn", "Ma van don", "Mã tracking", "Tracking", "Mã đơn vận chuyển"];
+    const nameNames = ["Receiver Name", "Tên người nhận", "Ten nguoi nhan", "Người nhận", "Nguoi nhan", "Receiver"];
+    const phoneNames = ["Receiver Phone Number", "Số điện thoại người nhận", "So dien thoai nguoi nhan", "Receiver Phone", "Phone Number", "SĐT", "SDT", "Điện thoại"];
+    const orderIdNames = ["Mã đơn", "Ma don", "Order ID", "Order No", "Seller Order No", "Mã đơn hàng", "Ma don hang", "Reference No", "Reference"];
+
+    let headerRowIndex = -1;
+    let trackingIndex = -1;
+    let nameIndex = -1;
+    let phoneIndex = -1;
+    let orderIdIndex = -1;
+
+    const maxScanRows = Math.min(rows.length, 30);
+    for (let r = 0; r < maxScanRows; r++) {
+        const row = rows[r] || [];
+        const t = window.findColumnIndexByNames(row, trackingNames);
+        const n = window.findColumnIndexByNames(row, nameNames);
+        const p = window.findColumnIndexByNames(row, phoneNames);
+
+        if (t >= 0 && n >= 0 && p >= 0) {
+            headerRowIndex = r;
+            trackingIndex = t;
+            nameIndex = n;
+            phoneIndex = p;
+            orderIdIndex = window.findColumnIndexByNames(row, orderIdNames);
+            break;
+        }
+    }
+
+    if (headerRowIndex < 0) {
+        throw new Error("Không tìm thấy đủ 3 cột bắt buộc trong file SPX: Tracking No., Receiver Name, Receiver Phone Number.");
+    }
+
+    const records = [];
+    rows.slice(headerRowIndex + 1).forEach((row, index) => {
+        const trackingCode = window.cleanOrderText(row[trackingIndex]).toUpperCase();
+        const receiverName = window.cleanOrderText(row[nameIndex]);
+        const receiverPhone = window.normalizeOrderPhone(row[phoneIndex]);
+        const orderId = orderIdIndex >= 0 ? window.cleanOrderText(row[orderIdIndex]) : "";
+
+        // Bỏ qua dòng mô tả tiếng Việt dưới header và dòng rỗng.
+        if (!trackingCode || !receiverName || !receiverPhone) return;
+        if (!/^SPX[A-Z0-9]+$/i.test(trackingCode)) return;
+
+        records.push({
+            rowNumber: headerRowIndex + index + 2,
+            trackingCode,
+            receiverName,
+            receiverPhone,
+            orderId
+        });
+    });
+
+    return records;
+};
+
+window.getCreatedTimeForSort = window.getCreatedTimeForSort || function(order) {
+    const raw = order && (order.created_at || order.date || order.updated_at);
+    const time = raw ? new Date(raw).getTime() : 0;
+    return Number.isFinite(time) ? time : 0;
+};
+
+window.importSPXTrackingFile = async function(input) {
+    const file = input && input.files && input.files[0];
+    if (!file) return;
+
+    try {
+        if (!Array.isArray(allOrdersData) || allOrdersData.length === 0) {
+            await window.loadOrders();
+        }
+
+        const rows = await window.readSPXFileRows(file);
+        const spxRecords = window.extractSPXRecordsFromRows(rows);
+
+        if (!spxRecords.length) {
+            alert("Không tìm thấy mã vận đơn SPX hợp lệ trong file. Vui lòng kiểm tra lại file export từ SPX.");
+            return;
+        }
+
+        const orders = Array.isArray(allOrdersData) ? [...allOrdersData] : [];
+        const orderById = new Map();
+        const queuesByCustomer = new Map();
+
+        orders
+            .sort((a, b) => window.getCreatedTimeForSort(a) - window.getCreatedTimeForSort(b))
+            .forEach(order => {
+                if (!order || !order.id) return;
+
+                const ids = [order.order_id, order.orderId, order.code, order.id]
+                    .map(v => window.cleanOrderText(v).toLowerCase())
+                    .filter(Boolean);
+                ids.forEach(id => orderById.set(id, order));
+
+                const key = window.getOrderMatchKey(order);
+                if (!key || key === "|") return;
+                if (!queuesByCustomer.has(key)) queuesByCustomer.set(key, []);
+                queuesByCustomer.get(key).push(order);
+            });
+
+        const usedOrderIds = new Set();
+        const updatePayloads = [];
+        const unmatched = [];
+        const duplicateWarnings = [];
+
+        for (const record of spxRecords) {
+            let matchedOrder = null;
+
+            const importOrderId = window.cleanOrderText(record.orderId).toLowerCase();
+            if (importOrderId && orderById.has(importOrderId)) {
+                const order = orderById.get(importOrderId);
+                if (!usedOrderIds.has(String(order.id))) matchedOrder = order;
+            }
+
+            if (!matchedOrder) {
+                const key = `${window.normalizeVietnameseText(record.receiverName)}|${record.receiverPhone}`;
+                const queue = queuesByCustomer.get(key) || [];
+                const available = queue.filter(order => !usedOrderIds.has(String(order.id)));
+
+                if (available.length > 1) {
+                    duplicateWarnings.push(`${record.receiverName} - ${record.receiverPhone} có ${available.length} đơn trùng thông tin, hệ thống gán theo thứ tự đơn cũ trước.`);
+                }
+
+                matchedOrder = available[0] || null;
+            }
+
+            if (!matchedOrder) {
+                unmatched.push(`${record.trackingCode} | ${record.receiverName} | ${record.receiverPhone}`);
+                continue;
+            }
+
+            usedOrderIds.add(String(matchedOrder.id));
+            updatePayloads.push({
+                order: matchedOrder,
+                trackingCode: record.trackingCode,
+                body: {
+                    status: "Đang giao hàng",
+                    spx_tracking_code: record.trackingCode,
+                    shipping_provider: "SPX",
+                    tracking_updated_at: new Date().toISOString()
+                }
+            });
+        }
+
+        if (!updatePayloads.length) {
+            alert(`Không match được đơn nào.\n\nKhông khớp: ${unmatched.slice(0, 10).join("\n")}`);
+            return;
+        }
+
+        const confirmMessage = [
+            `Tìm thấy ${spxRecords.length} mã SPX trong file.`,
+            `Sẽ cập nhật ${updatePayloads.length} đơn sang trạng thái "Đang giao hàng".`,
+            unmatched.length ? `Không khớp: ${unmatched.length} dòng.` : "Không có dòng không khớp.",
+            duplicateWarnings.length ? `Lưu ý: ${duplicateWarnings.length} khách có nhiều đơn trùng tên + SĐT.` : "",
+            "",
+            "Bạn có chắc chắn muốn cập nhật không?"
+        ].filter(Boolean).join("\n");
+
+        if (!confirm(confirmMessage)) return;
+
+        let success = 0;
+        const failed = [];
+
+        for (const payload of updatePayloads) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/orders/${payload.order.id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload.body)
+                });
+
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                payload.order.status = payload.body.status;
+                payload.order.spx_tracking_code = payload.body.spx_tracking_code;
+                payload.order.shipping_provider = payload.body.shipping_provider;
+                payload.order.tracking_updated_at = payload.body.tracking_updated_at;
+                success++;
+            } catch (err) {
+                failed.push(`${payload.trackingCode} | ${window.getOrderCustomerName(payload.order)} | ${window.getOrderCustomerPhone(payload.order)}`);
+            }
+        }
+
+        try {
+            localStorage.setItem("morachi_orders", JSON.stringify(allOrdersData));
+        } catch (e) {}
+
+        window.updateOrderDashboardStats(allOrdersData);
+        window.renderOrdersTable(allOrdersData);
+
+        let resultMessage = `✅ Đã cập nhật thành công ${success}/${updatePayloads.length} đơn hàng sang "Đang giao hàng".`;
+        if (failed.length) resultMessage += `\n\n❌ Cập nhật lỗi ${failed.length} dòng:\n${failed.slice(0, 10).join("\n")}`;
+        if (unmatched.length) resultMessage += `\n\n⚠️ Không tìm thấy đơn khớp ${unmatched.length} dòng:\n${unmatched.slice(0, 10).join("\n")}`;
+        if (duplicateWarnings.length) resultMessage += `\n\n⚠️ Có đơn trùng tên + SĐT, vui lòng kiểm tra lại:\n${duplicateWarnings.slice(0, 5).join("\n")}`;
+
+        alert(resultMessage);
+        window.loadOrders();
+    } catch (err) {
+        console.error("Lỗi import SPX:", err);
+        alert("Lỗi import file SPX: " + (err && err.message ? err.message : err));
+    } finally {
+        if (input) input.value = "";
+    }
+};
+
 window.exportSPX = function() {
     const ordersStr = localStorage.getItem('morachi_orders');
     if (!ordersStr) {
