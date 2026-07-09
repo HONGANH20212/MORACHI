@@ -6,6 +6,7 @@ const state = {
     selectedBrands: new Set(),
     sort: "bestseller", // Mặc định hiển thị tab Bán chạy
     search: "",
+    category: "all",
     minPrice: null,
     maxPrice: null
 };
@@ -44,6 +45,243 @@ function escapeHtml(text) {
         .replace(/>/g, "&gt;")
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
+}
+
+
+// =========================================================
+// DANH MỤC THÔNG MINH + TÌM KIẾM GỢI Ý
+// - Không cần backend có sẵn category: tự nhận diện từ tên/brand/mô tả/variant
+// - Nếu sau này backend có trường category thì vẫn ưu tiên dùng kèm dữ liệu đó
+// =========================================================
+const MORACHI_CATEGORIES = [
+    { id: "all", label: "Tất cả", icon: "fa-border-all", keywords: [] },
+    { id: "ma-hong", label: "Má hồng", icon: "fa-wand-magic-sparkles", keywords: ["má hồng", "ma hong", "blush", "cheek", "cream cheek"] },
+    { id: "phan-phu", label: "Phấn phủ", icon: "fa-circle-half-stroke", keywords: ["phấn phủ", "phan phu", "powder", "finish powder", "marshmallow"] },
+    { id: "kem-nen", label: "Kem nền / Kem lót", icon: "fa-fill-drip", keywords: ["kem nền", "kem nen", "foundation", "cushion", "kem lót", "kem lot", "primer", "base"] },
+    { id: "son", label: "Son môi", icon: "fa-kiss-wink-heart", keywords: ["son", "lip", "lipstick", "tint", "gloss", "rouge"] },
+    { id: "skincare", label: "Skincare", icon: "fa-spa", keywords: ["skincare", "serum", "toner", "lotion", "cleanser", "sữa rửa mặt", "sua rua mat", "kem dưỡng", "kem duong", "chống nắng", "chong nang", "sunscreen", "spf"] },
+    { id: "instock", label: "Hàng có sẵn", icon: "fa-box-open", keywords: [] },
+    { id: "order", label: "Hàng order", icon: "fa-plane", keywords: [] }
+];
+
+function normalizeTextForSearch(value) {
+    return String(value ?? "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "D")
+        .toLowerCase()
+        .trim();
+}
+
+function getProductSearchText(product) {
+    const variantsText = Array.isArray(product.variants)
+        ? product.variants.map(v => `${v.name || ""} ${v.status || ""} ${v.date || v.expected_date || ""}`).join(" ")
+        : "";
+
+    return [
+        product.title,
+        product.brand,
+        product.category,
+        product.discount,
+        product.description,
+        product.specifications,
+        product.ingredients,
+        variantsText
+    ].filter(Boolean).join(" ");
+}
+
+function productHasStatus(product, statusList) {
+    const statuses = statusList.map(normalizeTextForSearch);
+    const productStatus = normalizeTextForSearch(product.status || "");
+    if (statuses.some(st => productStatus.includes(st))) return true;
+
+    if (Array.isArray(product.variants) && product.variants.length) {
+        return product.variants.some(v => statuses.some(st => normalizeTextForSearch(v.status || "").includes(st)));
+    }
+
+    return false;
+}
+
+function inferProductCategoryIds(product) {
+    const ids = new Set();
+    const rawText = getProductSearchText(product);
+    const text = normalizeTextForSearch(rawText);
+
+    MORACHI_CATEGORIES.forEach(cat => {
+        if (!cat.keywords.length) return;
+        if (cat.keywords.some(keyword => text.includes(normalizeTextForSearch(keyword)))) {
+            ids.add(cat.id);
+        }
+    });
+
+    const variants = Array.isArray(product.variants) ? product.variants : [];
+    const hasInStockVariant = variants.length
+        ? variants.some(v => {
+            const status = normalizeTextForSearch(v.status || "instock");
+            return status.includes("instock") || status.includes("san") || status.includes("con");
+        })
+        : !["out", "order", "het", "hết", "inactive"].some(st => text.includes(normalizeTextForSearch(st)));
+
+    const hasOrderVariant = variants.length
+        ? variants.some(v => {
+            const status = normalizeTextForSearch(v.status || "");
+            return status.includes("order") || status.includes("out") || status.includes("het");
+        })
+        : false;
+
+    if (hasInStockVariant) ids.add("instock");
+    if (hasOrderVariant || text.includes("hang order") || text.includes("hàng order")) {
+        ids.add("order");
+    }
+
+    return ids;
+}
+
+function productMatchesCategory(product, categoryId) {
+    if (!categoryId || categoryId === "all") return true;
+    return inferProductCategoryIds(product).has(categoryId);
+}
+
+function productMatchesSearch(product, keyword) {
+    const normalizedKeyword = normalizeTextForSearch(keyword);
+    if (!normalizedKeyword) return true;
+    return normalizeTextForSearch(getProductSearchText(product)).includes(normalizedKeyword);
+}
+
+function renderCategoryFilters(products) {
+    const container = document.getElementById("category-filter-list");
+    if (!container) return;
+
+    const counts = new Map(MORACHI_CATEGORIES.map(cat => [cat.id, 0]));
+    (products || []).forEach(product => {
+        counts.set("all", (counts.get("all") || 0) + 1);
+        inferProductCategoryIds(product).forEach(id => counts.set(id, (counts.get(id) || 0) + 1));
+    });
+
+    container.innerHTML = MORACHI_CATEGORIES
+        .filter(cat => cat.id === "all" || (counts.get(cat.id) || 0) > 0)
+        .map(cat => `
+            <button type="button" class="category-chip ${state.category === cat.id ? "active" : ""}" data-category="${cat.id}">
+                <i class="fa-solid ${cat.icon}"></i>
+                <span>${cat.label}</span>
+                <b>${counts.get(cat.id) || 0}</b>
+            </button>
+        `).join("");
+
+    container.querySelectorAll(".category-chip").forEach(btn => {
+        btn.addEventListener("click", () => {
+            state.category = btn.dataset.category || "all";
+            renderCategoryFilters(state.allProducts);
+            applyClientFilters();
+        });
+    });
+
+    setupMobileFilterCompact();
+}
+
+function getTopSearchSuggestions(keyword, limit = 6) {
+    const q = normalizeTextForSearch(keyword);
+    if (!q) return [];
+
+    return [...state.allProducts]
+        .filter(product => productMatchesSearch(product, q))
+        .sort((a, b) => {
+            const aTitle = normalizeTextForSearch(a.title || "");
+            const bTitle = normalizeTextForSearch(b.title || "");
+            const aBrand = normalizeTextForSearch(a.brand || "");
+            const bBrand = normalizeTextForSearch(b.brand || "");
+            const scoreA = (aTitle.startsWith(q) ? 20 : 0) + (aBrand.startsWith(q) ? 10 : 0) + (hasDisplayOrder(a) ? 5 : 0);
+            const scoreB = (bTitle.startsWith(q) ? 20 : 0) + (bBrand.startsWith(q) ? 10 : 0) + (hasDisplayOrder(b) ? 5 : 0);
+            if (scoreA !== scoreB) return scoreB - scoreA;
+            return getDisplayOrder(a) - getDisplayOrder(b);
+        })
+        .slice(0, limit);
+}
+
+function initSmartSearchAutocomplete() {
+    const { input, button } = getSearchElements();
+    const searchBar = document.querySelector(".search-bar");
+    if (!input || !button || !searchBar) return;
+
+    searchBar.classList.add("smart-search-wrap");
+
+    let dropdown = searchBar.querySelector(".smart-search-dropdown");
+    if (!dropdown) {
+        dropdown = document.createElement("div");
+        dropdown.className = "smart-search-dropdown";
+        dropdown.style.display = "none";
+        searchBar.appendChild(dropdown);
+    }
+
+    let debounceTimer = null;
+
+    const hideDropdown = () => {
+        dropdown.style.display = "none";
+    };
+
+    const renderDropdown = () => {
+        const keyword = input.value.trim();
+        const suggestions = getTopSearchSuggestions(keyword, 7);
+
+        if (!keyword || suggestions.length === 0) {
+            hideDropdown();
+            return;
+        }
+
+        dropdown.innerHTML = `
+            <div class="smart-search-title"><i class="fa-solid fa-bolt"></i> Gợi ý phù hợp</div>
+            ${suggestions.map(product => `
+                <div class="smart-search-item" data-id="${escapeHtml(product.id)}">
+                    <img src="${escapeHtml(product.thumbnail || "images/icon-logo.png")}" alt="${escapeHtml(product.title || "Sản phẩm")}" onerror="this.src='images/icon-logo.png'">
+                    <div class="smart-search-info">
+                        <div class="smart-search-name">${escapeHtml(product.title || "Sản phẩm")}</div>
+                        <div class="smart-search-meta">${escapeHtml(product.brand || "MORACHI")} • ${formatPrice(product.current_price)}</div>
+                    </div>
+                </div>
+            `).join("")}
+            <button type="button" class="smart-search-view-all"><i class="fa-solid fa-magnifying-glass"></i> Xem tất cả kết quả cho “${escapeHtml(keyword)}”</button>
+        `;
+
+        dropdown.querySelectorAll(".smart-search-item").forEach(item => {
+            item.addEventListener("mousedown", e => e.preventDefault());
+            item.addEventListener("click", () => {
+                const id = item.dataset.id;
+                if (id) window.location.href = `product-detail.html?id=${encodeURIComponent(id)}`;
+            });
+        });
+
+        const viewAll = dropdown.querySelector(".smart-search-view-all");
+        if (viewAll) {
+            viewAll.addEventListener("mousedown", e => e.preventDefault());
+            viewAll.addEventListener("click", () => {
+                state.search = keyword;
+                applyClientFilters();
+                hideDropdown();
+            });
+        }
+
+        dropdown.style.display = "block";
+    };
+
+    const runRealtimeSearch = () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            state.search = input.value.trim();
+            applyClientFilters();
+            renderDropdown();
+        }, 120);
+    };
+
+    input.addEventListener("input", runRealtimeSearch);
+    input.addEventListener("focus", renderDropdown);
+    input.addEventListener("keydown", e => {
+        if (e.key === "Escape") hideDropdown();
+    });
+
+    document.addEventListener("click", e => {
+        if (!searchBar.contains(e.target)) hideDropdown();
+    });
 }
 
 // --- Xử lý giao diện ---
@@ -178,12 +416,11 @@ function applyClientFilters() {
     let products = [...state.allProducts];
 
     if (state.search) {
-        const keyword = state.search.toLowerCase();
-        products = products.filter((item) => {
-            const title = String(item.title || "").toLowerCase();
-            const brand = String(item.brand || "").toLowerCase();
-            return title.includes(keyword) || brand.includes(keyword);
-        });
+        products = products.filter((item) => productMatchesSearch(item, state.search));
+    }
+
+    if (state.category && state.category !== "all") {
+        products = products.filter((item) => productMatchesCategory(item, state.category));
     }
 
     if (state.selectedBrands.size > 0) {
@@ -240,9 +477,8 @@ function applyClientFilters() {
 // --- Bộ lọc thương hiệu động ---
 function renderBrandFilters(products) {
     const filterSections = document.querySelectorAll(".filter-section");
-    if (filterSections.length < 2) return;
-
-    const brandSection = filterSections[1];
+    const brandSection = document.querySelector('[data-filter="brand"]') || filterSections[1];
+    if (!brandSection) return;
     const title = brandSection.querySelector("h3");
     brandSection.innerHTML = "";
     if (title) brandSection.appendChild(title);
@@ -333,7 +569,7 @@ function setupMobileFilterCompact() {
     });
 
     // Danh sách thương hiệu: mobile hiển thị 2 cột + chỉ hiện 6 brand đầu
-    const brandSection = sections[1];
+    const brandSection = document.querySelector('[data-filter="brand"]') || sections[1];
     if (!brandSection) return;
 
     const content = brandSection.querySelector(".filter-content");
@@ -395,6 +631,19 @@ async function loadProducts() {
         const products = await response.json();
         state.allProducts = normalizeProductsFromApi(products);
 
+        const params = new URLSearchParams(window.location.search);
+        const searchFromUrl = params.get("search");
+        const categoryFromUrl = params.get("category");
+        if (searchFromUrl && !state.search) {
+            state.search = searchFromUrl.trim();
+            const { input } = getSearchElements();
+            if (input) input.value = state.search;
+        }
+        if (categoryFromUrl && MORACHI_CATEGORIES.some(cat => cat.id === categoryFromUrl)) {
+            state.category = categoryFromUrl;
+        }
+
+        renderCategoryFilters(state.allProducts);
         renderBrandFilters(state.allProducts);
         applyClientFilters(); 
     } catch (error) {
@@ -432,6 +681,8 @@ function bindSearch() {
             runSearch();
         }
     });
+
+    initSmartSearchAutocomplete();
 }
 
 function bindPriceFilter() {

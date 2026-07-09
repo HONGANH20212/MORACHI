@@ -833,7 +833,7 @@ async function executeOrderSubmit(btn, name, phone, address) {
         orderCount++;
         localStorage.setItem('morachi_order_count', orderCount);
 
-        showSuccessModal(name, orderId, method);
+        showSuccessModal(name, orderId, method, totalAmount, phone);
 
         if (!isBuyNowMode) {
             cart = [];
@@ -852,57 +852,62 @@ async function executeOrderSubmit(btn, name, phone, address) {
 // ==============================================================
 // HÀM TẠO GIAO DIỆN POPUP ĐẶT HÀNG THÀNH CÔNG ĐẸP MẮT
 // ==============================================================
-function showSuccessModal(name, orderId, method) {
+function showSuccessModal(name, orderId, method, totalAmount = 0, phone = '') {
     let oldModal = document.getElementById('custom-success-modal');
     if (oldModal) oldModal.remove();
 
-    let methodMsg = "";
-    if (method === 'bank') {
-        methodMsg = "Vui lòng đảm bảo bạn đã quét mã QR để chuyển khoản. Hệ thống Admin đã ghi nhận đơn hàng.";
-    } else {
-        methodMsg = "Chúng tôi sẽ đóng gói và thu tiền mặt (COD) tận nhà cho bạn.";
-    }
+    const isBank = method === 'bank';
+    const paymentTitle = isBank ? 'Chuyển khoản VietQR' : 'Ship COD';
+    const paymentNote = isBank
+        ? 'Shop sẽ kiểm tra sao kê và xác nhận đơn sau khi nhận được chuyển khoản.'
+        : 'Bạn thanh toán tiền mặt khi nhận hàng.';
+    const trackUrl = `tracking.html${phone ? `?phone=${encodeURIComponent(phone)}` : ''}`;
 
     const modalHtml = `
-    <div id="custom-success-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999999; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease;">
-        <div style="background: white; width: 90%; max-width: 450px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; transform: translateY(-20px); transition: transform 0.3s ease; font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; text-align: center;">
-            
-            <div style="background: #e8f8f0; padding: 30px 20px 20px;">
-                <div style="width: 70px; height: 70px; background: #27ae60; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; margin: 0 auto 15px; box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);">
+    <div id="custom-success-modal" style="position: fixed; inset: 0; background: rgba(0,0,0,0.62); z-index: 999999; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; padding: 16px; box-sizing: border-box;">
+        <div style="background: white; width: 100%; max-width: 520px; border-radius: 22px; box-shadow: 0 24px 70px rgba(0,0,0,0.28); overflow: hidden; transform: translateY(-20px); transition: transform 0.3s ease; font-family: 'Segoe UI', Tahoma, Geneva, sans-serif; text-align: center;">
+            <div style="background: linear-gradient(135deg, #fff2eb, #e8f8f0); padding: 28px 24px 20px;">
+                <div style="width: 76px; height: 76px; background: #27ae60; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 14px; box-shadow: 0 10px 25px rgba(39,174,96,.28);">
                     <i class="fas fa-check"></i>
                 </div>
-                <h3 style="margin: 0; color: #219653; font-size: 20px; font-weight: bold;">ĐẶT HÀNG THÀNH CÔNG!</h3>
+                <h3 style="margin: 0; color: #14532d; font-size: 22px; font-weight: 900;">ĐẶT HÀNG THÀNH CÔNG!</h3>
+                <p style="margin: 8px 0 0; color:#555; font-size: 14px;">Cảm ơn <strong style="color:#f57224;">${name}</strong> đã mua sắm tại MORACHI.</p>
             </div>
-            
-            <div style="padding: 25px 20px;">
-                <p style="margin-top: 0; color: #333; font-size: 15px; line-height: 1.5; font-weight: 500;">
-                    Cảm ơn <strong style="color: #f57224;">${name}</strong> đã tin tưởng và mua sắm tại MORACHI!
-                </p>
-                
-                <div style="background: #f9f9f9; padding: 15px; border-radius: 8px; margin: 15px 0; border: 1px dashed #ddd; font-size: 14px; color: #555;">
-                    <div style="margin-bottom: 5px;">Mã đơn hàng của bạn là:</div>
-                    <div style="font-size: 22px; font-weight: bold; color: #f57224; letter-spacing: 1px;">${orderId}</div>
+
+            <div style="padding: 22px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; text-align:left; margin-bottom: 14px;">
+                    <div style="background:#fafafa; border:1px solid #eee; border-radius:14px; padding:14px;">
+                        <div style="font-size:12px; color:#888; margin-bottom:6px;">Mã đơn hàng</div>
+                        <div style="font-size:20px; font-weight:900; color:#f57224; letter-spacing:.5px;">${orderId}</div>
+                    </div>
+                    <div style="background:#fafafa; border:1px solid #eee; border-radius:14px; padding:14px;">
+                        <div style="font-size:12px; color:#888; margin-bottom:6px;">Tổng thanh toán</div>
+                        <div style="font-size:20px; font-weight:900; color:#ba1a1a;">${Number(totalAmount || 0).toLocaleString('vi-VN')} đ</div>
+                    </div>
                 </div>
-                
-                <p style="margin-bottom: 0; color: #666; font-size: 14px; line-height: 1.6;">
-                    ${methodMsg}
-                </p>
+
+                <div style="background:${isBank ? '#eef6ff' : '#f6ffed'}; border:1px dashed ${isBank ? '#93c5fd' : '#86efac'}; border-radius:14px; padding:14px; text-align:left; display:flex; gap:12px; align-items:flex-start;">
+                    <div style="width:36px;height:36px;border-radius:50%;background:white;display:flex;align-items:center;justify-content:center;color:${isBank ? '#2563eb' : '#16a34a'};flex-shrink:0;"><i class="fas ${isBank ? 'fa-building-columns' : 'fa-money-bill-wave'}"></i></div>
+                    <div>
+                        <div style="font-weight:900; color:#222; font-size:14px;">${paymentTitle}</div>
+                        <div style="font-size:13px; color:#555; line-height:1.5; margin-top:3px;">${paymentNote}</div>
+                    </div>
+                </div>
             </div>
-            
-            <div style="padding: 20px; background: #fafafa; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid #eee;">
-                <button id="btn-success-track" style="width: 100%; padding: 14px; border: none; background: #f57224; color: white; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(245, 114, 36, 0.3); font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+
+            <div style="padding: 18px 22px 22px; background: #fafafa; display: flex; flex-direction: column; gap: 10px; border-top: 1px solid #eee;">
+                <button id="btn-success-track" style="width: 100%; padding: 14px; border: none; background: #f57224; color: white; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.2s; box-shadow: 0 7px 18px rgba(245,114,36,.25); font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 8px;">
                     <i class="fas fa-map-marker-alt"></i> TRA CỨU ĐƠN HÀNG
                 </button>
-                <button id="btn-success-close" style="width: 100%; padding: 12px; border: 1px solid #ddd; background: white; color: #555; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 13px;">
+                <button id="btn-success-close" style="width: 100%; padding: 12px; border: 1px solid #ddd; background: white; color: #555; border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.2s; font-size: 13px;">
                     TIẾP TỤC MUA SẮM
                 </button>
             </div>
-            
         </div>
     </div>`;
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-    
+
     const modal = document.getElementById('custom-success-modal');
     const box = modal.querySelector('div');
 
@@ -913,18 +918,18 @@ function showSuccessModal(name, orderId, method) {
 
     const btnTrack = document.getElementById('btn-success-track');
     const btnClose = document.getElementById('btn-success-close');
-    
+
     btnTrack.onmouseover = () => btnTrack.style.background = '#d35400';
     btnTrack.onmouseout = () => btnTrack.style.background = '#f57224';
     btnClose.onmouseover = () => btnClose.style.background = '#f5f5f5';
     btnClose.onmouseout = () => btnClose.style.background = 'white';
 
-    btnClose.onclick = () => { 
-        closeCustomSuccessModal(modal, box); 
-    };
-    btnTrack.onclick = () => { 
+    btnClose.onclick = () => {
         closeCustomSuccessModal(modal, box);
-        window.location.href = "tracking.html"; 
+    };
+    btnTrack.onclick = () => {
+        closeCustomSuccessModal(modal, box);
+        window.location.href = trackUrl;
     };
 }
 

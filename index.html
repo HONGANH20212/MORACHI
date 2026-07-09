@@ -51,9 +51,9 @@
                     </a>
                 </div>
 
-                <div class="search-bar">
-                    <input type="text" placeholder="Tìm sản phẩm, thương hiệu bạn mong muốn...">
-                    <button><i class="fa-solid fa-magnifying-glass"></i></button>
+                <div class="search-bar" data-smart-search="home">
+                    <input type="text" id="home-search-input" autocomplete="off" placeholder="Tìm sản phẩm, thương hiệu bạn mong muốn...">
+                    <button type="button"><i class="fa-solid fa-magnifying-glass"></i></button>
                 </div>
 
                 <div class="header-actions">
@@ -97,7 +97,14 @@
         <aside class="sidebar">
             <div class="sidebar-wrapper">
                 
-                <div class="filter-section">
+                <div class="filter-section" data-filter="category">
+                    <h3>DANH MỤC</h3>
+                    <div id="category-filter-list" class="category-filter-list"></div>
+                </div>
+
+                <div class="filter-divider"></div>
+
+                <div class="filter-section" data-filter="price">
                     <h3>KHOẢNG GIÁ</h3>
                     
                     <div class="price-inputs">
@@ -119,9 +126,9 @@
 
                 <div class="filter-divider"></div>
                 
-                <div class="filter-section">
+                <div class="filter-section" data-filter="brand">
                     <h3>THƯƠNG HIỆU</h3>
-                    </div>
+                </div>
 
             </div>
         </aside>

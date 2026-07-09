@@ -568,9 +568,9 @@
                     </a>
                 </div>
 
-                <div class="search-bar">
-                    <input type="text" placeholder="Tìm sản phẩm, thương hiệu bạn mong muốn...">
-                    <button><i class="fa-solid fa-magnifying-glass"></i></button>
+                <div class="search-bar" data-smart-search="detail">
+                    <input type="text" id="detail-search-input" autocomplete="off" placeholder="Tìm sản phẩm, thương hiệu bạn mong muốn...">
+                    <button type="button"><i class="fa-solid fa-magnifying-glass"></i></button>
                 </div>
 
                 <div class="header-actions">
@@ -691,9 +691,200 @@
 
         let currentProduct = null;
         let currentVariant = null;
+        let detailProductsCache = [];
 
         function formatVND(val) {
             return Number(val || 0).toLocaleString('vi-VN') + ' đ';
+        }
+
+
+        function escapeDetailHtml(text) {
+            return String(text ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function normalizeDetailText(value) {
+            return String(value ?? '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/đ/g, 'd')
+                .replace(/Đ/g, 'D')
+                .toLowerCase()
+                .trim();
+        }
+
+        function getDetailSearchText(product) {
+            const variantsText = Array.isArray(product.variants)
+                ? product.variants.map(v => `${v.name || ''} ${v.status || ''} ${v.date || v.expected_date || ''}`).join(' ')
+                : '';
+            return [product.title, product.brand, product.category, product.discount, product.description, product.specifications, variantsText].filter(Boolean).join(' ');
+        }
+
+        function inferDetailCategoryIds(product) {
+            const text = normalizeDetailText(getDetailSearchText(product));
+            const ids = new Set();
+            const rules = [
+                ['ma-hong', ['má hồng', 'ma hong', 'blush', 'cheek', 'cream cheek']],
+                ['phan-phu', ['phấn phủ', 'phan phu', 'powder', 'finish powder', 'marshmallow']],
+                ['kem-nen', ['kem nền', 'kem nen', 'foundation', 'cushion', 'kem lót', 'kem lot', 'primer', 'base']],
+                ['son', ['son', 'lip', 'lipstick', 'tint', 'gloss', 'rouge']],
+                ['skincare', ['skincare', 'serum', 'toner', 'lotion', 'cleanser', 'sữa rửa mặt', 'sua rua mat', 'kem dưỡng', 'kem duong', 'chống nắng', 'chong nang', 'sunscreen', 'spf']]
+            ];
+            rules.forEach(([id, keywords]) => {
+                if (keywords.some(k => text.includes(normalizeDetailText(k)))) ids.add(id);
+            });
+            return ids;
+        }
+
+        function getRelatedProducts(product, products, limit = 4) {
+            if (!product || !Array.isArray(products)) return [];
+            const currentId = String(product.id);
+            const currentBrand = normalizeDetailText(product.brand || '');
+            const currentCategories = inferDetailCategoryIds(product);
+            const currentTitleWords = normalizeDetailText(product.title || '').split(/\s+/).filter(w => w.length >= 4);
+
+            return products
+                .filter(item => String(item.id) !== currentId)
+                .map(item => {
+                    let score = 0;
+                    const itemBrand = normalizeDetailText(item.brand || '');
+                    if (currentBrand && itemBrand === currentBrand) score += 50;
+
+                    const itemCategories = inferDetailCategoryIds(item);
+                    currentCategories.forEach(id => {
+                        if (itemCategories.has(id)) score += 25;
+                    });
+
+                    const itemText = normalizeDetailText(getDetailSearchText(item));
+                    currentTitleWords.forEach(word => {
+                        if (itemText.includes(word)) score += 3;
+                    });
+
+                    const order = Number(item.display_order ?? item.sort_order ?? item.position) || 999999;
+                    return { item, score, order };
+                })
+                .filter(row => row.score > 0)
+                .sort((a, b) => b.score - a.score || a.order - b.order)
+                .slice(0, limit)
+                .map(row => row.item);
+        }
+
+        function renderRelatedProductsHtml(product, products) {
+            const related = getRelatedProducts(product, products, 4);
+            if (!related.length) return '';
+
+            return `
+                <section class="related-products-section">
+                    <div class="related-products-heading">
+                        <div>
+                            <h2><i class="fa-solid fa-heart" style="color: var(--primary-red);"></i> Sản phẩm liên quan</h2>
+                            <p>Gợi ý thêm sản phẩm cùng thương hiệu hoặc cùng nhóm sản phẩm.</p>
+                        </div>
+                        <a href="/?search=${encodeURIComponent(product.brand || '')}" style="font-size:13px; color:var(--primary-red); font-weight:700;">Xem thêm</a>
+                    </div>
+                    <div class="related-products-grid">
+                        ${related.map(item => `
+                            <div class="related-product-card" onclick="window.location.href='product-detail.html?id=${encodeURIComponent(item.id)}'">
+                                <img src="${escapeDetailHtml(item.thumbnail || 'images/icon-logo.png')}" alt="${escapeDetailHtml(item.title || 'Sản phẩm')}" onerror="this.src='images/icon-logo.png'">
+                                <div class="related-product-info">
+                                    <div class="related-product-brand">${escapeDetailHtml(item.brand || 'MORACHI')}</div>
+                                    <div class="related-product-title">${escapeDetailHtml(item.title || 'Sản phẩm')}</div>
+                                    <div class="related-product-price">${formatVND(item.current_price)}</div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </section>
+            `;
+        }
+
+        function initDetailSmartSearch(products) {
+            const searchBar = document.querySelector('.search-bar');
+            if (!searchBar || searchBar.dataset.detailSmartBound === 'true') return;
+
+            const input = searchBar.querySelector('input');
+            const button = searchBar.querySelector('button');
+            if (!input || !button) return;
+
+            searchBar.dataset.detailSmartBound = 'true';
+            searchBar.classList.add('smart-search-wrap');
+
+            let dropdown = searchBar.querySelector('.smart-search-dropdown');
+            if (!dropdown) {
+                dropdown = document.createElement('div');
+                dropdown.className = 'smart-search-dropdown';
+                dropdown.style.display = 'none';
+                searchBar.appendChild(dropdown);
+            }
+
+            const getMatches = () => {
+                const q = normalizeDetailText(input.value);
+                if (!q) return [];
+                return (products || [])
+                    .filter(item => normalizeDetailText(getDetailSearchText(item)).includes(q))
+                    .slice(0, 7);
+            };
+
+            const hide = () => { dropdown.style.display = 'none'; };
+            const render = () => {
+                const keyword = input.value.trim();
+                const matches = getMatches();
+                if (!keyword || !matches.length) {
+                    hide();
+                    return;
+                }
+
+                dropdown.innerHTML = `
+                    <div class="smart-search-title"><i class="fa-solid fa-bolt"></i> Gợi ý phù hợp</div>
+                    ${matches.map(item => `
+                        <div class="smart-search-item" data-id="${escapeDetailHtml(item.id)}">
+                            <img src="${escapeDetailHtml(item.thumbnail || 'images/icon-logo.png')}" alt="${escapeDetailHtml(item.title || 'Sản phẩm')}" onerror="this.src='images/icon-logo.png'">
+                            <div class="smart-search-info">
+                                <div class="smart-search-name">${escapeDetailHtml(item.title || 'Sản phẩm')}</div>
+                                <div class="smart-search-meta">${escapeDetailHtml(item.brand || 'MORACHI')} • ${formatVND(item.current_price)}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                    <button type="button" class="smart-search-view-all"><i class="fa-solid fa-magnifying-glass"></i> Xem tất cả kết quả cho “${escapeDetailHtml(keyword)}”</button>
+                `;
+
+                dropdown.querySelectorAll('.smart-search-item').forEach(item => {
+                    item.addEventListener('mousedown', e => e.preventDefault());
+                    item.addEventListener('click', () => {
+                        window.location.href = `product-detail.html?id=${encodeURIComponent(item.dataset.id)}`;
+                    });
+                });
+
+                const viewAll = dropdown.querySelector('.smart-search-view-all');
+                if (viewAll) {
+                    viewAll.addEventListener('mousedown', e => e.preventDefault());
+                    viewAll.addEventListener('click', () => {
+                        window.location.href = `/?search=${encodeURIComponent(keyword)}`;
+                    });
+                }
+
+                dropdown.style.display = 'block';
+            };
+
+            input.addEventListener('input', render);
+            input.addEventListener('focus', render);
+            input.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    window.location.href = `/?search=${encodeURIComponent(input.value.trim())}`;
+                }
+                if (e.key === 'Escape') hide();
+            });
+            button.addEventListener('click', () => {
+                window.location.href = `/?search=${encodeURIComponent(input.value.trim())}`;
+            });
+            document.addEventListener('click', e => {
+                if (!searchBar.contains(e.target)) hide();
+            });
         }
 
         function renderSpecsTable(text) {
@@ -732,10 +923,12 @@
             if (cachedData) {
                 try {
                     const products = JSON.parse(cachedData);
-                    const product = products.find(p => p.id === productId);
+                    detailProductsCache = Array.isArray(products) ? products : [];
+                    initDetailSmartSearch(detailProductsCache);
+                    const product = detailProductsCache.find(p => String(p.id) === String(productId));
                     if (product) {
                         currentProduct = product; 
-                        renderProductDetail(product);
+                        renderProductDetail(product, detailProductsCache);
                         return; 
                     }
                 } catch(e) {}
@@ -745,10 +938,12 @@
                 const response = await fetch(API_URL);
                 if (!response.ok) throw new Error("API Error");
                 const products = await response.json();
+                detailProductsCache = Array.isArray(products) ? products : [];
+                initDetailSmartSearch(detailProductsCache);
                 
-                sessionStorage.setItem(cacheKey, JSON.stringify(products));
+                sessionStorage.setItem(cacheKey, JSON.stringify(detailProductsCache));
 
-                const product = products.find(p => p.id === productId);
+                const product = detailProductsCache.find(p => String(p.id) === String(productId));
 
                 if (!product) {
                     root.innerHTML = `<div style="background: white; padding: 50px; text-align: center; border-radius: 8px;">Sản phẩm không tồn tại hoặc đã bị xóa.</div>`;
@@ -756,13 +951,13 @@
                 }
 
                 currentProduct = product; 
-                renderProductDetail(product);
+                renderProductDetail(product, detailProductsCache);
             } catch (error) {
                 root.innerHTML = `<div style="background: white; padding: 50px; text-align: center; border-radius: 8px; color:var(--primary-red);">Lỗi kết nối máy chủ. Vui lòng thử lại.</div>`;
             }
         }
 
-        function renderProductDetail(p) {
+        function renderProductDetail(p, products = detailProductsCache) {
             document.title = p.title + " | MORACHI";
             document.getElementById('bread-brand').innerText = p.brand;
             document.getElementById('bread-title').innerText = p.title;
@@ -898,6 +1093,8 @@
                     <div><i class="fa-solid fa-money-bill-wave"></i> 15.000đ</div>
                     <div><i class="fa-regular fa-clock"></i> Theo dõi đơn</div>
                 </div>
+
+                ${renderRelatedProductsHtml(p, products)}
             `;
 
             document.getElementById('product-detail-root').innerHTML = html;

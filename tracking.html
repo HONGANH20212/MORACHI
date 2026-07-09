@@ -259,6 +259,97 @@
     </footer>
 
     <script>
+        function escapeTrackHtml(text) {
+            return String(text ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function getOrderStatusText(order) {
+            return String(order && order.status ? order.status : 'Chờ xác nhận');
+        }
+
+        function canCancelOrder(order) {
+            const status = getOrderStatusText(order).toLowerCase();
+            const lockedKeywords = [
+                'đang chuẩn bị hàng',
+                'dang chuan bi hang',
+                'đang giao hàng',
+                'dang giao hang',
+                'đã giao hàng',
+                'da giao hang',
+                'đã hủy',
+                'da huy'
+            ];
+
+            if (order && order.spx_tracking_code) return false;
+            return !lockedKeywords.some(keyword => status.includes(keyword));
+        }
+
+        function getStatusVisual(order) {
+            const status = getOrderStatusText(order).toLowerCase();
+            const hasTracking = !!(order && order.spx_tracking_code);
+
+            if (status.includes('đã hủy') || status.includes('da huy')) {
+                return { bg: '#fdf2f2', color: '#c51622', icon: 'fa-ban' };
+            }
+            if (status.includes('đã giao') || status.includes('da giao')) {
+                return { bg: '#e8f8f0', color: '#16a34a', icon: 'fa-circle-check' };
+            }
+            if (status.includes('giao') || hasTracking) {
+                return { bg: '#eef6ff', color: '#2563eb', icon: 'fa-truck' };
+            }
+            return { bg: '#fff7ed', color: '#c2410c', icon: 'fa-box' };
+        }
+
+        function renderCancelBox(order) {
+            if (!canCancelOrder(order)) {
+                return `<div class="cancel-note"><i class="fa-solid fa-circle-info"></i> Đơn đã vào giai đoạn chuẩn bị/giao hàng nên không thể hủy trực tiếp trên website.</div>`;
+            }
+
+            const dbId = order.id || order._id || order.order_id || '';
+            if (!dbId) return '';
+
+            return `
+                <div class="order-cancel-box">
+                    <button class="btn-cancel-order" onclick="cancelOrder('${escapeTrackHtml(dbId)}', '${escapeTrackHtml(order.order_id || '')}')">
+                        <i class="fa-solid fa-ban"></i> Hủy đơn này
+                    </button>
+                </div>
+            `;
+        }
+
+        async function cancelOrder(id, orderCode) {
+            const reason = prompt(`Bạn muốn hủy đơn ${orderCode || ''}?\nVui lòng nhập lý do hủy đơn:`, 'Tôi muốn hủy đơn');
+            if (reason === null) return;
+
+            const cleanReason = reason.trim() || 'Khách yêu cầu hủy đơn';
+            if (!confirm('Xác nhận hủy đơn? Sau khi hủy, shop sẽ không tiếp tục xử lý đơn này.')) return;
+
+            try {
+                const response = await fetch(`/api/orders/${encodeURIComponent(id)}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        status: 'Đã hủy',
+                        cancel_reason: cleanReason,
+                        cancelled_at: new Date().toISOString()
+                    })
+                });
+
+                if (!response.ok) throw new Error('Không cập nhật được trạng thái đơn hàng');
+
+                alert('Đã gửi yêu cầu hủy đơn thành công.');
+                fetchOrders();
+            } catch (err) {
+                console.error(err);
+                alert('Không thể hủy đơn lúc này. Vui lòng nhắn shop để được hỗ trợ.');
+            }
+        }
+
         async function fetchOrders() {
             const phone = document.getElementById('search-phone').value.trim();
             const resultsDiv = document.getElementById('results-container');
@@ -273,8 +364,7 @@
             loadingDiv.style.display = "block";
 
             try {
-                // Gọi API backend tìm đơn theo SĐT
-                const response = await fetch(`/api/track?phone=${phone}`);
+                const response = await fetch(`/api/track?phone=${encodeURIComponent(phone)}`);
                 const orders = await response.json();
                 
                 loadingDiv.style.display = "none";
@@ -285,45 +375,58 @@
                 }
 
                 resultsDiv.innerHTML = orders.map(o => {
-                    const dateStr = new Date(o.created_at).toLocaleString('vi-VN');
-                    // Phân biệt màu sắc Trạng thái
-                    const isDelivering = o.status.toLowerCase().includes("giao") || o.spx_tracking_code;
-                    const statusClass = isDelivering ? 'status-delivering' : 'status-pending';
+                    const createdAt = o.created_at || o.date || new Date().toISOString();
+                    const parsedDate = new Date(createdAt);
+                    const dateStr = isNaN(parsedDate.getTime()) ? 'Chưa cập nhật' : parsedDate.toLocaleString('vi-VN');
+                    const statusText = getOrderStatusText(o);
+                    const visual = getStatusVisual(o);
+                    const items = Array.isArray(o.items) ? o.items : (Array.isArray(o.products) ? o.products : []);
                     
                     let spxHtml = "";
-                    // Nếu Admin đã nhập mã SPX thì mới in ô xanh này ra cho khách
                     if (o.spx_tracking_code) {
                         spxHtml = `
                             <div class="spx-box">
                                 <div>
                                     <div style="font-size:12px; color:#555;">Đơn vị: <b>Shopee Xpress (SPX)</b></div>
-                                    <div class="spx-code" style="font-size: 16px; font-weight: bold; color: #111;">${o.spx_tracking_code}</div>
+                                    <div class="spx-code" style="font-size: 16px; font-weight: bold; color: #111;">${escapeTrackHtml(o.spx_tracking_code)}</div>
                                 </div>
                                 <a href="https://spx.vn" target="_blank" style="background: var(--primary-red); color: white; text-decoration: none; padding: 8px 15px; border-radius: 6px; font-size: 12px; font-weight: bold;"><i class="fas fa-search-location"></i> SPX</a>
                             </div>
                         `;
                     }
 
-                    const itemsHtml = o.items.map(i => `<div>• ${i.title} (${i.variant}) <b>x${i.quantity}</b></div>`).join('');
+                    const itemsHtml = items.length
+                        ? items.map(i => `<div>• ${escapeTrackHtml(i.title || 'Sản phẩm')} (${escapeTrackHtml(i.variant || 'Mặc định')}) <b>x${Number(i.quantity || 1)}</b></div>`).join('')
+                        : '<div style="color:#888;">Chưa có dữ liệu sản phẩm.</div>';
+
+                    const paymentText = o.payment_label || (o.payment_method === 'bank' ? 'Chuyển khoản VietQR' : (o.payment_method === 'cod' ? 'Ship COD' : 'Chưa cập nhật'));
+                    const paymentStatus = o.payment_status || '';
+                    const total = Number(o.total_amount || o.total || 0);
 
                     return `
                         <div class="order-card">
-                            <div class="order-header" style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee; padding-bottom: 10px; margin-bottom: 15px;">
-                                <span class="order-id" style="font-weight: bold; color: var(--primary-red); font-size: 14px;">Mã: ${o.order_id || 'N/A'}</span>
-                                <span class="order-date" style="font-size: 12px; color: #888;">${dateStr}</span>
+                            <div class="order-header" style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee; padding-bottom: 10px; margin-bottom: 15px; gap:10px;">
+                                <span class="order-id" style="font-weight: bold; color: var(--primary-red); font-size: 14px;">Mã: ${escapeTrackHtml(o.order_id || 'N/A')}</span>
+                                <span class="order-date" style="font-size: 12px; color: #888;">${escapeTrackHtml(dateStr)}</span>
                             </div>
                             
-                            <div style="display: inline-block; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-bottom: 15px; background: ${isDelivering ? '#e8f8f0' : '#fdf2f2'}; color: ${isDelivering ? '#27ae60' : 'var(--primary-red)'};"><i class="fas ${isDelivering ? 'fa-truck' : 'fa-box'}"></i> Trạng thái: ${o.status}</div>
+                            <div style="display: inline-block; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-bottom: 15px; background: ${visual.bg}; color: ${visual.color};"><i class="fas ${visual.icon}"></i> Trạng thái: ${escapeTrackHtml(statusText)}</div>
                             
                             ${spxHtml}
+
+                            <div style="background:#fafafa; border-radius:10px; padding:12px; margin-bottom:15px; font-size:13px; color:#555;">
+                                <div><strong>Thanh toán:</strong> ${escapeTrackHtml(paymentText)}</div>
+                                ${paymentStatus ? `<div style="margin-top:4px;"><strong>Tình trạng:</strong> ${escapeTrackHtml(paymentStatus)}</div>` : ''}
+                            </div>
                             
                             <div class="order-items" style="font-size: 13px; color: #444; line-height: 1.6;">
                                 <strong style="margin-bottom:5px; display:block; color: #111;">Sản phẩm đã mua:</strong>
                                 ${itemsHtml}
                             </div>
                             <div class="order-total" style="border-top: 1px dashed #eee; padding-top: 15px; margin-top: 15px; font-weight: bold; text-align: right; font-size: 15px; color: #111;">
-                                Tổng: <span style="color:var(--primary-red); font-size: 18px; margin-left: 5px;">${Number(o.total_amount).toLocaleString('vi-VN')} đ</span>
+                                Tổng: <span style="color:var(--primary-red); font-size: 18px; margin-left: 5px;">${total.toLocaleString('vi-VN')} đ</span>
                             </div>
+                            ${renderCancelBox(o)}
                         </div>
                     `;
                 }).join('');
@@ -333,6 +436,16 @@
                 resultsDiv.innerHTML = `<div style="text-align:center; color:var(--primary-red);">Lỗi kết nối máy chủ! Vui lòng thử lại sau.</div>`;
             }
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const phone = params.get('phone');
+            if (phone) {
+                const input = document.getElementById('search-phone');
+                input.value = phone;
+                fetchOrders();
+            }
+        });
     </script>
 </body>
 </html>
