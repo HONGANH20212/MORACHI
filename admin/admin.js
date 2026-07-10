@@ -774,57 +774,60 @@ window.buildOrderAddress = window.buildOrderAddress || function(order) {
     const o = order || {};
     const c = o.customer_info || {};
 
+    // Ưu tiên các field top-level vì phần khách tự chỉnh thông tin thường cập nhật nhanh các field này.
+    const fullAddress = window.firstOrderValue(
+        o.customer_address,
+        o.shipping_address,
+        o.full_address,
+        o.address,
+        c.customer_address,
+        c.shipping_address,
+        c.full_address
+    );
+
     const detail = window.firstOrderValue(
-        c.address,
-        c.address_detail,
-        c.detail_address,
-        c.street,
         o.customer_address,
         o.address,
         o.address_detail,
         o.detail_address,
-        o.street
+        o.street,
+        c.address,
+        c.address_detail,
+        c.detail_address,
+        c.street
     );
 
     const ward = window.firstOrderValue(
-        c.ward,
-        c.ward_name,
-        c.customer_ward,
         o.ward,
         o.ward_name,
-        o.customer_ward
+        o.customer_ward,
+        c.ward,
+        c.ward_name,
+        c.customer_ward
     );
 
     const district = window.firstOrderValue(
-        c.district,
-        c.dist,
-        c.district_name,
-        c.customer_district,
         o.district,
         o.dist,
         o.district_name,
-        o.customer_district
+        o.customer_district,
+        c.district,
+        c.dist,
+        c.district_name,
+        c.customer_district
     );
 
     const province = window.firstOrderValue(
-        c.province,
-        c.prov,
-        c.city,
-        c.province_name,
-        c.customer_province,
         o.province,
         o.prov,
         o.city,
         o.province_name,
-        o.customer_province
-    );
-
-    const fullAddress = window.firstOrderValue(
-        c.full_address,
-        c.shipping_address,
-        c.customer_address,
-        o.full_address,
-        o.shipping_address
+        o.customer_province,
+        c.province,
+        c.prov,
+        c.city,
+        c.province_name,
+        c.customer_province
     );
 
     const parts = [];
@@ -1095,6 +1098,13 @@ window.renderOrdersTable = function(ordersList) {
             ? `<div style="margin-top:4px; color:var(--success); font-size:11px; font-weight:500;"><i class="fas fa-truck"></i> SPX: <b>${o.spx_tracking_code}</b></div>` 
             : ``;
 
+        const customerNameText = window.getOrderCustomerName
+            ? window.getOrderCustomerName(o)
+            : window.firstOrderValue(o.customer_name, o.name, o.receiver_name, c.name, c.customer_name, 'N/A');
+        const customerPhoneText = window.getOrderCustomerPhone
+            ? window.getOrderCustomerPhone(o)
+            : window.firstOrderValue(o.customer_phone, o.phone, o.receiver_phone, c.phone, c.customer_phone, '');
+
         const addressText = window.buildOrderAddress(o);
         const addressHtml = addressText
             ? `<div style="font-size:12px; color:#555; margin-top:5px; line-height:1.45; max-width: 280px;"><i class="fas fa-map-marker-alt" style="color:#aaa; font-size:10px; margin-right:4px;"></i>${window.escapeAdminHtml(addressText)}</div>`
@@ -1110,8 +1120,8 @@ window.renderOrdersTable = function(ordersList) {
                     <div style="font-size:11px; color:var(--text-light); margin-top:3px;">${timeDisplay}</div>
                 </td>
                 <td>
-                    <div style="font-weight:600; color:var(--text-main); font-size:13px;">${window.escapeAdminHtml(c.name || 'N/A')}</div>
-                    <div style="font-size:12px; color:var(--text-light); margin-top:3px;"><i class="fas fa-phone-alt" style="color:#aaa; font-size:10px;"></i> ${window.escapeAdminHtml(c.phone || '')}</div>
+                    <div style="font-weight:600; color:var(--text-main); font-size:13px;">${window.escapeAdminHtml(customerNameText || 'N/A')}</div>
+                    <div style="font-size:12px; color:var(--text-light); margin-top:3px;"><i class="fas fa-phone-alt" style="color:#aaa; font-size:10px;"></i> ${window.escapeAdminHtml(customerPhoneText || '')}</div>
                     ${addressHtml}
                 </td>
                 <td>
@@ -1304,14 +1314,14 @@ window.normalizeOrderPhone = window.normalizeOrderPhone || function(value) {
 window.getOrderCustomerName = window.getOrderCustomerName || function(order) {
     const c = (order && order.customer_info) || {};
     return window.cleanOrderText(
-        c.name || c.customer_name || order.customer_name || order.name || order.receiver_name || ""
+        order.customer_name || order.name || order.receiver_name || c.name || c.customer_name || ""
     );
 };
 
 window.getOrderCustomerPhone = window.getOrderCustomerPhone || function(order) {
     const c = (order && order.customer_info) || {};
     return window.normalizeOrderPhone(
-        c.phone || c.customer_phone || order.customer_phone || order.phone || order.receiver_phone || ""
+        order.customer_phone || order.phone || order.receiver_phone || c.phone || c.customer_phone || ""
     );
 };
 
@@ -1634,8 +1644,8 @@ window.exportSPX = function() {
 
     orders.forEach(o => {
         let orderId = o.order_id || "";
-        let customerName = o.customer_info ? (o.customer_info.name || "") : "";
-        let phone = o.customer_info ? (o.customer_info.phone || "") : "";
+        let customerName = window.getOrderCustomerName ? window.getOrderCustomerName(o) : (o.customer_name || (o.customer_info ? (o.customer_info.name || "") : ""));
+        let phone = window.getOrderCustomerPhone ? window.getOrderCustomerPhone(o) : (o.customer_phone || (o.customer_info ? (o.customer_info.phone || "") : ""));
         let address = window.buildOrderAddress(o);
         
         let productsStr = "";
