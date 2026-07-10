@@ -171,6 +171,133 @@
         .feat-text h4 { font-size: 14px; color: #111; margin: 0 0 4px 0; font-weight: 600; }
         .feat-text p { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin: 0; }
 
+
+
+        /* --- CUSTOMER ORDER ACTIONS --- */
+        .customer-info-box {
+            background: #fffafa;
+            border: 1px solid #f5dddd;
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin: 14px 0;
+            font-size: 13px;
+            color: #444;
+            line-height: 1.7;
+        }
+        .customer-info-box strong { color: #111; }
+        .order-action-row {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        .order-action-btn {
+            border: none;
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            transition: 0.2s;
+        }
+        .btn-edit-order { background: #fff4e6; color: #c56b00; }
+        .btn-edit-order:hover { background: #ffe8c2; }
+        .btn-cancel-order { background: #fdecec; color: var(--primary-red); }
+        .btn-cancel-order:hover { background: #ffdada; }
+        .order-locked-note {
+            margin-top: 14px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            background: #f6f7f9;
+            color: #777;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .track-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .track-modal-box {
+            width: 100%;
+            max-width: 520px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .track-modal-head {
+            padding: 18px 22px;
+            background: #fff7f7;
+            border-bottom: 1px solid #f2dfdf;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .track-modal-head h3 { margin: 0; font-size: 16px; color: #111; }
+        .track-modal-close {
+            border: none;
+            background: transparent;
+            font-size: 18px;
+            cursor: pointer;
+            color: #888;
+        }
+        .track-modal-body { padding: 22px; }
+        .track-modal-field { margin-bottom: 14px; }
+        .track-modal-field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 6px;
+        }
+        .track-modal-field input,
+        .track-modal-field textarea {
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #e2e2e2;
+            border-radius: 8px;
+            padding: 11px 12px;
+            font-size: 14px;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+        }
+        .track-modal-field textarea { min-height: 90px; resize: vertical; }
+        .track-modal-field input:focus,
+        .track-modal-field textarea:focus {
+            border-color: var(--primary-red);
+            box-shadow: 0 0 0 3px rgba(197, 22, 34, 0.08);
+        }
+        .track-modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 18px;
+        }
+        .modal-btn-secondary,
+        .modal-btn-primary {
+            border: none;
+            border-radius: 8px;
+            padding: 11px 16px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+        }
+        .modal-btn-secondary { background: #f2f2f2; color: #555; }
+        .modal-btn-primary { background: var(--primary-red); color: #fff; }
+        .modal-btn-primary:disabled { opacity: 0.65; cursor: not-allowed; }
+
         /* --- RESPONSIVE MOBILE --- */
         @media (max-width: 768px) {
             .center-card { padding: 40px 20px; }
@@ -259,6 +386,147 @@
     </footer>
 
     <script>
+        let currentTrackingPhone = "";
+        let currentTrackingOrders = [];
+
+        function escapeTrackHtml(value) {
+            return String(value ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function normalizeText(value) {
+            return String(value ?? "")
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .replace(/đ/g, "d");
+        }
+
+        function getOrderDbId(order) {
+            return order && (order.id || order._id || order.order_id || "");
+        }
+
+        function getCustomerInfo(order) {
+            const info = order.customer_info || {};
+            return {
+                name: info.name || order.customer_name || order.name || "",
+                phone: info.phone || order.customer_phone || order.phone || "",
+                address: info.address || order.customer_address || order.address || "",
+                prov: info.prov || order.prov || "",
+                dist: info.dist || order.dist || "",
+                ward: info.ward || order.ward || ""
+            };
+        }
+
+        function buildFullAddress(info) {
+            const parts = [info.address, info.ward, info.dist, info.prov]
+                .map(v => String(v || "").trim())
+                .filter(Boolean);
+            return [...new Set(parts)].join(", ");
+        }
+
+        function isOrderEditable(order) {
+            const status = normalizeText(order && order.status);
+
+            // Khách chỉ được hủy/chỉnh sửa khi đơn còn ở bước mới tạo/chờ xác nhận.
+            // Khi đã chuẩn bị, đang giao, hoàn thành/giao xong hoặc đã hủy thì khóa thao tác.
+            const lockedKeywords = [
+                "dang chuan bi",
+                "dang giao",
+                "da giao",
+                "hoan thanh",
+                "da hoan thanh",
+                "da huy"
+            ];
+
+            if (order && order.spx_tracking_code) return false;
+            return !lockedKeywords.some(keyword => status.includes(keyword));
+        }
+
+        function getOrderById(orderId) {
+            const id = String(orderId || "");
+            return currentTrackingOrders.find(o => String(getOrderDbId(o)) === id || String(o.order_id || "") === id);
+        }
+
+        function formatDate(value) {
+            const date = value ? new Date(value) : new Date();
+            return Number.isNaN(date.getTime()) ? "" : date.toLocaleString('vi-VN');
+        }
+
+        function renderOrderCard(o) {
+            const dateStr = formatDate(o.created_at);
+            const status = o.status || "Chờ xác nhận";
+            const isDelivering = normalizeText(status).includes("giao") || o.spx_tracking_code;
+            const editable = isOrderEditable(o);
+            const orderDbId = String(getOrderDbId(o));
+            const customer = getCustomerInfo(o);
+            const fullAddress = buildFullAddress(customer);
+            const items = Array.isArray(o.items) ? o.items : (Array.isArray(o.products) ? o.products : []);
+            const itemsHtml = items.length
+                ? items.map(i => `<div>• ${escapeTrackHtml(i.title)} (${escapeTrackHtml(i.variant || 'Mặc định')}) <b>x${escapeTrackHtml(i.quantity || 1)}</b></div>`).join('')
+                : `<div style="color:#888;">Chưa có thông tin sản phẩm</div>`;
+
+            let spxHtml = "";
+            if (o.spx_tracking_code) {
+                spxHtml = `
+                    <div class="spx-box">
+                        <div>
+                            <div style="font-size:12px; color:#555;">Đơn vị: <b>Shopee Xpress (SPX)</b></div>
+                            <div class="spx-code" style="font-size: 16px; font-weight: bold; color: #111;">${escapeTrackHtml(o.spx_tracking_code)}</div>
+                        </div>
+                        <a href="https://spx.vn" target="_blank" style="background: var(--primary-red); color: white; text-decoration: none; padding: 8px 15px; border-radius: 6px; font-size: 12px; font-weight: bold;"><i class="fas fa-search-location"></i> SPX</a>
+                    </div>
+                `;
+            }
+
+            const actionHtml = editable ? `
+                <div class="order-action-row">
+                    <button class="order-action-btn btn-edit-order" onclick="openEditOrderModal('${escapeTrackHtml(orderDbId)}')">
+                        <i class="fas fa-pen"></i> Chỉnh sửa thông tin
+                    </button>
+                    <button class="order-action-btn btn-cancel-order" onclick="cancelCustomerOrder('${escapeTrackHtml(orderDbId)}')">
+                        <i class="fas fa-ban"></i> Hủy đơn
+                    </button>
+                </div>
+            ` : `
+                <div class="order-locked-note">
+                    <i class="fas fa-lock"></i> Đơn hàng đã chuyển qua trạng thái xử lý/giao hàng/hoàn thành nên không thể hủy hoặc chỉnh sửa thông tin trên trang tra cứu.
+                </div>
+            `;
+
+            return `
+                <div class="order-card">
+                    <div class="order-header" style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee; padding-bottom: 10px; margin-bottom: 15px;">
+                        <span class="order-id" style="font-weight: bold; color: var(--primary-red); font-size: 14px;">Mã: ${escapeTrackHtml(o.order_id || 'N/A')}</span>
+                        <span class="order-date" style="font-size: 12px; color: #888;">${escapeTrackHtml(dateStr)}</span>
+                    </div>
+
+                    <div style="display: inline-block; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-bottom: 15px; background: ${isDelivering ? '#e8f8f0' : '#fdf2f2'}; color: ${isDelivering ? '#27ae60' : 'var(--primary-red)'};"><i class="fas ${isDelivering ? 'fa-truck' : 'fa-box'}"></i> Trạng thái: ${escapeTrackHtml(status)}</div>
+
+                    ${spxHtml}
+
+                    <div class="customer-info-box">
+                        <div><strong>Người nhận:</strong> ${escapeTrackHtml(customer.name || 'Chưa có')}</div>
+                        <div><strong>SĐT:</strong> ${escapeTrackHtml(customer.phone || 'Chưa có')}</div>
+                        <div><strong>Địa chỉ:</strong> ${escapeTrackHtml(fullAddress || 'Chưa có')}</div>
+                    </div>
+
+                    <div class="order-items" style="font-size: 13px; color: #444; line-height: 1.6;">
+                        <strong style="margin-bottom:5px; display:block; color: #111;">Sản phẩm đã mua:</strong>
+                        ${itemsHtml}
+                    </div>
+                    <div class="order-total" style="border-top: 1px dashed #eee; padding-top: 15px; margin-top: 15px; font-weight: bold; text-align: right; font-size: 15px; color: #111;">
+                        Tổng: <span style="color:var(--primary-red); font-size: 18px; margin-left: 5px;">${Number(o.total_amount || o.total || 0).toLocaleString('vi-VN')} đ</span>
+                    </div>
+                    ${actionHtml}
+                </div>
+            `;
+        }
+
         async function fetchOrders() {
             const phone = document.getElementById('search-phone').value.trim();
             const resultsDiv = document.getElementById('results-container');
@@ -269,68 +537,165 @@
                 return;
             }
 
+            currentTrackingPhone = phone;
             resultsDiv.innerHTML = "";
             loadingDiv.style.display = "block";
 
             try {
-                // Gọi API backend tìm đơn theo SĐT
-                const response = await fetch(`/api/track?phone=${phone}`);
+                const response = await fetch(`/api/track?phone=${encodeURIComponent(phone)}&t=${Date.now()}`, { cache: "no-store" });
                 const orders = await response.json();
-                
                 loadingDiv.style.display = "none";
 
                 if (!response.ok || !orders || orders.length === 0) {
+                    currentTrackingOrders = [];
                     resultsDiv.innerHTML = `<div style="text-align:center; color:var(--primary-red); font-weight:bold; padding: 20px; background: #fdf2f2; border-radius: 8px;"><i class="fas fa-exclamation-circle"></i> Không tìm thấy đơn hàng nào thuộc về số điện thoại này!</div>`;
                     return;
                 }
 
-                resultsDiv.innerHTML = orders.map(o => {
-                    const dateStr = new Date(o.created_at).toLocaleString('vi-VN');
-                    // Phân biệt màu sắc Trạng thái
-                    const isDelivering = o.status.toLowerCase().includes("giao") || o.spx_tracking_code;
-                    const statusClass = isDelivering ? 'status-delivering' : 'status-pending';
-                    
-                    let spxHtml = "";
-                    // Nếu Admin đã nhập mã SPX thì mới in ô xanh này ra cho khách
-                    if (o.spx_tracking_code) {
-                        spxHtml = `
-                            <div class="spx-box">
-                                <div>
-                                    <div style="font-size:12px; color:#555;">Đơn vị: <b>Shopee Xpress (SPX)</b></div>
-                                    <div class="spx-code" style="font-size: 16px; font-weight: bold; color: #111;">${o.spx_tracking_code}</div>
-                                </div>
-                                <a href="https://spx.vn" target="_blank" style="background: var(--primary-red); color: white; text-decoration: none; padding: 8px 15px; border-radius: 6px; font-size: 12px; font-weight: bold;"><i class="fas fa-search-location"></i> SPX</a>
-                            </div>
-                        `;
-                    }
-
-                    const itemsHtml = o.items.map(i => `<div>• ${i.title} (${i.variant}) <b>x${i.quantity}</b></div>`).join('');
-
-                    return `
-                        <div class="order-card">
-                            <div class="order-header" style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee; padding-bottom: 10px; margin-bottom: 15px;">
-                                <span class="order-id" style="font-weight: bold; color: var(--primary-red); font-size: 14px;">Mã: ${o.order_id || 'N/A'}</span>
-                                <span class="order-date" style="font-size: 12px; color: #888;">${dateStr}</span>
-                            </div>
-                            
-                            <div style="display: inline-block; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-bottom: 15px; background: ${isDelivering ? '#e8f8f0' : '#fdf2f2'}; color: ${isDelivering ? '#27ae60' : 'var(--primary-red)'};"><i class="fas ${isDelivering ? 'fa-truck' : 'fa-box'}"></i> Trạng thái: ${o.status}</div>
-                            
-                            ${spxHtml}
-                            
-                            <div class="order-items" style="font-size: 13px; color: #444; line-height: 1.6;">
-                                <strong style="margin-bottom:5px; display:block; color: #111;">Sản phẩm đã mua:</strong>
-                                ${itemsHtml}
-                            </div>
-                            <div class="order-total" style="border-top: 1px dashed #eee; padding-top: 15px; margin-top: 15px; font-weight: bold; text-align: right; font-size: 15px; color: #111;">
-                                Tổng: <span style="color:var(--primary-red); font-size: 18px; margin-left: 5px;">${Number(o.total_amount).toLocaleString('vi-VN')} đ</span>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-
+                currentTrackingOrders = Array.isArray(orders) ? orders : [];
+                resultsDiv.innerHTML = currentTrackingOrders.map(renderOrderCard).join('');
             } catch (err) {
                 loadingDiv.style.display = "none";
                 resultsDiv.innerHTML = `<div style="text-align:center; color:var(--primary-red);">Lỗi kết nối máy chủ! Vui lòng thử lại sau.</div>`;
+            }
+        }
+
+        function openEditOrderModal(orderId) {
+            const order = getOrderById(orderId);
+            if (!order) {
+                alert("Không tìm thấy đơn hàng cần chỉnh sửa.");
+                return;
+            }
+
+            if (!isOrderEditable(order)) {
+                alert("Đơn hàng đã chuyển trạng thái xử lý nên không thể chỉnh sửa thông tin.");
+                return;
+            }
+
+            const c = getCustomerInfo(order);
+            const modal = document.createElement("div");
+            modal.id = "edit-order-modal";
+            modal.className = "track-modal-overlay";
+            modal.innerHTML = `
+                <div class="track-modal-box">
+                    <div class="track-modal-head">
+                        <h3><i class="fas fa-pen"></i> Chỉnh sửa thông tin nhận hàng</h3>
+                        <button class="track-modal-close" onclick="closeEditOrderModal()"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="track-modal-body">
+                        <div class="track-modal-field">
+                            <label>Họ và tên</label>
+                            <input id="edit-customer-name" type="text" value="${escapeTrackHtml(c.name)}" placeholder="Nhập họ tên người nhận">
+                        </div>
+                        <div class="track-modal-field">
+                            <label>Số điện thoại</label>
+                            <input id="edit-customer-phone" type="tel" value="${escapeTrackHtml(c.phone)}" placeholder="Nhập số điện thoại">
+                        </div>
+                        <div class="track-modal-field">
+                            <label>Địa chỉ nhận hàng</label>
+                            <textarea id="edit-customer-address" placeholder="Nhập địa chỉ đầy đủ">${escapeTrackHtml(buildFullAddress(c))}</textarea>
+                        </div>
+                        <div class="track-modal-actions">
+                            <button class="modal-btn-secondary" onclick="closeEditOrderModal()">Đóng</button>
+                            <button id="save-edit-order-btn" class="modal-btn-primary" onclick="saveCustomerOrderEdit('${escapeTrackHtml(orderId)}')">
+                                <i class="fas fa-save"></i> Lưu thay đổi
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function closeEditOrderModal() {
+            const modal = document.getElementById("edit-order-modal");
+            if (modal) modal.remove();
+        }
+
+        async function saveCustomerOrderEdit(orderId) {
+            const order = getOrderById(orderId);
+            if (!order) return alert("Không tìm thấy đơn hàng cần cập nhật.");
+            if (!isOrderEditable(order)) return alert("Đơn hàng đã chuyển trạng thái xử lý nên không thể chỉnh sửa thông tin.");
+
+            const name = document.getElementById("edit-customer-name").value.trim();
+            const phone = document.getElementById("edit-customer-phone").value.trim();
+            const address = document.getElementById("edit-customer-address").value.trim();
+            const btn = document.getElementById("save-edit-order-btn");
+
+            if (!name || !phone || !address) {
+                alert("Vui lòng nhập đầy đủ Họ tên, SĐT và Địa chỉ.");
+                return;
+            }
+
+            const oldInfo = getCustomerInfo(order);
+            const payload = {
+                customer_info: {
+                    ...oldInfo,
+                    name,
+                    phone,
+                    address,
+                    prov: "",
+                    dist: "",
+                    ward: ""
+                },
+                customer_name: name,
+                customer_phone: phone,
+                customer_address: address,
+                updated_by_customer: true,
+                customer_updated_at: new Date().toISOString()
+            };
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Đang lưu...`;
+                const response = await fetch(`/api/orders/${encodeURIComponent(orderId)}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("Cập nhật thất bại");
+
+                alert("✅ Đã cập nhật thông tin đơn hàng thành công!");
+                closeEditOrderModal();
+
+                // Nếu khách đổi SĐT thì tự tra cứu lại bằng SĐT mới.
+                document.getElementById('search-phone').value = phone;
+                await fetchOrders();
+            } catch (err) {
+                alert("❌ Không cập nhật được đơn hàng. Vui lòng thử lại hoặc liên hệ shop.");
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-save"></i> Lưu thay đổi`;
+            }
+        }
+
+        async function cancelCustomerOrder(orderId) {
+            const order = getOrderById(orderId);
+            if (!order) return alert("Không tìm thấy đơn hàng cần hủy.");
+            if (!isOrderEditable(order)) return alert("Đơn hàng đã chuyển trạng thái xử lý nên không thể hủy.");
+
+            const reason = prompt(`Bạn có chắc muốn hủy đơn ${order.order_id || ''}?\nNhập lý do hủy đơn nếu có:`, "Khách hàng muốn hủy đơn");
+            if (reason === null) return;
+
+            if (!confirm("Xác nhận hủy đơn hàng này?")) return;
+
+            try {
+                const response = await fetch(`/api/orders/${encodeURIComponent(orderId)}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        status: "Đã hủy",
+                        cancel_reason: reason.trim() || "Khách hàng tự hủy trên trang tra cứu",
+                        cancelled_by_customer: true,
+                        cancelled_at: new Date().toISOString()
+                    })
+                });
+
+                if (!response.ok) throw new Error("Hủy đơn thất bại");
+                alert("✅ Đã hủy đơn hàng thành công!");
+                await fetchOrders();
+            } catch (err) {
+                alert("❌ Không hủy được đơn hàng. Vui lòng thử lại hoặc liên hệ shop.");
             }
         }
     </script>
