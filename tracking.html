@@ -647,6 +647,45 @@
             throw lastError || new Error("Cập nhật thất bại.");
         }
 
+
+        async function getLatestOrderFromServer(order) {
+            try {
+                const response = await fetch(`/api/orders?t=${Date.now()}&verify_customer_update=1`, { cache: "no-store" });
+                if (!response.ok) return null;
+                const orders = await response.json();
+                if (!Array.isArray(orders)) return null;
+
+                const orderCode = String(order && order.order_id || "").trim();
+                const orderId = String(order && (order.id || order._id) || "").trim();
+
+                return orders.find(item => {
+                    const itemCode = String(item.order_id || "").trim();
+                    const itemId = String(item.id || item._id || "").trim();
+                    return (orderId && itemId === orderId) || (orderCode && itemCode === orderCode);
+                }) || null;
+            } catch (e) {
+                console.warn("Không verify được dữ liệu đơn hàng sau khi lưu:", e);
+                return null;
+            }
+        }
+
+        async function verifyCustomerUpdateSaved(order, expected) {
+            const latest = await getLatestOrderFromServer(order);
+            if (!latest) return false;
+
+            const c = getCustomerInfo(latest);
+            const expectedPhone = normalizeTrackPhone(expected.phone);
+            const savedPhone = normalizeTrackPhone(c.phone || latest.customer_phone || latest.phone || latest.receiver_phone || "");
+            const savedName = normalizeText(c.name || latest.customer_name || latest.name || latest.receiver_name || "");
+            const expectedName = normalizeText(expected.name || "");
+            const savedAddress = normalizeText(buildFullAddress(c) || latest.customer_address || latest.address || "");
+            const expectedAddress = normalizeText(expected.address || "");
+
+            return savedPhone === expectedPhone
+                && savedName.includes(expectedName)
+                && (savedAddress.includes(expectedAddress) || expectedAddress.includes(savedAddress));
+        }
+
         function mergeOrderIntoCurrentList(orderId, changes) {
             currentTrackingOrders = currentTrackingOrders.map(item => {
                 const same = String(getOrderDbId(item)) === String(orderId) || String(item.order_id || "") === String(orderId);
@@ -884,6 +923,11 @@
                 customer_address: address,
                 full_address: address,
                 shipping_address: address,
+                name,
+                phone,
+                address,
+                receiver_name: name,
+                receiver_phone: phone,
                 updated_by_customer: true,
                 customer_updated_at: updatedAt
             };
@@ -892,8 +936,15 @@
                 btn.disabled = true;
                 btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Đang lưu...`;
 
-                await putOrderUpdate(order, changes);
+                const updatedOrderResponse = await putOrderUpdate(order, changes);
                 mergeOrderIntoCurrentList(orderId, changes);
+
+                // Verify lại từ server để tránh trường hợp API trả 200 nhưng backend chỉ lưu status/spx_tracking_code.
+                const verified = await verifyCustomerUpdateSaved(order, { name, phone, address });
+                if (!verified) {
+                    throw new Error("Backend chưa lưu customer_info/customer_phone/customer_address. Cần cập nhật api/function_app.py route /api/orders/{id}.");
+                }
+
                 closeEditOrderModal();
 
                 // Nếu khách đổi SĐT thì tự tra cứu lại bằng SĐT mới để kiểm tra dữ liệu đã lưu từ server.
@@ -903,7 +954,7 @@
                 alert("✅ Đã cập nhật thông tin đơn hàng. Admin tải lại mục Đơn hàng sẽ thấy thông tin mới.");
             } catch (err) {
                 console.error("Lỗi cập nhật thông tin đơn hàng:", err);
-                alert("❌ Chưa lưu được vào máy chủ. Nếu vẫn lỗi, cần kiểm tra backend /api/orders/:id đã cho phép cập nhật customer_info, customer_name, customer_phone, customer_address chưa.");
+                alert("❌ Chưa lưu được vào máy chủ. Nguyên nhân thường là backend /api/orders/:id hiện chỉ lưu status/spx_tracking_code, chưa lưu customer_info/customer_phone/customer_address.");
                 btn.disabled = false;
                 btn.innerHTML = `<i class="fas fa-save"></i> Lưu thay đổi`;
             }

@@ -391,6 +391,105 @@ def normalize_customer_info_for_order(body):
 
     return normalized
 
+
+
+def normalize_order_phone_for_lookup(value):
+    """Chuẩn hóa SĐT để tra cứu/so sánh ổn định hơn."""
+    digits = "".join(ch for ch in str(value or "") if ch.isdigit())
+    if len(digits) == 9:
+        digits = "0" + digits
+    if digits.startswith("84") and len(digits) >= 11:
+        digits = "0" + digits[2:]
+    return digits
+
+
+def get_order_phone_for_lookup(order):
+    """Lấy SĐT của đơn hàng từ nhiều field cũ/mới để tra cứu sau khi khách chỉnh sửa."""
+    info = order.get("customer_info", {}) if isinstance(order, dict) else {}
+    if not isinstance(info, dict):
+        info = {}
+    return normalize_order_phone_for_lookup(
+        info.get("phone")
+        or info.get("customer_phone")
+        or order.get("customer_phone")
+        or order.get("phone")
+        or order.get("receiver_phone")
+    )
+
+
+def merge_order_customer_update(existing_item, body):
+    """Merge thông tin khách hàng khi khách chỉnh trên tracking.html.
+
+    Chỉ bổ sung/ghi đè các field thông tin khách hàng khi payload có gửi lên.
+    Các field đơn hàng khác như items, total_amount, payment_method, created_at... được giữ nguyên.
+    Lưu cả customer_info và top-level alias để admin/tracking cũ mới đều đọc được.
+    """
+    existing_item = existing_item or {}
+    body = body or {}
+
+    old_info = existing_item.get("customer_info", {})
+    if not isinstance(old_info, dict):
+        old_info = {}
+
+    new_info = body.get("customer_info", {})
+    if not isinstance(new_info, dict):
+        new_info = {}
+
+    merged_info = dict(old_info)
+    merged_info.update(new_info)
+
+    name = first_customer_value(
+        new_info.get("name"), new_info.get("customer_name"),
+        body.get("customer_name"), body.get("name"), body.get("receiver_name"),
+        merged_info.get("name"), merged_info.get("customer_name"),
+        existing_item.get("customer_name"), existing_item.get("name"), existing_item.get("receiver_name")
+    )
+    phone = first_customer_value(
+        new_info.get("phone"), new_info.get("customer_phone"),
+        body.get("customer_phone"), body.get("phone"), body.get("receiver_phone"),
+        merged_info.get("phone"), merged_info.get("customer_phone"),
+        existing_item.get("customer_phone"), existing_item.get("phone"), existing_item.get("receiver_phone")
+    )
+    detail_address = first_customer_value(
+        new_info.get("address"), new_info.get("customer_address"), new_info.get("full_address"), new_info.get("shipping_address"),
+        body.get("customer_address"), body.get("full_address"), body.get("shipping_address"), body.get("address"),
+        merged_info.get("address"), merged_info.get("customer_address"), merged_info.get("full_address"), merged_info.get("shipping_address"),
+        existing_item.get("customer_address"), existing_item.get("full_address"), existing_item.get("shipping_address"), existing_item.get("address")
+    )
+    ward = first_customer_value(new_info.get("ward"), body.get("ward"), merged_info.get("ward"), existing_item.get("ward"))
+    district = first_customer_value(new_info.get("district"), new_info.get("dist"), body.get("district"), body.get("dist"), merged_info.get("district"), merged_info.get("dist"), existing_item.get("district"), existing_item.get("dist"))
+    province = first_customer_value(new_info.get("province"), new_info.get("prov"), new_info.get("city"), body.get("province"), body.get("prov"), body.get("city"), merged_info.get("province"), merged_info.get("prov"), merged_info.get("city"), existing_item.get("province"), existing_item.get("prov"), existing_item.get("city"))
+
+    address = join_address_parts(detail_address, ward, district, province)
+    updated_at = first_customer_value(body.get("customer_updated_at"), new_info.get("customer_updated_at")) or datetime.utcnow().isoformat() + "Z"
+
+    if name:
+        merged_info["name"] = name
+        merged_info["customer_name"] = name
+    if phone:
+        merged_info["phone"] = phone
+        merged_info["customer_phone"] = phone
+    if address:
+        merged_info["address"] = address
+        merged_info["customer_address"] = address
+        merged_info["full_address"] = address
+        merged_info["shipping_address"] = address
+    if ward:
+        merged_info["ward"] = ward
+    if district:
+        merged_info["district"] = district
+        merged_info["dist"] = district
+    if province:
+        merged_info["province"] = province
+        merged_info["prov"] = province
+        merged_info["city"] = province
+
+    if body.get("updated_by_customer") or new_info.get("updated_by_customer"):
+        merged_info["updated_by_customer"] = True
+        merged_info["customer_updated_at"] = updated_at
+
+    return merged_info, name, phone, address, updated_at
+
 # --- ROUTES ĐƠN HÀNG & TRỪ KHO ---
 
 @app.route(route="orders", methods=["GET", "POST", "OPTIONS"])
@@ -468,17 +567,68 @@ def order_by_id(req: func.HttpRequest) -> func.HttpResponse:
     container = get_cosmos_container()
     o_id = req.route_params.get("id")
     try:
-        # Đơn hàng luôn nằm trong partition ORDER
-        item = container.read_item(item=o_id, partition_key="ORDER")
-        
+        # Ưu tiên đọc theo id Cosmos. Nếu frontend gửi mã MO..., fallback tìm theo order_id.
+        try:
+            item = container.read_item(item=o_id, partition_key="ORDER")
+        except Exception:
+            query = "SELECT * FROM c WHERE c.type = 'order' AND c.order_id = @order_id"
+            found = list(container.query_items(
+                query=query,
+                parameters=[{"name": "@order_id", "value": o_id}],
+                enable_cross_partition_query=True
+            ))
+            if not found:
+                raise
+            item = found[0]
+            o_id = item.get("id")
+
         if req.method == "PUT":
             body = req.get_json()
-            item["status"] = body.get("status", item.get("status"))
-            item["spx_tracking_code"] = body.get("spx_tracking_code", item.get("spx_tracking_code", ""))
-            item["updated_at"] = datetime.utcnow().isoformat() + "Z"
-            container.replace_item(item=o_id, body=item)
+            now = datetime.utcnow().isoformat() + "Z"
+
+            # Giữ nguyên chức năng cũ: admin cập nhật trạng thái và mã vận đơn SPX.
+            if "status" in body:
+                item["status"] = body.get("status")
+            if "spx_tracking_code" in body:
+                item["spx_tracking_code"] = body.get("spx_tracking_code") or ""
+
+            # Bổ sung chức năng hủy đơn từ trang tra cứu, không ảnh hưởng cập nhật trạng thái admin.
+            for field in ["cancel_reason", "cancelled_by_customer", "cancelled_at"]:
+                if field in body:
+                    item[field] = body.get(field)
+
+            # Bổ sung lưu thông tin khách hàng sau khi chỉnh sửa trên tracking.html.
+            has_customer_update = any(key in body for key in [
+                "customer_info", "customer_name", "customer_phone", "customer_address",
+                "full_address", "shipping_address", "name", "phone", "address",
+                "receiver_name", "receiver_phone", "updated_by_customer", "customer_updated_at"
+            ])
+            if has_customer_update:
+                customer_info, name, phone, address, updated_at = merge_order_customer_update(item, body)
+                item["customer_info"] = customer_info
+
+                if name:
+                    item["customer_name"] = name
+                    item["name"] = name
+                    item["receiver_name"] = name
+                if phone:
+                    item["customer_phone"] = phone
+                    item["phone"] = phone
+                    item["receiver_phone"] = phone
+                if address:
+                    item["customer_address"] = address
+                    item["full_address"] = address
+                    item["shipping_address"] = address
+                    item["address"] = address
+
+                if body.get("updated_by_customer") or customer_info.get("updated_by_customer"):
+                    item["updated_by_customer"] = True
+                    item["customer_updated_at"] = updated_at
+
+            item["updated_at"] = now
+            container.replace_item(item=item["id"], body=item)
             return json_response({"message": "Cập nhật đơn hàng thành công", "item": item})
-        
+
         if req.method == "DELETE":
             container.delete_item(item=o_id, partition_key="ORDER")
             return json_response({"message": "Xóa đơn hàng thành công"})
@@ -494,13 +644,14 @@ def track_order(req: func.HttpRequest) -> func.HttpResponse:
     
     try:
         container = get_cosmos_container()
-        # Truy vấn tìm đơn hàng theo SĐT khách hàng
-        query = "SELECT * FROM c WHERE c.type = 'order' AND c.customer_info.phone = @phone"
-        items = list(container.query_items(
-            query=query, 
-            parameters=[{"name": "@phone", "value": phone}], 
-            enable_cross_partition_query=True
-        ))
+        target_phone = normalize_order_phone_for_lookup(phone)
+
+        # Tìm theo nhiều field SĐT để sau khi khách đổi 1212 -> 1213 vẫn tra cứu được bằng SĐT mới.
+        # Cách này giữ tương thích với đơn cũ có customer_info.phone và đơn mới có customer_phone/phone.
+        query = "SELECT * FROM c WHERE c.type = 'order'"
+        all_orders = list(container.query_items(query=query, enable_cross_partition_query=True))
+        items = [order for order in all_orders if get_order_phone_for_lookup(order) == target_phone]
+
         items.sort(key=lambda x: x.get("created_at", ""), reverse=True)
         return json_response(items)
     except Exception as e:
