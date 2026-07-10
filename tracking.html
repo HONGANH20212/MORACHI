@@ -334,12 +334,12 @@
                 <span></span><i class="fa-solid fa-circle"></i><span></span>
             </div>
             
-            <p class="track-desc">Vui lòng nhập <strong>Số điện thoại / Mã đơn hàng / Mã vận đơn</strong><br>để kiểm tra quá trình xử lý và xem mã vận đơn Shopee Express.</p>
+            <p class="track-desc">Vui lòng nhập <strong>Số điện thoại hoặc Mã đơn hàng</strong><br>để kiểm tra quá trình xử lý và xem mã vận đơn Shopee Express.</p>
             
             <div class="track-form-area">
                 <div class="input-wrapper">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="search-phone" placeholder="Nhập SĐT, mã đơn hàng MO... hoặc mã vận đơn SPX" onkeydown="if(event.key === 'Enter') fetchOrders()">
+                    <input type="text" id="search-phone" placeholder="Nhập SĐT hoặc mã đơn hàng MO123xxx của bạn" onkeydown="if(event.key === 'Enter') fetchOrders()">
                 </div>
 
                 <button class="btn-track" onclick="fetchOrders()">
@@ -764,7 +764,7 @@
                 </div>
             ` : (cancelled ? "" : `
                 <div class="order-locked-note">
-                    <i class="fas fa-lock"></i> Đơn hàng đã chuyển qua trạng thái xử lý/giao hàng/hoàn thành nên không thể hủy hoặc chỉnh sửa thông tin trên trang tra cứu.
+                    <i class="fas fa-lock"></i>Đơn hàng đang được chuẩn bị trong 1 ngày sẽ được giao đến bạn không thể chỉnh sửa hoặc hủy đơn vui lòng liên hệ Shop nếu cần.
                 </div>
             `);
 
