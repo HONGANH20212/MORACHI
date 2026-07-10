@@ -491,6 +491,11 @@
             return uniqueParts.join(", ");
         }
 
+        function isOrderCancelled(order) {
+            const status = normalizeText(order && order.status);
+            return status.includes("da huy") || Boolean(order && order.cancelled_by_customer);
+        }
+
         function isOrderEditable(order) {
             const status = normalizeText(order && order.status);
 
@@ -747,6 +752,7 @@
                 `;
             }
 
+            const cancelled = isOrderCancelled(o);
             const actionHtml = editable ? `
                 <div class="order-action-row">
                     <button class="order-action-btn btn-edit-order" onclick="openEditOrderModal('${escapeTrackHtml(orderDbId)}')">
@@ -756,11 +762,11 @@
                         <i class="fas fa-ban"></i> Hủy đơn
                     </button>
                 </div>
-            ` : `
+            ` : (cancelled ? "" : `
                 <div class="order-locked-note">
                     <i class="fas fa-lock"></i> Đơn hàng đã chuyển qua trạng thái xử lý/giao hàng/hoàn thành nên không thể hủy hoặc chỉnh sửa thông tin trên trang tra cứu.
                 </div>
-            `;
+            `);
 
             return `
                 <div class="order-card">
