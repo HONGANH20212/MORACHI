@@ -334,12 +334,12 @@
                 <span></span><i class="fa-solid fa-circle"></i><span></span>
             </div>
             
-            <p class="track-desc">Vui lòng nhập <strong>Số điện thoại</strong> lúc đặt hàng<br>để kiểm tra quá trình xử lý và xem mã vận đơn Shopee Express.</p>
+            <p class="track-desc">Vui lòng nhập <strong>Số điện thoại / Mã đơn hàng / Mã vận đơn</strong><br>để kiểm tra quá trình xử lý và xem mã vận đơn Shopee Express.</p>
             
             <div class="track-form-area">
                 <div class="input-wrapper">
-                    <i class="fa-solid fa-mobile-screen-button"></i>
-                    <input type="tel" id="search-phone" placeholder="Nhập số điện thoại đặt hàng" onkeydown="if(event.key === 'Enter') fetchOrders()">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="search-phone" placeholder="Nhập SĐT, mã đơn hàng MO... hoặc mã vận đơn SPX" onkeydown="if(event.key === 'Enter') fetchOrders()">
                 </div>
 
                 <button class="btn-track" onclick="fetchOrders()">
@@ -520,6 +520,27 @@
             if (digits.length === 9) digits = "0" + digits;
             if (digits.startsWith("84") && digits.length >= 11) digits = "0" + digits.slice(2);
             return digits;
+        }
+
+        function normalizeTrackCode(value) {
+            return String(value ?? "").toUpperCase().trim().replace(/[^A-Z0-9]/g, "");
+        }
+
+        function orderMatchesTrackingQuery(order, keyword) {
+            const targetPhone = normalizeTrackPhone(keyword);
+            const targetCode = normalizeTrackCode(keyword);
+
+            if (targetPhone && getTrackOrderCustomerPhone(order) === targetPhone) return true;
+            if (!targetCode) return false;
+
+            return [
+                order && order.order_id,
+                order && order.spx_tracking_code,
+                order && order.tracking_code,
+                order && order.shipping_code,
+                order && order.id,
+                order && order._id
+            ].some(value => normalizeTrackCode(value) === targetCode);
         }
 
         function getTrackOrderCustomerPhone(order) {
@@ -770,17 +791,16 @@
             `;
         }
 
-        async function fetchOrdersByPhoneFallback(phone) {
-            // Dự phòng cho trường hợp /api/track chưa tìm theo SĐT mới sau khi khách chỉnh sửa.
-            // Không thay đổi dữ liệu, chỉ đọc /api/orders rồi lọc đúng số điện thoại trên trình duyệt.
+        async function fetchOrdersFallback(keyword) {
+            // Dự phòng cho trường hợp /api/track chưa được deploy bản mới.
+            // Không thay đổi dữ liệu, chỉ đọc /api/orders rồi lọc theo SĐT / mã đơn / mã vận đơn trên trình duyệt.
             try {
                 const response = await fetch(`/api/orders?t=${Date.now()}&fallback_track=1`, { cache: "no-store" });
                 if (!response.ok) return [];
                 const orders = await response.json();
                 if (!Array.isArray(orders)) return [];
 
-                const targetPhone = normalizeTrackPhone(phone);
-                return orders.filter(order => getTrackOrderCustomerPhone(order) === targetPhone);
+                return orders.filter(order => orderMatchesTrackingQuery(order, keyword));
             } catch (e) {
                 console.warn("Không thể fallback tra cứu từ /api/orders:", e);
                 return [];
@@ -797,32 +817,33 @@
         }
 
         async function fetchOrders() {
-            const phone = document.getElementById('search-phone').value.trim();
+            const keyword = document.getElementById('search-phone').value.trim();
             const resultsDiv = document.getElementById('results-container');
             const loadingDiv = document.getElementById('loading');
             
-            if (!phone) {
-                alert("Vui lòng nhập số điện thoại để tra cứu!");
+            if (!keyword) {
+                alert("Vui lòng nhập số điện thoại, mã đơn hàng hoặc mã vận đơn để tra cứu!");
                 return;
             }
 
-            currentTrackingPhone = phone;
+            currentTrackingPhone = keyword;
             resultsDiv.innerHTML = "";
             loadingDiv.style.display = "block";
 
             try {
-                const response = await fetch(`/api/track?phone=${encodeURIComponent(phone)}&t=${Date.now()}`, { cache: "no-store" });
+                // Giữ tham số phone để tương thích backend cũ, backend mới sẽ hiểu là từ khóa tra cứu.
+                const response = await fetch(`/api/track?phone=${encodeURIComponent(keyword)}&t=${Date.now()}`, { cache: "no-store" });
                 let orders = [];
                 try { orders = await response.json(); } catch (e) { orders = []; }
 
                 const apiTrackOrders = response.ok && Array.isArray(orders) ? orders : [];
-                const fallbackOrders = await fetchOrdersByPhoneFallback(phone);
+                const fallbackOrders = await fetchOrdersFallback(keyword);
                 const finalOrders = mergeTrackOrderLists(apiTrackOrders, fallbackOrders);
                 loadingDiv.style.display = "none";
 
                 if (!finalOrders.length) {
                     currentTrackingOrders = [];
-                    resultsDiv.innerHTML = `<div style="text-align:center; color:var(--primary-red); font-weight:bold; padding: 20px; background: #fdf2f2; border-radius: 8px;"><i class="fas fa-exclamation-circle"></i> Không tìm thấy đơn hàng nào thuộc về số điện thoại này!</div>`;
+                    resultsDiv.innerHTML = `<div style="text-align:center; color:var(--primary-red); font-weight:bold; padding: 20px; background: #fdf2f2; border-radius: 8px;"><i class="fas fa-exclamation-circle"></i> Không tìm thấy đơn hàng phù hợp với thông tin tra cứu này!</div>`;
                     return;
                 }
 
