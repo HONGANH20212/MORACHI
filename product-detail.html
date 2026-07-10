@@ -788,7 +788,7 @@
                     </div>
                     <div class="related-products-grid">
                         ${related.map(item => `
-                            <div class="related-product-card" onclick="window.location.href='product-detail.html?id=${encodeURIComponent(item.id)}'">
+                            <div class="related-product-card" data-product-id="${escapeDetailHtml(String(item.id ?? ''))}">
                                 <img src="${escapeDetailHtml(item.thumbnail || 'images/icon-logo.png')}" alt="${escapeDetailHtml(item.title || 'Sản phẩm')}" onerror="this.src='images/icon-logo.png'">
                                 <div class="related-product-info">
                                     <div class="related-product-brand">${escapeDetailHtml(item.brand || 'MORACHI')}</div>
@@ -800,6 +800,23 @@
                     </div>
                 </section>
             `;
+        }
+
+        function goToProductDetailFromDetail(productId) {
+            const id = String(productId ?? '').trim();
+            if (!id) return;
+            window.location.href = `product-detail.html?id=${encodeURIComponent(id)}`;
+        }
+
+        function bindRelatedProductClicks() {
+            const root = document.getElementById('product-detail-root');
+            if (!root) return;
+
+            root.querySelectorAll('.related-product-card[data-product-id]').forEach(card => {
+                card.addEventListener('click', function() {
+                    goToProductDetailFromDetail(card.dataset.productId);
+                });
+            });
         }
 
         function initDetailSmartSearch(products) {
@@ -855,7 +872,7 @@
                 dropdown.querySelectorAll('.smart-search-item').forEach(item => {
                     item.addEventListener('mousedown', e => e.preventDefault());
                     item.addEventListener('click', () => {
-                        window.location.href = `product-detail.html?id=${encodeURIComponent(item.dataset.id)}`;
+                        goToProductDetailFromDetail(item.dataset.id);
                     });
                 });
 
@@ -918,7 +935,9 @@
             }
 
             const cacheKey = 'morachi_products_cache';
-            const cachedData = sessionStorage.getItem(cacheKey);
+            // Không dùng cache cũ ở trang chi tiết để tránh lỗi bấm sản phẩm A nhưng mở dữ liệu sản phẩm B sau khi danh sách sản phẩm đã thay đổi.
+            try { sessionStorage.removeItem(cacheKey); } catch (e) {}
+            const cachedData = null;
             
             if (cachedData) {
                 try {
@@ -935,7 +954,10 @@
             }
 
             try {
-                const response = await fetch(API_URL);
+                const response = await fetch(`${API_URL}?t=${Date.now()}`, {
+                    cache: "no-store",
+                    headers: { "Cache-Control": "no-cache" }
+                });
                 if (!response.ok) throw new Error("API Error");
                 const products = await response.json();
                 detailProductsCache = Array.isArray(products) ? products : [];
@@ -1098,6 +1120,7 @@
             `;
 
             document.getElementById('product-detail-root').innerHTML = html;
+            bindRelatedProductClicks();
 
             if (variants.length > 0) {
                 currentVariant = variants[0];

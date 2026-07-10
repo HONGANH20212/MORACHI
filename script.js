@@ -247,7 +247,7 @@ function initSmartSearchAutocomplete() {
             item.addEventListener("mousedown", e => e.preventDefault());
             item.addEventListener("click", () => {
                 const id = item.dataset.id;
-                if (id) window.location.href = `product-detail.html?id=${encodeURIComponent(id)}`;
+                if (id) openProductDetail(id);
             });
         });
 
@@ -345,6 +345,7 @@ function renderProducts(products) {
 
     productList.innerHTML = products.map((product) => {
         const id = product.id; 
+        const safeId = escapeHtml(String(id ?? ""));
         const title = escapeHtml(product.title || "");
         const brand = escapeHtml(product.brand || "");
         const thumbnail = escapeHtml(product.thumbnail || "images/icon-logo.png");
@@ -366,10 +367,10 @@ function renderProducts(products) {
 
         // RENDER HTML THEO FORMAT MỚI
         return `
-            <div class="product-card" onclick="window.location.href='product-detail.html?id=${id}'">
+            <div class="product-card" data-product-id="${safeId}">
                 ${discountBadgeHTML}
                 
-                <button class="btn-wishlist" onclick="event.stopPropagation(); this.classList.toggle('active');">
+                <button class="btn-wishlist" type="button" aria-label="Yêu thích">
                     <i class="fa-regular fa-heart"></i>
                 </button>
 
@@ -391,13 +392,42 @@ function renderProducts(products) {
                         ${oldPrice ? `<span class="old-price">${oldPrice}</span>` : ""}
                     </div>
 
-                    <button class="btn-buy-now" onclick="event.stopPropagation(); window.location.href='product-detail.html?id=${id}'">
+                    <button class="btn-buy-now" type="button" data-product-id="${safeId}">
                         <i class="fa-solid fa-cart-shopping"></i> MUA NGAY
                     </button>
                 </div>
             </div>
         `;
     }).join("");
+
+    bindProductCardClickEvents(productList);
+}
+
+function openProductDetail(productId) {
+    const id = String(productId ?? "").trim();
+    if (!id) return;
+    window.location.href = `product-detail.html?id=${encodeURIComponent(id)}`;
+}
+
+function bindProductCardClickEvents(productList) {
+    if (!productList || productList.dataset.navigationBound === "true") return;
+    productList.dataset.navigationBound = "true";
+
+    productList.addEventListener("click", function(event) {
+        const wishlist = event.target.closest(".btn-wishlist");
+        if (wishlist) {
+            event.preventDefault();
+            event.stopPropagation();
+            wishlist.classList.toggle("active");
+            return;
+        }
+
+        const card = event.target.closest(".product-card");
+        if (!card || !productList.contains(card)) return;
+
+        const id = card.dataset.productId;
+        if (id) openProductDetail(id);
+    });
 }
 
 
