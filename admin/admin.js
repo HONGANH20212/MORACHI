@@ -770,65 +770,45 @@ window.firstOrderValue = window.firstOrderValue || function(...values) {
     return "";
 };
 
-window.buildOrderAddress = window.buildOrderAddress || function(order) {
+window.orderHasCustomerEditMeta = function(order) {
     const o = order || {};
     const c = o.customer_info || {};
+    return Boolean(o.updated_by_customer || o.customer_updated_at || o.customer_edit_at || c.updated_by_customer || c.customer_updated_at || c.customer_edit_at);
+};
 
-    // Ưu tiên các field top-level vì phần khách tự chỉnh thông tin thường cập nhật nhanh các field này.
-    const fullAddress = window.firstOrderValue(
-        o.customer_address,
-        o.shipping_address,
-        o.full_address,
-        o.address,
-        c.customer_address,
-        c.shipping_address,
-        c.full_address
-    );
+window.pickOrderCustomerValue = function(order, topLevelFields, nestedFields) {
+    const o = order || {};
+    const c = o.customer_info || {};
+    const topValues = topLevelFields.map(key => o[key]);
+    const nestedValues = nestedFields.map(key => c[key]);
+    const nestedEdited = Boolean(c.updated_by_customer || c.customer_updated_at || c.customer_edit_at);
+    const topEdited = Boolean(o.updated_by_customer || o.customer_updated_at || o.customer_edit_at);
 
-    const detail = window.firstOrderValue(
-        o.customer_address,
-        o.address,
-        o.address_detail,
-        o.detail_address,
-        o.street,
-        c.address,
-        c.address_detail,
-        c.detail_address,
-        c.street
-    );
+    // Backend có thể lưu thông tin khách sửa ở top-level hoặc trong customer_info.
+    // Ưu tiên đúng nơi có dấu hiệu vừa được khách cập nhật để tránh hiển thị dữ liệu cũ.
+    if (nestedEdited && !topEdited) return window.firstOrderValue(...nestedValues, ...topValues);
+    if (topEdited && !nestedEdited) return window.firstOrderValue(...topValues, ...nestedValues);
+    if (nestedEdited && topEdited) return window.firstOrderValue(...topValues, ...nestedValues);
 
-    const ward = window.firstOrderValue(
-        o.ward,
-        o.ward_name,
-        o.customer_ward,
-        c.ward,
-        c.ward_name,
-        c.customer_ward
-    );
+    return window.firstOrderValue(...topValues, ...nestedValues);
+};
 
-    const district = window.firstOrderValue(
-        o.district,
-        o.dist,
-        o.district_name,
-        o.customer_district,
-        c.district,
-        c.dist,
-        c.district_name,
-        c.customer_district
-    );
+window.buildOrderAddress = function(order) {
+    const o = order || {};
+    const c = o.customer_info || {};
+    const edited = window.orderHasCustomerEditMeta(o);
 
-    const province = window.firstOrderValue(
-        o.province,
-        o.prov,
-        o.city,
-        o.province_name,
-        o.customer_province,
-        c.province,
-        c.prov,
-        c.city,
-        c.province_name,
-        c.customer_province
-    );
+    const fullAddress = edited
+        ? window.firstOrderValue(c.customer_address, c.shipping_address, c.full_address, c.address, o.customer_address, o.shipping_address, o.full_address, o.address)
+        : window.firstOrderValue(o.customer_address, o.shipping_address, o.full_address, o.address, c.customer_address, c.shipping_address, c.full_address, c.address);
+
+    const detail = edited
+        ? window.firstOrderValue(c.address, c.customer_address, c.address_detail, c.detail_address, c.street, o.customer_address, o.address, o.address_detail, o.detail_address, o.street)
+        : window.firstOrderValue(o.customer_address, o.address, o.address_detail, o.detail_address, o.street, c.address, c.customer_address, c.address_detail, c.detail_address, c.street);
+
+    const ward = window.pickOrderCustomerValue(o, ["ward", "ward_name", "customer_ward"], ["ward", "ward_name", "customer_ward"]);
+    const district = window.pickOrderCustomerValue(o, ["district", "dist", "district_name", "customer_district"], ["district", "dist", "district_name", "customer_district"]);
+    const province = window.pickOrderCustomerValue(o, ["province", "prov", "city", "province_name", "customer_province"], ["province", "prov", "city", "province_name", "customer_province"]);
 
     const parts = [];
     const addPart = (value) => {
@@ -1109,6 +1089,9 @@ window.renderOrdersTable = function(ordersList) {
         const addressHtml = addressText
             ? `<div style="font-size:12px; color:#555; margin-top:5px; line-height:1.45; max-width: 280px;"><i class="fas fa-map-marker-alt" style="color:#aaa; font-size:10px; margin-right:4px;"></i>${window.escapeAdminHtml(addressText)}</div>`
             : `<div style="font-size:12px; color:#bbb; margin-top:5px; line-height:1.45;"><i class="fas fa-map-marker-alt" style="font-size:10px; margin-right:4px;"></i>Chưa có địa chỉ</div>`;
+        const customerEditedHtml = window.orderHasCustomerEditMeta(o)
+            ? `<div style="font-size:11px; color:#d97706; margin-top:5px; font-weight:600;"><i class="fas fa-pen"></i> Khách đã chỉnh thông tin</div>`
+            : ``;
 
         return `
             <tr>
@@ -1123,6 +1106,7 @@ window.renderOrdersTable = function(ordersList) {
                     <div style="font-weight:600; color:var(--text-main); font-size:13px;">${window.escapeAdminHtml(customerNameText || 'N/A')}</div>
                     <div style="font-size:12px; color:var(--text-light); margin-top:3px;"><i class="fas fa-phone-alt" style="color:#aaa; font-size:10px;"></i> ${window.escapeAdminHtml(customerPhoneText || '')}</div>
                     ${addressHtml}
+                    ${customerEditedHtml}
                 </td>
                 <td>
                     ${itemDisplay}
@@ -1311,17 +1295,15 @@ window.normalizeOrderPhone = window.normalizeOrderPhone || function(value) {
     return digits;
 };
 
-window.getOrderCustomerName = window.getOrderCustomerName || function(order) {
-    const c = (order && order.customer_info) || {};
+window.getOrderCustomerName = function(order) {
     return window.cleanOrderText(
-        order.customer_name || order.name || order.receiver_name || c.name || c.customer_name || ""
+        window.pickOrderCustomerValue(order, ["customer_name", "name", "receiver_name"], ["name", "customer_name", "receiver_name"])
     );
 };
 
-window.getOrderCustomerPhone = window.getOrderCustomerPhone || function(order) {
-    const c = (order && order.customer_info) || {};
+window.getOrderCustomerPhone = function(order) {
     return window.normalizeOrderPhone(
-        order.customer_phone || order.phone || order.receiver_phone || c.phone || c.customer_phone || ""
+        window.pickOrderCustomerValue(order, ["customer_phone", "phone", "receiver_phone"], ["phone", "customer_phone", "receiver_phone"])
     );
 };
 
