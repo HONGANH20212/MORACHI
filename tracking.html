@@ -9,385 +9,849 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* =========================================
-           TRACKING PAGE - CENTERED LAYOUT
-           ========================================= */
         :root {
-            --primary-red: #c51622;
-            --primary-red-hover: #a3101b;
-            --bg-page: #faf9f7;
-            --text-dark: #222222;
-            --text-muted: #777777;
-            --border-color: #eaeaea;
-            --card-radius: 20px;
+            --primary-red: #ce0f1d;
+            --primary-red-dark: #a90c17;
+            --primary-red-soft: #fff2f3;
+            --bg-page: #fffafa;
+            --surface: #ffffff;
+            --text-dark: #1f2025;
+            --text-body: #50535b;
+            --text-muted: #8a8e98;
+            --border-color: #ececf0;
+            --success: #35ad68;
+            --success-soft: #effaf2;
+            --warning: #c47a16;
+            --warning-soft: #fff8ea;
+            --info: #3276c8;
+            --info-soft: #eef6ff;
+            --shadow-soft: 0 12px 38px rgba(121, 28, 35, 0.08);
+            --shadow-card: 0 16px 46px rgba(91, 30, 36, 0.09);
+            --radius-lg: 26px;
+            --radius-md: 16px;
         }
 
-        body { 
-            background-color: var(--bg-page); 
-            font-family: 'Inter', sans-serif;
-            color: var(--text-dark);
-            margin: 0;
-            padding: 0;
-            /* Flexbox để ép footer luôn nằm dưới cùng màn hình */
-            display: flex;
-            flex-direction: column;
+        * { box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
             min-height: 100vh;
+            margin: 0;
+            background:
+                radial-gradient(circle at 8% 8%, rgba(206, 15, 29, 0.05), transparent 26%),
+                radial-gradient(circle at 92% 18%, rgba(250, 174, 181, 0.16), transparent 24%),
+                linear-gradient(180deg, #fffefe 0%, #fff9f9 55%, #ffffff 100%);
+            color: var(--text-dark);
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
         }
 
-        /* --- HEADER --- */
+        button,
+        input,
+        textarea { font: inherit; }
+
+        button,
+        a { -webkit-tap-highlight-color: transparent; }
+
         .track-header {
-            background: #fff;
-            border-bottom: 1px solid var(--border-color);
-            padding: 15px 0;
-        }
-        .track-header-inner {
-            display: flex; justify-content: space-between; align-items: center; 
-            max-width: 1200px; margin: 0 auto; padding: 0 20px;
-        }
-        .track-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-        .track-logo img { height: 40px; width: auto; }
-        .track-logo h1 { 
-            font-family: 'Playfair Display', serif; 
-            font-size: 22px; color: #111; line-height: 1; letter-spacing: 1px; margin: 0;
-        }
-        .track-logo p { 
-            font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #999; margin-top: 4px; 
-        }
-        
-        .track-nav { display: flex; gap: 30px; }
-        .track-nav a { 
-            text-decoration: none; color: var(--text-dark); font-size: 14px; font-weight: 500; 
-            display: flex; align-items: center; gap: 8px; transition: 0.2s; 
-        }
-        .track-nav a:hover, .track-nav a:hover i { color: var(--primary-red); }
-        .track-nav a i { color: var(--primary-red); font-size: 15px; transition: 0.2s; }
-
-        /* --- MAIN WRAPPER --- */
-        .track-wrapper {
-            flex: 1; /* Chiếm hết phần không gian trống để đẩy footer xuống */
-            width: 100%;
-            max-width: 1100px;
-            margin: 50px auto;
-            padding: 0 20px;
-            display: flex;
-            justify-content: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            padding: 12px;
+            background: rgba(255, 250, 250, 0.92);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
         }
 
-        /* --- CENTER CARD (FORM TRA CỨU) --- */
-        .center-card {
-            background: #fff;
-            border-radius: var(--card-radius);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.04);
-            width: 100%;
-            max-width: 700px; /* Độ rộng vừa phải để form không bị bành trướng */
-            padding: 60px 40px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-
-        .icon-circle-lg {
-            width: 56px; height: 56px; background: #fdf2f2; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            color: var(--primary-red); font-size: 22px; margin-bottom: 20px;
-        }
-
-        .track-title { 
-            font-family: 'Playfair Display', serif; font-size: 30px; 
-            color: #111; margin-bottom: 10px; font-weight: 700; 
-        }
-        
-        .title-divider { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 15px; }
-        .title-divider span { width: 25px; height: 1px; background: #ddd; }
-        .title-divider i { color: var(--primary-red); font-size: 5px; }
-
-        .track-desc { font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 30px; max-width: 450px; }
-        .track-desc strong { color: var(--primary-red); }
-
-        /* Form Area */
-        .track-form-area {
-            width: 100%;
-            max-width: 450px; 
-        }
-
-        .input-wrapper {
-            position: relative; width: 100%; margin-bottom: 15px;
-        }
-        .input-wrapper i {
-            position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
-            color: #aaa; font-size: 16px;
-        }
-        .input-wrapper input {
-            width: 100%; padding: 14px 20px 14px 45px; border: 1px solid #e2e2e2;
-            border-radius: 8px; font-size: 14px; outline: none; transition: 0.3s;
-            font-family: 'Inter', sans-serif;
-            box-sizing: border-box;
-        }
-        .input-wrapper input:focus { 
-            border-color: var(--primary-red); 
-            box-shadow: 0 0 0 3px rgba(197, 22, 34, 0.08); 
-        }
-
-        .btn-track {
-            width: 100%; padding: 15px; background: var(--primary-red); color: white;
-            border: none; border-radius: 8px; font-size: 14px; font-weight: 600;
-            cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;
-            font-family: 'Inter', sans-serif;
-            box-sizing: border-box;
-        }
-        .btn-track:hover { 
-            background: var(--primary-red-hover); 
-            box-shadow: 0 4px 12px rgba(197, 22, 34, 0.2); 
-        }
-
-        .security-note { 
-            font-size: 12px; color: #888; margin-top: 15px; 
-            display: flex; align-items: center; justify-content: center; gap: 6px; 
-        }
-        .security-note i { color: #27ae60; }
-
-        /* --- KẾT QUẢ TRA CỨU --- */
-        #results-container { width: 100%; text-align: left; margin-top: 30px; }
-        .order-card { border: 1px solid #eee; border-radius: 12px; padding: 25px; margin-bottom: 20px; text-align: left; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.02);}
-        .spx-box { background: #fdfdfd; border: 1px dashed #ddd; padding: 15px; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;}
-
-        /* --- FOOTER (TÍNH NĂNG BẢO MẬT) --- */
-        .track-footer {
-            background: #fff;
-            border-top: 1px solid var(--border-color);
-            padding: 40px 0;
-            margin-top: 20px;
-        }
-        .features-row {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px;
-            max-width: 1100px; margin: 0 auto; padding: 0 20px;
-        }
-        .feature-box { display: flex; gap: 15px; align-items: flex-start; }
-        .feat-icon {
-            width: 42px; height: 42px; background: #fdf2f2; border-radius: 50%; flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center; color: var(--primary-red); font-size: 16px;
-        }
-        .feat-text h4 { font-size: 14px; color: #111; margin: 0 0 4px 0; font-weight: 600; }
-        .feat-text p { font-size: 12px; color: var(--text-muted); line-height: 1.5; margin: 0; }
-
-
-
-        /* --- CUSTOMER ORDER ACTIONS --- */
-        .customer-info-box {
-            background: #fffafa;
-            border: 1px solid #f5dddd;
-            border-radius: 10px;
-            padding: 12px 14px;
-            margin: 14px 0;
-            font-size: 13px;
-            color: #444;
-            line-height: 1.7;
-        }
-        .customer-info-box strong { color: #111; }
-        .order-action-row {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            flex-wrap: wrap;
-            margin-top: 15px;
-        }
-        .order-action-btn {
-            border: none;
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-size: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 7px;
-            transition: 0.2s;
-        }
-        .btn-edit-order { background: #fff4e6; color: #c56b00; }
-        .btn-edit-order:hover { background: #ffe8c2; }
-        .btn-cancel-order { background: #fdecec; color: var(--primary-red); }
-        .btn-cancel-order:hover { background: #ffdada; }
-        .order-locked-note {
-            margin-top: 14px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            background: #f6f7f9;
-            color: #777;
-            font-size: 12px;
-            line-height: 1.5;
-        }
-        .track-modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.45);
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-        }
-        .track-modal-box {
-            width: 100%;
-            max-width: 520px;
-            background: #fff;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        .track-header-shell {
+            width: min(100%, 820px);
+            margin: 0 auto;
             overflow: hidden;
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid rgba(235, 230, 232, 0.92);
+            border-radius: 18px;
+            box-shadow: 0 8px 28px rgba(75, 25, 29, 0.07);
         }
-        .track-modal-head {
-            padding: 18px 22px;
-            background: #fff7f7;
-            border-bottom: 1px solid #f2dfdf;
+
+        .track-brand-row {
+            min-height: 84px;
+            padding: 14px 24px;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 16px;
         }
-        .track-modal-head h3 { margin: 0; font-size: 16px; color: #111; }
-        .track-modal-close {
-            border: none;
-            background: transparent;
+
+        .track-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 13px;
+            color: inherit;
+            text-decoration: none;
+            min-width: 0;
+        }
+
+        .track-logo img {
+            width: 58px;
+            height: 58px;
+            object-fit: contain;
+            flex: 0 0 auto;
+        }
+
+        .track-logo-copy { min-width: 0; }
+
+        .track-logo h1 {
+            margin: 0;
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(25px, 4.4vw, 36px);
+            line-height: 1;
+            letter-spacing: 1.5px;
+            color: #111114;
+            white-space: nowrap;
+        }
+
+        .track-logo p {
+            margin: 7px 0 0;
+            color: #8c8f98;
+            font-size: clamp(9px, 1.8vw, 12px);
+            font-weight: 500;
+            letter-spacing: clamp(3px, 1vw, 7px);
+            white-space: nowrap;
+        }
+
+        .messenger-top {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            min-width: 98px;
+            padding: 11px 13px;
+            border-radius: 14px;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: background .2s ease, transform .2s ease;
+        }
+
+        .messenger-top i { color: var(--primary-red); font-size: 25px; }
+        .messenger-top:hover { background: var(--primary-red-soft); transform: translateY(-1px); }
+
+        .track-nav {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .track-nav a {
+            min-height: 66px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background .2s ease, color .2s ease;
+        }
+
+        .track-nav a + a { border-left: 1px solid var(--border-color); }
+        .track-nav a i { color: var(--primary-red); font-size: 23px; }
+        .track-nav a:hover { background: #fff6f7; color: var(--primary-red); }
+
+        .track-wrapper {
+            width: min(100%, 820px);
+            margin: 14px auto 50px;
+            padding: 0 12px;
+        }
+
+        .lookup-card {
+            position: relative;
+            overflow: hidden;
+            padding: 34px 42px 28px;
+            background: rgba(255, 255, 255, 0.97);
+            border: 1px solid rgba(237, 231, 233, 0.92);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-card);
+            text-align: center;
+        }
+
+        .lookup-card::before,
+        .lookup-card::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .lookup-card::before {
+            width: 240px;
+            height: 240px;
+            right: -110px;
+            top: -70px;
+            background: radial-gradient(circle, rgba(206, 15, 29, 0.07), transparent 68%);
+        }
+
+        .lookup-card::after {
+            width: 160px;
+            height: 160px;
+            left: -86px;
+            bottom: -70px;
+            background: radial-gradient(circle, rgba(242, 164, 173, 0.11), transparent 68%);
+        }
+
+        .lookup-content { position: relative; z-index: 1; }
+
+        .icon-circle-lg {
+            width: 72px;
+            height: 72px;
+            margin: 0 auto 17px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #fff3f4, #ffe5e8);
+            color: var(--primary-red);
+            font-size: 31px;
+            box-shadow: inset 0 0 0 1px rgba(206, 15, 29, 0.04);
+        }
+
+        .track-title {
+            margin: 0;
+            color: #15161a;
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(31px, 6vw, 46px);
+            line-height: 1.18;
+            font-weight: 700;
+            letter-spacing: -0.4px;
+        }
+
+        .title-divider {
+            margin: 17px 0 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .title-divider span { width: 34px; height: 1px; background: #ef8b93; }
+        .title-divider i { color: var(--primary-red); font-size: 7px; }
+
+        .track-desc {
+            max-width: 600px;
+            margin: 0 auto 26px;
+            color: #63666f;
+            font-size: clamp(14px, 2.6vw, 17px);
+            line-height: 1.7;
+        }
+
+        .track-desc strong { color: var(--primary-red); font-weight: 700; }
+
+        .track-form-area { width: 100%; max-width: 650px; margin: 0 auto; }
+
+        .input-wrapper { position: relative; margin-bottom: 16px; }
+
+        .input-wrapper > i {
+            position: absolute;
+            top: 50%;
+            left: 22px;
+            z-index: 2;
+            transform: translateY(-50%);
+            color: #a4a8b0;
+            font-size: 22px;
+            pointer-events: none;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            height: 66px;
+            padding: 0 58px 0 62px;
+            border: 1px solid #dedfe4;
+            border-radius: 15px;
+            outline: none;
+            background: #fff;
+            color: #25262b;
             font-size: 18px;
-            cursor: pointer;
-            color: #888;
+            box-shadow: inset 0 1px 2px rgba(31, 32, 37, 0.02);
+            transition: border-color .2s ease, box-shadow .2s ease;
         }
-        .track-modal-body { padding: 22px; }
-        .track-modal-field { margin-bottom: 14px; }
-        .track-modal-field label {
-            display: block;
+
+        .input-wrapper input::placeholder { color: #a8abb3; font-size: 14px; }
+
+        .input-wrapper input:focus {
+            border-color: #e4525e;
+            box-shadow: 0 0 0 4px rgba(206, 15, 29, 0.08);
+        }
+
+        .clear-search-btn {
+            position: absolute;
+            top: 50%;
+            right: 18px;
+            z-index: 3;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            transform: translateY(-50%);
+            border: none;
+            border-radius: 50%;
+            background: #b6bac2;
+            color: #fff;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .clear-search-btn.visible { display: flex; }
+
+        .btn-track {
+            width: 100%;
+            min-height: 66px;
+            padding: 14px 20px;
+            border: 0;
+            border-radius: 15px;
+            background: linear-gradient(90deg, #d90c1c 0%, #bf0d1a 100%);
+            color: #fff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 13px;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: .3px;
+            box-shadow: 0 10px 24px rgba(206, 15, 29, 0.18);
+            transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+        }
+
+        .btn-track i { font-size: 22px; }
+        .btn-track:hover { filter: brightness(.97); box-shadow: 0 13px 28px rgba(206, 15, 29, 0.24); }
+        .btn-track:active { transform: translateY(1px) scale(.995); }
+        .btn-track:disabled { opacity: .72; cursor: wait; }
+
+        .security-note {
+            margin: 20px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            color: #80838b;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .security-note i { color: var(--success); font-size: 19px; }
+
+        #loading {
+            display: none;
+            margin: 18px auto 0;
+            padding: 18px;
+            color: var(--primary-red);
+            text-align: center;
+        }
+
+        #results-container { width: 100%; margin-top: 18px; text-align: left; }
+
+        .empty-result,
+        .error-result {
+            padding: 22px 18px;
+            border-radius: var(--radius-md);
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .empty-result { background: var(--primary-red-soft); color: var(--primary-red); border: 1px solid #ffd6da; }
+        .error-result { background: #fff6f0; color: #aa5419; border: 1px solid #ffddc6; }
+
+        .order-card {
+            margin: 0 0 18px;
+            padding: 28px 34px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid rgba(236, 232, 233, 0.95);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-soft);
+        }
+
+        .order-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .order-id { color: var(--primary-red); font-size: 20px; line-height: 1.2; }
+        .order-id strong { font-weight: 700; }
+        .order-date { color: #6f737d; font-size: 13px; white-space: nowrap; }
+
+        .status-banner {
+            width: 100%;
+            min-height: 58px;
+            margin-bottom: 20px;
+            padding: 13px 17px;
+            border: 1px solid;
+            border-radius: 13px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            line-height: 1.45;
+        }
+
+        .status-banner i { font-size: 21px; flex: 0 0 auto; }
+        .status-success { color: #277c43; background: var(--success-soft); border-color: #bfe7c9; }
+        .status-shipping { color: #2f6da9; background: var(--info-soft); border-color: #c7dffa; }
+        .status-waiting { color: #9a6519; background: var(--warning-soft); border-color: #f1d7a8; }
+        .status-cancelled { color: #a72430; background: var(--primary-red-soft); border-color: #f4c3c8; }
+
+        .spx-box {
+            margin: -4px 0 20px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            border: 1px dashed #efb6bb;
+            border-radius: 13px;
+            background: #fffafa;
+        }
+
+        .spx-caption { color: #777b84; font-size: 12px; }
+        .spx-code { margin-top: 4px; color: #22242a; font-size: 16px; font-weight: 700; word-break: break-all; }
+        .spx-link {
+            flex: 0 0 auto;
+            padding: 9px 13px;
+            border-radius: 10px;
+            background: var(--primary-red);
+            color: #fff;
+            text-decoration: none;
             font-size: 12px;
             font-weight: 700;
-            color: #333;
-            margin-bottom: 6px;
         }
+
+        .customer-info-box {
+            position: relative;
+            margin: 0 0 23px;
+            padding: 18px 18px 18px 88px;
+            min-height: 112px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+            border: 1px solid #f3c8cc;
+            border-radius: 14px;
+            background: linear-gradient(110deg, #fff7f7 0%, #ffffff 72%);
+            color: #555962;
+            font-size: 14px;
+            line-height: 1.55;
+        }
+
+        .customer-avatar {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            width: 52px;
+            height: 52px;
+            transform: translateY(-50%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ffe6e8;
+            color: var(--primary-red);
+            font-size: 23px;
+        }
+
+        .customer-info-line { overflow-wrap: anywhere; }
+        .customer-info-line strong { color: #1f2025; font-weight: 700; }
+
+        .order-items-section { margin-top: 4px; }
+
+        .order-section-title {
+            margin: 0 0 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #24252a;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .order-section-title i { color: var(--primary-red); font-size: 19px; }
+
+        .order-product-list {
+            overflow: hidden;
+            border: 1px solid #e8e8ec;
+            border-radius: 14px;
+            background: #fff;
+        }
+
+        .order-product-row {
+            display: grid;
+            grid-template-columns: 58px minmax(0, 1fr) 44px 105px;
+            align-items: center;
+            gap: 13px;
+            min-height: 82px;
+            padding: 10px 12px;
+        }
+
+        .order-product-row + .order-product-row { border-top: 1px solid #eeeeF1; }
+
+        .order-product-image {
+            width: 58px;
+            height: 58px;
+            padding: 3px;
+            border: 1px solid #ececef;
+            border-radius: 10px;
+            background: #fff;
+            object-fit: contain;
+        }
+
+        .order-product-name {
+            color: #303239;
+            font-size: 13px;
+            line-height: 1.48;
+            overflow-wrap: anywhere;
+        }
+
+        .order-product-qty { color: #24262c; font-size: 13px; font-weight: 700; text-align: center; }
+        .order-product-price { color: var(--primary-red); font-size: 13px; font-weight: 700; text-align: right; white-space: nowrap; }
+
+        .order-total {
+            margin-top: 20px;
+            padding: 16px 20px;
+            border: 1px solid #f5c8cc;
+            border-radius: 14px;
+            background: linear-gradient(90deg, #fffafa, #fff5f6);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 28px;
+        }
+
+        .order-total-label { color: #202126; font-size: 16px; font-weight: 700; }
+        .order-total-value { padding-left: 28px; border-left: 1px solid #efc5c9; color: var(--primary-red); font-size: 30px; font-weight: 800; line-height: 1.1; white-space: nowrap; }
+
+        .order-action-row {
+            margin-top: 16px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .order-action-btn {
+            min-height: 54px;
+            border: 1px solid;
+            border-radius: 13px;
+            background: #fff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            transition: transform .2s ease, background .2s ease;
+        }
+
+        .order-action-btn:active { transform: scale(.985); }
+        .btn-edit-order { color: #a45a12; border-color: #eea559; }
+        .btn-edit-order:hover { background: #fff9ef; }
+        .btn-cancel-order { color: var(--primary-red); border-color: #f09aa2; }
+        .btn-cancel-order:hover { background: #fff5f6; }
+
+        .order-locked-note {
+            margin-top: 16px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: #f6f7f9;
+            color: #767a83;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .track-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(17, 18, 22, 0.54);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+        .track-modal-box {
+            width: min(100%, 520px);
+            max-height: calc(100dvh - 32px);
+            overflow-y: auto;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 24px 70px rgba(0, 0, 0, .22);
+        }
+
+        .track-modal-head {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            padding: 18px 20px;
+            background: #fff7f7;
+            border-bottom: 1px solid #f2dfe1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .track-modal-head h3 { margin: 0; color: #202126; font-size: 16px; }
+        .track-modal-close { border: 0; background: transparent; color: #777b84; font-size: 20px; cursor: pointer; }
+        .track-modal-body { padding: 20px; }
+        .track-modal-field { margin-bottom: 14px; }
+
+        .track-modal-field label {
+            display: block;
+            margin-bottom: 7px;
+            color: #373940;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
         .track-modal-field input,
         .track-modal-field textarea {
             width: 100%;
-            box-sizing: border-box;
-            border: 1px solid #e2e2e2;
-            border-radius: 8px;
-            padding: 11px 12px;
-            font-size: 14px;
+            padding: 12px 13px;
+            border: 1px solid #dedfe4;
+            border-radius: 11px;
             outline: none;
-            font-family: 'Inter', sans-serif;
+            color: #2c2e34;
+            font-size: 14px;
         }
-        .track-modal-field textarea { min-height: 90px; resize: vertical; }
-        .track-modal-field input:focus,
-        .track-modal-field textarea:focus {
-            border-color: var(--primary-red);
-            box-shadow: 0 0 0 3px rgba(197, 22, 34, 0.08);
-        }
-        .track-modal-actions {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 18px;
-        }
-        .modal-btn-secondary,
-        .modal-btn-primary {
-            border: none;
-            border-radius: 8px;
-            padding: 11px 16px;
-            font-weight: 700;
-            cursor: pointer;
-            font-family: 'Inter', sans-serif;
-        }
-        .modal-btn-secondary { background: #f2f2f2; color: #555; }
-        .modal-btn-primary { background: var(--primary-red); color: #fff; }
-        .modal-btn-primary:disabled { opacity: 0.65; cursor: not-allowed; }
 
-        /* --- RESPONSIVE MOBILE --- */
-        @media (max-width: 768px) {
-            .center-card { padding: 40px 20px; }
-            .features-row { grid-template-columns: 1fr; gap: 25px; max-width: 400px; }
-            .track-header-inner { flex-direction: column; gap: 15px; }
+        .track-modal-field textarea { min-height: 100px; resize: vertical; }
+        .track-modal-field input:focus,
+        .track-modal-field textarea:focus { border-color: #e4525e; box-shadow: 0 0 0 4px rgba(206, 15, 29, .07); }
+
+        .track-modal-actions { margin-top: 18px; display: flex; justify-content: flex-end; gap: 10px; }
+        .modal-btn-secondary,
+        .modal-btn-primary { min-height: 44px; padding: 10px 16px; border: 0; border-radius: 10px; cursor: pointer; font-weight: 700; }
+        .modal-btn-secondary { background: #f1f2f4; color: #555962; }
+        .modal-btn-primary { background: var(--primary-red); color: #fff; }
+        .modal-btn-primary:disabled { opacity: .65; cursor: wait; }
+
+        .track-footer { display: none; }
+
+        @media (max-width: 680px) {
+            .track-header { padding: 8px; }
+            .track-header-shell { border-radius: 14px; }
+            .track-brand-row { min-height: 70px; padding: 10px 14px; }
+            .track-logo { gap: 9px; }
+            .track-logo img { width: 47px; height: 47px; }
+            .track-logo h1 { font-size: clamp(22px, 7vw, 30px); letter-spacing: .8px; }
+            .track-logo p { margin-top: 5px; font-size: 8px; letter-spacing: clamp(2.5px, 1.3vw, 5px); }
+            .messenger-top { min-width: auto; padding: 9px; gap: 7px; font-size: 13px; }
+            .messenger-top i { font-size: 22px; }
+            .track-nav a { min-height: 56px; gap: 10px; font-size: 15px; }
+            .track-nav a i { font-size: 20px; }
+
+            .track-wrapper { margin-top: 8px; padding: 0 8px; }
+            .lookup-card { padding: 25px 15px 22px; border-radius: 22px; }
+            .icon-circle-lg { width: 62px; height: 62px; margin-bottom: 14px; font-size: 27px; }
+            .track-title { font-size: clamp(29px, 9vw, 39px); }
+            .title-divider { margin: 13px 0 15px; }
+            .track-desc { margin-bottom: 20px; font-size: 14px; line-height: 1.62; }
+            .input-wrapper input { height: 58px; padding-left: 52px; padding-right: 50px; font-size: 16px; border-radius: 13px; }
+            .input-wrapper > i { left: 18px; font-size: 19px; }
+            .clear-search-btn { right: 14px; width: 28px; height: 28px; }
+            .btn-track { min-height: 58px; font-size: 16px; border-radius: 13px; }
+            .btn-track i { font-size: 19px; }
+            .security-note { margin-top: 17px; font-size: 12px; }
+
+            #results-container { margin-top: 14px; }
+            .order-card { padding: 20px 15px; border-radius: 22px; }
+            .order-meta { align-items: flex-start; gap: 8px; }
+            .order-id { font-size: 17px; }
+            .order-date { font-size: 11px; text-align: right; white-space: normal; }
+            .status-banner { min-height: 52px; padding: 11px 12px; font-size: 12.5px; }
+            .status-banner i { font-size: 18px; }
+            .customer-info-box { padding: 15px 12px 15px 68px; min-height: 105px; font-size: 12.5px; }
+            .customer-avatar { left: 13px; width: 44px; height: 44px; font-size: 20px; }
+            .order-section-title { font-size: 15px; }
+            .order-product-row { grid-template-columns: 48px minmax(0, 1fr) 30px; gap: 9px; min-height: 72px; padding: 9px; }
+            .order-product-image { width: 48px; height: 48px; border-radius: 8px; }
+            .order-product-name { font-size: 12px; line-height: 1.42; }
+            .order-product-qty { font-size: 12px; }
+            .order-product-price { grid-column: 2 / 4; margin-top: -2px; font-size: 12.5px; text-align: right; }
+            .order-total { padding: 14px 15px; gap: 16px; }
+            .order-total-label { font-size: 14px; }
+            .order-total-value { padding-left: 16px; font-size: clamp(23px, 7vw, 29px); }
+            .order-action-row { gap: 9px; }
+            .order-action-btn { min-height: 50px; padding: 9px; font-size: 12px; }
+            .order-locked-note { font-size: 11.5px; }
+
+            .track-modal-overlay { align-items: flex-end; padding: 0; }
+            .track-modal-box { max-height: 92dvh; border-radius: 22px 22px 0 0; }
+            .track-modal-body { padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); }
+        }
+
+        @media (max-width: 390px) {
+            .track-logo img { width: 42px; height: 42px; }
+            .track-logo h1 { font-size: 23px; }
+            .track-logo p { font-size: 7px; letter-spacing: 2.8px; }
+            .messenger-top span { display: none; }
+            .messenger-top i { font-size: 23px; }
+            .track-nav a { font-size: 14px; }
+            .lookup-card { padding-left: 12px; padding-right: 12px; }
+            .order-card { padding-left: 12px; padding-right: 12px; }
+            .order-total { justify-content: space-between; gap: 10px; }
+            .order-total-value { font-size: 23px; }
+            .order-action-btn { gap: 6px; font-size: 11.5px; }
+        }
+
+        @media (max-width: 340px) {
+            .track-logo h1 { font-size: 20px; }
+            .track-logo p { letter-spacing: 2px; }
+            .track-brand-row { padding-left: 10px; padding-right: 10px; }
+            .track-nav a { font-size: 13px; gap: 7px; }
+            .track-title { font-size: 28px; }
+            .order-action-row { grid-template-columns: 1fr; }
+            .order-total { align-items: flex-end; flex-direction: column; }
+            .order-total-value { width: 100%; padding: 10px 0 0; border-left: 0; border-top: 1px solid #efc5c9; text-align: right; }
+        }
+
+        @media (min-width: 900px) {
+            .track-wrapper { margin-top: 22px; }
         }
     </style>
 </head>
 <body>
 
     <header class="track-header">
-        <div class="track-header-inner">
-            <a href="/" class="track-logo">
-                <img src="images/morachi_logo.png" alt="MORACHI" onerror="this.src='images/icon-logo.png'">
-                <div>
-                    <h1>MORACHI</h1>
-                    <p>JAPAN BEAUTY</p>
-                </div>
-            </a>
-            <div class="track-nav">
-                <a href="/"><i class="fa-solid fa-house"></i> Trang chủ</a>
-                <a href="https://www.facebook.com/profile.php?id=61572066442519" target="_blank"><i class="fa-regular fa-comment-dots"></i> Mess</a>
+        <div class="track-header-shell">
+            <div class="track-brand-row">
+                <a href="/" class="track-logo" aria-label="MORACHI - Trang chủ">
+                    <img src="images/morachi_logo.png" alt="MORACHI" onerror="this.src='images/icon-logo.png'">
+                    <div class="track-logo-copy">
+                        <h1>MORACHI</h1>
+                        <p>JAPAN BEAUTY</p>
+                    </div>
+                </a>
+                <a class="messenger-top" href="https://www.facebook.com/profile.php?id=61572066442519" target="_blank" rel="noopener noreferrer">
+                    <i class="fa-regular fa-comment-dots"></i><span>Mess</span>
+                </a>
             </div>
+
+            <nav class="track-nav" aria-label="Điều hướng trang tra cứu">
+                <a href="/"><i class="fa-solid fa-house"></i><span>Trang chủ</span></a>
+                <a href="https://www.facebook.com/profile.php?id=61572066442519" target="_blank" rel="noopener noreferrer"><i class="fa-regular fa-comment-dots"></i><span>Mess</span></a>
+            </nav>
         </div>
     </header>
 
-    <div class="track-wrapper">
-        <div class="center-card">
-            
-            <div class="icon-circle-lg"><i class="fa-solid fa-box-open"></i></div>
-            <h2 class="track-title">Tra Cứu Đơn Hàng</h2>
-            
-            <div class="title-divider">
-                <span></span><i class="fa-solid fa-circle"></i><span></span>
-            </div>
-            
-            <p class="track-desc">Vui lòng nhập <strong>Số điện thoại hoặc Mã đơn hàng</strong><br>để kiểm tra quá trình xử lý và xem mã vận đơn Shopee Express.</p>
-            
-            <div class="track-form-area">
-                <div class="input-wrapper">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                    <input type="text" id="search-phone" placeholder="Nhập SĐT hoặc mã đơn hàng MO123xxx của bạn" onkeydown="if(event.key === 'Enter') fetchOrders()">
+    <main class="track-wrapper">
+        <section class="lookup-card" aria-labelledby="tracking-title">
+            <div class="lookup-content">
+                <div class="icon-circle-lg"><i class="fa-solid fa-box-open"></i></div>
+                <h2 class="track-title" id="tracking-title">Tra Cứu Đơn Hàng</h2>
+
+                <div class="title-divider" aria-hidden="true">
+                    <span></span><i class="fa-solid fa-circle"></i><span></span>
                 </div>
 
-                <button class="btn-track" onclick="fetchOrders()">
-                    <i class="fa-solid fa-magnifying-glass"></i> TRA CỨU
-                </button>
+                <p class="track-desc">Vui lòng nhập <strong>Số điện thoại</strong> hoặc <strong>Mã đơn hàng</strong><br>để kiểm tra quá trình xử lý và xem mã vận đơn Shopee Express.</p>
 
-                <div class="security-note">
-                    <i class="fa-solid fa-shield-halved"></i> Thông tin của bạn được bảo mật tuyệt đối
+                <div class="track-form-area">
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input
+                            type="text"
+                            id="search-phone"
+                            inputmode="search"
+                            autocomplete="off"
+                            aria-label="Số điện thoại, mã đơn hàng hoặc mã vận đơn"
+                            placeholder="Nhập SĐT, mã đơn hoặc mã vận đơn"
+                            oninput="toggleSearchClear()"
+                            onkeydown="if(event.key === 'Enter') fetchOrders()"
+                        >
+                        <button type="button" id="clear-search-btn" class="clear-search-btn" aria-label="Xóa nội dung tìm kiếm" onclick="clearTrackingSearch()">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <button class="btn-track" id="track-submit-btn" type="button" onclick="fetchOrders()">
+                        <i class="fa-solid fa-magnifying-glass"></i><span>TRA CỨU</span>
+                    </button>
                 </div>
             </div>
+        </section>
 
-            <div id="loading" style="display:none; text-align:center; padding:20px; margin-top:20px; color:var(--primary-red);">
-                <i class="fas fa-spinner fa-spin fa-2x"></i>
-            </div>
-            <div id="results-container"></div>
-
+        <div class="security-note">
+            <i class="fa-solid fa-shield-halved"></i><span>Thông tin của bạn được bảo mật tuyệt đối</span>
         </div>
-    </div>
 
-    <footer class="track-footer">
-        <div class="features-row">
-            <div class="feature-box">
-                <div class="feat-icon"><i class="fa-solid fa-lock"></i></div>
-                <div class="feat-text">
-                    <h4>Bảo mật thông tin</h4>
-                    <p>Cam kết bảo mật tuyệt đối mọi thông tin của khách hàng.</p>
-                </div>
-            </div>
-            <div class="feature-box">
-                <div class="feat-icon"><i class="fa-solid fa-rotate"></i></div>
-                <div class="feat-text">
-                    <h4>Cập nhật liên tục</h4>
-                    <p>Thông tin đơn hàng được cập nhật liên tục, nhanh chóng và chính xác.</p>
-                </div>
-            </div>
-            <div class="feature-box">
-                <div class="feat-icon"><i class="fa-solid fa-truck-fast"></i></div>
-                <div class="feat-text">
-                    <h4>Giao hàng an toàn</h4>
-                    <p>Đơn hàng được vận chuyển an toàn đến tận tay bạn.</p>
-                </div>
-            </div>
+        <div id="loading" aria-live="polite">
+            <i class="fas fa-spinner fa-spin fa-2x"></i>
         </div>
-    </footer>
+        <div id="results-container" aria-live="polite"></div>
+    </main>
+
+    <footer class="track-footer" aria-hidden="true"></footer>
 
     <script>
         let currentTrackingPhone = "";
         let currentTrackingOrders = [];
+
+
+        function toggleSearchClear() {
+            const input = document.getElementById('search-phone');
+            const clearBtn = document.getElementById('clear-search-btn');
+            if (!input || !clearBtn) return;
+            clearBtn.classList.toggle('visible', Boolean(input.value.trim()));
+        }
+
+        function clearTrackingSearch() {
+            const input = document.getElementById('search-phone');
+            const results = document.getElementById('results-container');
+            if (input) {
+                input.value = '';
+                input.focus();
+            }
+            if (results) results.innerHTML = '';
+            currentTrackingOrders = [];
+            currentTrackingPhone = '';
+            toggleSearchClear();
+        }
+
+        function parseTrackPrice(value) {
+            if (typeof value === 'number' && Number.isFinite(value)) return value;
+            const digits = String(value ?? '').replace(/[^\d]/g, '');
+            return digits ? Number(digits) : 0;
+        }
+
+        function getTrackItemPrice(item) {
+            const quantity = Math.max(1, Number(item && item.quantity) || 1);
+            const totalValue = parseTrackPrice(item && (item.total_price ?? item.line_total ?? item.subtotal));
+            if (totalValue > 0) return Math.round(totalValue / quantity);
+            return parseTrackPrice(item && (item.price ?? item.current_price ?? item.unit_price));
+        }
+
+        function getTrackItemImage(item) {
+            return firstTrackValue(
+                item && item.image,
+                item && item.thumbnail,
+                item && item.product_image,
+                item && item.img,
+                'images/icon-logo.png'
+            );
+        }
 
         function escapeTrackHtml(value) {
             return String(value ?? "")
@@ -723,31 +1187,72 @@
 
         function formatDate(value) {
             const date = value ? new Date(value) : new Date();
-            return Number.isNaN(date.getTime()) ? "" : date.toLocaleString('vi-VN');
+            if (Number.isNaN(date.getTime())) return "";
+            return date.toLocaleString('vi-VN', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour12: false
+            });
+        }
+
+        function getStatusPresentation(order, status) {
+            const normalized = normalizeText(status);
+            if (isOrderCancelled(order)) {
+                return { css: 'status-cancelled', icon: 'fa-circle-xmark' };
+            }
+            if (normalized.includes('da giao') || normalized.includes('hoan thanh') || normalized.includes('thanh cong')) {
+                return { css: 'status-success', icon: 'fa-circle-check' };
+            }
+            if (normalized.includes('dang giao') || normalized.includes('van chuyen') || order.spx_tracking_code) {
+                return { css: 'status-shipping', icon: 'fa-truck-fast' };
+            }
+            if (normalized.includes('xac nhan') || normalized.includes('dang chuan bi')) {
+                return { css: 'status-success', icon: 'fa-circle-check' };
+            }
+            return { css: 'status-waiting', icon: 'fa-clock' };
         }
 
         function renderOrderCard(o) {
-            const dateStr = formatDate(o.created_at);
+            const dateStr = formatDate(o.created_at || o.date);
             const status = o.status || "Chờ xác nhận";
-            const isDelivering = normalizeText(status).includes("giao") || o.spx_tracking_code;
             const editable = isOrderEditable(o);
             const orderDbId = String(getOrderDbId(o));
             const customer = getCustomerInfo(o);
             const fullAddress = buildFullAddress(customer);
             const items = Array.isArray(o.items) ? o.items : (Array.isArray(o.products) ? o.products : []);
+            const statusView = getStatusPresentation(o, status);
+
             const itemsHtml = items.length
-                ? items.map(i => `<div>• ${escapeTrackHtml(i.title)} (${escapeTrackHtml(i.variant || 'Mặc định')}) <b>x${escapeTrackHtml(i.quantity || 1)}</b></div>`).join('')
-                : `<div style="color:#888;">Chưa có thông tin sản phẩm</div>`;
+                ? items.map(item => {
+                    const quantity = Math.max(1, Number(item.quantity) || 1);
+                    const itemPrice = getTrackItemPrice(item);
+                    const variant = firstTrackValue(item.variant, item.variant_name, item.option, item.classification);
+                    const itemTitle = firstTrackValue(item.title, item.product_name, item.name, 'Sản phẩm');
+                    const displayTitle = variant ? `${itemTitle} [${variant}]` : itemTitle;
+                    return `
+                        <div class="order-product-row">
+                            <img class="order-product-image" src="${escapeTrackHtml(getTrackItemImage(item))}" alt="${escapeTrackHtml(itemTitle)}" onerror="this.src='images/icon-logo.png'">
+                            <div class="order-product-name">${escapeTrackHtml(displayTitle)}</div>
+                            <div class="order-product-qty">x${escapeTrackHtml(quantity)}</div>
+                            <div class="order-product-price">${itemPrice > 0 ? `${itemPrice.toLocaleString('vi-VN')} đ` : '—'}</div>
+                        </div>
+                    `;
+                }).join('')
+                : `<div style="padding:20px; color:#888; text-align:center; font-size:13px;">Chưa có thông tin sản phẩm</div>`;
 
             let spxHtml = "";
             if (o.spx_tracking_code) {
                 spxHtml = `
                     <div class="spx-box">
                         <div>
-                            <div style="font-size:12px; color:#555;">Đơn vị: <b>Shopee Xpress (SPX)</b></div>
-                            <div class="spx-code" style="font-size: 16px; font-weight: bold; color: #111;">${escapeTrackHtml(o.spx_tracking_code)}</div>
+                            <div class="spx-caption">Mã vận đơn Shopee Xpress (SPX)</div>
+                            <div class="spx-code">${escapeTrackHtml(o.spx_tracking_code)}</div>
                         </div>
-                        <a href="https://spx.vn" target="_blank" style="background: var(--primary-red); color: white; text-decoration: none; padding: 8px 15px; border-radius: 6px; font-size: 12px; font-weight: bold;"><i class="fas fa-search-location"></i> SPX</a>
+                        <a class="spx-link" href="https://spx.vn" target="_blank" rel="noopener noreferrer"><i class="fas fa-location-arrow"></i> Theo dõi</a>
                     </div>
                 `;
             }
@@ -756,44 +1261,50 @@
             const actionHtml = editable ? `
                 <div class="order-action-row">
                     <button class="order-action-btn btn-edit-order" onclick="openEditOrderModal('${escapeTrackHtml(orderDbId)}')">
-                        <i class="fas fa-pen"></i> Chỉnh sửa thông tin
+                        <i class="fas fa-pen"></i><span>Chỉnh sửa thông tin</span>
                     </button>
                     <button class="order-action-btn btn-cancel-order" onclick="cancelCustomerOrder('${escapeTrackHtml(orderDbId)}')">
-                        <i class="fas fa-ban"></i> Hủy đơn
+                        <i class="fas fa-ban"></i><span>Hủy đơn</span>
                     </button>
                 </div>
             ` : (cancelled ? "" : `
                 <div class="order-locked-note">
-                    <i class="fas fa-lock"></i>Đơn hàng đang được chuẩn bị trong 1 ngày sẽ được giao đến bạn không thể chỉnh sửa hoặc hủy đơn vui lòng liên hệ Shop nếu cần.
+                    <i class="fas fa-lock"></i> Đơn hàng đã chuyển sang bước xử lý nên không thể chỉnh sửa hoặc hủy. Vui lòng liên hệ Shop khi cần hỗ trợ.
                 </div>
             `);
 
             return `
-                <div class="order-card">
-                    <div class="order-header" style="display: flex; justify-content: space-between; border-bottom: 1px dashed #eee; padding-bottom: 10px; margin-bottom: 15px;">
-                        <span class="order-id" style="font-weight: bold; color: var(--primary-red); font-size: 14px;">Mã: ${escapeTrackHtml(o.order_id || 'N/A')}</span>
-                        <span class="order-date" style="font-size: 12px; color: #888;">${escapeTrackHtml(dateStr)}</span>
+                <article class="order-card">
+                    <div class="order-meta">
+                        <div class="order-id"><strong>Mã:</strong> ${escapeTrackHtml(o.order_id || 'N/A')}</div>
+                        <div class="order-date">${escapeTrackHtml(dateStr)}</div>
                     </div>
 
-                    <div style="display: inline-block; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; margin-bottom: 15px; background: ${isDelivering ? '#e8f8f0' : '#fdf2f2'}; color: ${isDelivering ? '#27ae60' : 'var(--primary-red)'};"><i class="fas ${isDelivering ? 'fa-truck' : 'fa-box'}"></i> Trạng thái: ${escapeTrackHtml(status)}</div>
+                    <div class="status-banner ${statusView.css}">
+                        <i class="fas ${statusView.icon}"></i>
+                        <span>Trạng thái: ${escapeTrackHtml(status)}</span>
+                    </div>
 
                     ${spxHtml}
 
                     <div class="customer-info-box">
-                        <div><strong>Người nhận:</strong> ${escapeTrackHtml(customer.name || 'Chưa có')}</div>
-                        <div><strong>SĐT:</strong> ${escapeTrackHtml(customer.phone || 'Chưa có')}</div>
-                        <div><strong>Địa chỉ:</strong> ${escapeTrackHtml(fullAddress || 'Chưa có')}</div>
+                        <div class="customer-avatar"><i class="fas fa-user"></i></div>
+                        <div class="customer-info-line"><strong>Người nhận:</strong> ${escapeTrackHtml(customer.name || 'Chưa có')}</div>
+                        <div class="customer-info-line"><strong>SĐT:</strong> ${escapeTrackHtml(customer.phone || 'Chưa có')}</div>
+                        <div class="customer-info-line"><strong>Địa chỉ:</strong> ${escapeTrackHtml(fullAddress || 'Chưa có')}</div>
                     </div>
 
-                    <div class="order-items" style="font-size: 13px; color: #444; line-height: 1.6;">
-                        <strong style="margin-bottom:5px; display:block; color: #111;">Sản phẩm đã mua:</strong>
-                        ${itemsHtml}
-                    </div>
-                    <div class="order-total" style="border-top: 1px dashed #eee; padding-top: 15px; margin-top: 15px; font-weight: bold; text-align: right; font-size: 15px; color: #111;">
-                        Tổng: <span style="color:var(--primary-red); font-size: 18px; margin-left: 5px;">${Number(o.total_amount || o.total || 0).toLocaleString('vi-VN')} đ</span>
+                    <section class="order-items-section">
+                        <h3 class="order-section-title"><i class="fas fa-bag-shopping"></i><span>Sản phẩm đã mua</span></h3>
+                        <div class="order-product-list">${itemsHtml}</div>
+                    </section>
+
+                    <div class="order-total">
+                        <span class="order-total-label">Tổng cộng</span>
+                        <span class="order-total-value">${Number(o.total_amount || o.total || 0).toLocaleString('vi-VN')} đ</span>
                     </div>
                     ${actionHtml}
-                </div>
+                </article>
             `;
         }
 
@@ -835,6 +1346,14 @@
             currentTrackingPhone = keyword;
             resultsDiv.innerHTML = "";
             loadingDiv.style.display = "block";
+            toggleSearchClear();
+
+            const submitBtn = document.getElementById('track-submit-btn');
+            const oldSubmitHtml = submitBtn ? submitBtn.innerHTML : '';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>ĐANG TRA CỨU</span>';
+            }
 
             try {
                 // Giữ tham số phone để tương thích backend cũ, backend mới sẽ hiểu là từ khóa tra cứu.
@@ -849,7 +1368,7 @@
 
                 if (!finalOrders.length) {
                     currentTrackingOrders = [];
-                    resultsDiv.innerHTML = `<div style="text-align:center; color:var(--primary-red); font-weight:bold; padding: 20px; background: #fdf2f2; border-radius: 8px;"><i class="fas fa-exclamation-circle"></i> Không tìm thấy đơn hàng phù hợp với thông tin tra cứu này!</div>`;
+                    resultsDiv.innerHTML = `<div class="empty-result"><i class="fas fa-circle-exclamation"></i> Không tìm thấy đơn hàng phù hợp với thông tin tra cứu này.</div>`;
                     return;
                 }
 
@@ -857,7 +1376,12 @@
                 resultsDiv.innerHTML = currentTrackingOrders.map(renderOrderCard).join('');
             } catch (err) {
                 loadingDiv.style.display = "none";
-                resultsDiv.innerHTML = `<div style="text-align:center; color:var(--primary-red);">Lỗi kết nối máy chủ! Vui lòng thử lại sau.</div>`;
+                resultsDiv.innerHTML = `<div class="error-result"><i class="fas fa-triangle-exclamation"></i> Lỗi kết nối máy chủ. Vui lòng thử lại sau.</div>`;
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = oldSubmitHtml || '<i class="fa-solid fa-magnifying-glass"></i><span>TRA CỨU</span>';
+                }
             }
         }
 
@@ -1015,6 +1539,19 @@
                 alert("❌ Không hủy được đơn hàng. Vui lòng thử lại hoặc kiểm tra backend /api/orders/:id.");
             }
         }
+
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') closeEditOrderModal();
+        });
+
+        document.addEventListener('click', function(event) {
+            if (event.target && event.target.classList.contains('track-modal-overlay')) {
+                closeEditOrderModal();
+            }
+        });
+
+        toggleSearchClear();
 
     </script>
 </body>
