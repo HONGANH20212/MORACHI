@@ -705,7 +705,6 @@ function openCheckoutModal() {
                             <i class="fas fa-times"></i>
                         </button>
                         <div>
-                            <span class="bank-payment-icon"><i class="fas fa-qrcode"></i></span>
                             <h3 id="bank-payment-title">Thanh toán chuyển khoản</h3>
                             <p>Quét mã VietQR hoặc tải ảnh QR về thiết bị</p>
                         </div>
@@ -851,25 +850,31 @@ window.downloadBankQrImage = async function() {
     ).trim();
 
     const safeFileName = `MORACHI-QR-${orderCode.replace(/[^a-zA-Z0-9_-]/g, '')}.png`;
+    const ua = navigator.userAgent || '';
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+
+    // iPhone / Safari thường lỗi với kiểu tải blob. Mở ảnh trực tiếp để người dùng nhấn giữ và lưu.
+    if (isIOS || isSafari) {
+        window.open(qrImage.src, '_blank', 'noopener');
+        return;
+    }
 
     try {
-        const response = await fetch(qrImage.src, { cache: 'no-store' });
+        const response = await fetch(qrImage.src, { cache: 'no-store', mode: 'cors' });
         if (!response.ok) throw new Error('Không tải được ảnh QR');
 
         const blob = await response.blob();
         const objectUrl = URL.createObjectURL(blob);
         const link = document.createElement('a');
-
         link.href = objectUrl;
         link.download = safeFileName;
         document.body.appendChild(link);
         link.click();
         link.remove();
 
-        setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 2000);
     } catch (error) {
-        // Một số trình duyệt iPhone không hỗ trợ download trực tiếp.
-        // Mở ảnh QR trong tab mới để người dùng nhấn giữ và lưu ảnh.
         const fallback = document.createElement('a');
         fallback.href = qrImage.src;
         fallback.target = '_blank';
@@ -1709,9 +1714,9 @@ checkoutStyle.innerHTML = `
         inset: 0;
         z-index: 10030;
         display: none;
-        align-items: flex-end;
+        align-items: center;
         justify-content: center;
-        padding: 16px;
+        padding: 12px;
     }
 
     .bank-payment-popup.active {
@@ -1729,10 +1734,10 @@ checkoutStyle.innerHTML = `
     .bank-payment-dialog {
         position: relative;
         z-index: 1;
-        width: min(100%, 420px);
-        max-height: min(96vh, 760px);
+        width: min(100%, 410px);
+        max-height: min(92vh, 760px);
         overflow-y: auto;
-        border-radius: 24px;
+        border-radius: 22px;
         background: #fff;
         box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
         animation: bankPopupSlideUp .24s ease-out;
@@ -1751,16 +1756,16 @@ checkoutStyle.innerHTML = `
     }
 
     .bank-payment-handle {
-        width: 50px;
+        width: 44px;
         height: 5px;
-        margin: 7px auto 1px;
+        margin: 7px auto 0;
         border-radius: 999px;
         background: #d8d9dd;
     }
 
     .bank-payment-header {
         position: relative;
-        padding: 12px 46px 10px 16px;
+        padding: 10px 42px 8px 14px;
         border-bottom: 1px solid #ededf0;
         text-align: center;
     }
@@ -1769,52 +1774,40 @@ checkoutStyle.innerHTML = `
         display: flex;
         flex-direction: column;
         align-items: center;
-    }
-
-    .bank-payment-icon {
-        width: 36px;
-        height: 36px;
-        margin-bottom: 6px;
-        border-radius: 14px;
-        display: inline-flex;
-        align-items: center;
         justify-content: center;
-        color: #fff;
-        background: linear-gradient(145deg, #df0d1d, #bb0b17);
-        font-size: 20px;
-        box-shadow: 0 8px 18px rgba(201, 13, 27, .2);
     }
 
     .bank-payment-header h3 {
         margin: 0;
         color: #23252a;
         font-size: 15px;
-        line-height: 1.3;
+        line-height: 1.25;
+        font-weight: 800;
     }
 
     .bank-payment-header p {
-        margin: 3px 0 0;
+        margin: 2px 0 0;
         color: #74777f;
         font-size: 10px;
-        line-height: 1.45;
+        line-height: 1.35;
     }
 
     .bank-payment-close {
         position: absolute;
-        top: 10px;
-        right: 10px;
-        width: 32px;
-        height: 32px;
+        top: 9px;
+        right: 9px;
+        width: 30px;
+        height: 30px;
         border: 0;
         border-radius: 50%;
         background: #f3f3f5;
         color: #676a72;
         cursor: pointer;
-        font-size: 16px;
+        font-size: 15px;
     }
 
     .bank-payment-body {
-        padding: 12px 16px 16px;
+        padding: 10px 14px 14px;
     }
 
     .bank-payment-order-code {
@@ -1822,7 +1815,7 @@ checkoutStyle.innerHTML = `
         align-items: center;
         justify-content: space-between;
         gap: 10px;
-        padding: 9px 12px;
+        padding: 8px 10px;
         border: 1px solid #f3d3d6;
         border-radius: 12px;
         background: #fff8f8;
@@ -1840,17 +1833,17 @@ checkoutStyle.innerHTML = `
     }
 
     .bank-payment-qr-wrap {
-        padding: 12px 0 10px;
+        padding: 10px 0 8px;
         display: flex;
         flex-direction: column;
         align-items: center;
     }
 
     .bank-payment-qr-wrap img {
-        width: min(50vw, 190px);
-        height: min(50vw, 190px);
-        max-width: 190px;
-        max-height: 190px;
+        width: min(54vw, 205px);
+        height: min(54vw, 205px);
+        max-width: 205px;
+        max-height: 205px;
         object-fit: contain;
         border: 1px solid #ebd9db;
         border-radius: 16px;
@@ -1861,7 +1854,7 @@ checkoutStyle.innerHTML = `
 
     .bank-payment-download {
         min-height: 38px;
-        margin-top: 9px;
+        margin-top: 8px;
         padding: 8px 14px;
         border: 1px solid #cf101d;
         border-radius: 12px;
@@ -1896,12 +1889,12 @@ checkoutStyle.innerHTML = `
     }
 
     .bank-payment-details > div {
-        min-height: 36px;
-        padding: 7px 10px;
+        min-height: 34px;
+        padding: 6px 10px;
         display: grid;
-        grid-template-columns: minmax(92px, .9fr) minmax(0, 1.2fr);
+        grid-template-columns: minmax(88px, .88fr) minmax(0, 1.2fr);
         align-items: center;
-        gap: 12px;
+        gap: 8px;
         border-bottom: 1px solid #eeeeef;
     }
 
@@ -1911,12 +1904,12 @@ checkoutStyle.innerHTML = `
 
     .bank-payment-details span {
         color: #777a82;
-        font-size: 9.5px;
+        font-size: 9px;
     }
 
     .bank-payment-details strong {
         color: #303238;
-        font-size: 10.5px;
+        font-size: 10px;
         text-align: right;
         word-break: break-word;
     }
@@ -2192,28 +2185,29 @@ checkoutStyle.innerHTML = `
         .checkout-address-sheet-panel { max-height: 94%; }
 
         .bank-payment-popup {
-            padding: 0;
+            padding: 10px;
+            align-items: center;
         }
 
         .bank-payment-dialog {
             width: 100%;
-            max-height: 96vh;
-            border-radius: 24px 24px 0 0;
+            max-height: 92vh;
+            border-radius: 22px;
         }
 
         .bank-payment-header {
-            padding: 10px 42px 8px 14px;
+            padding: 9px 38px 7px 12px;
         }
 
         .bank-payment-body {
-            padding: 10px 14px 14px;
+            padding: 9px 12px 12px;
         }
 
         .bank-payment-qr-wrap img {
-            width: min(46vw, 176px);
-            height: min(46vw, 176px);
-            max-width: 176px;
-            max-height: 176px;
+            width: min(52vw, 190px);
+            height: min(52vw, 190px);
+            max-width: 190px;
+            max-height: 190px;
         }
 
         .checkout-bank-content img {
@@ -2234,18 +2228,18 @@ checkoutStyle.innerHTML = `
             flex-basis: 118px;
         }
         .bank-payment-qr-wrap img {
-            width: min(44vw, 160px);
-            height: min(44vw, 160px);
-            max-width: 160px;
-            max-height: 160px;
+            width: min(50vw, 182px);
+            height: min(50vw, 182px);
+            max-width: 182px;
+            max-height: 182px;
         }
         .bank-payment-details > div {
-            min-height: 34px;
-            padding: 6px 9px;
+            min-height: 32px;
+            padding: 6px 8px;
             gap: 8px;
         }
-        .bank-payment-details span { font-size: 9px; }
-        .bank-payment-details strong { font-size: 10px; }
+        .bank-payment-details span { font-size: 8.8px; }
+        .bank-payment-details strong { font-size: 9.8px; }
     }
 `;
 document.head.appendChild(checkoutStyle);
