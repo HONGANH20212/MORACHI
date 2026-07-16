@@ -1476,12 +1476,6 @@
                     </div>
                 </div>
 
-                <div class="pd-mobile-service-strip">
-                    <div><i class="fa-solid fa-truck-fast"></i><span><strong>Giao hàng</strong>10-15 ngày</span></div>
-                    <div><i class="fa-solid fa-ticket"></i><span><strong>Phí ship</strong>15.000đ</span></div>
-                    <div><i class="fa-solid fa-shield-halved"></i><span><strong>Chính hãng</strong>Nhật Bản 100%</span></div>
-                </div>
-
                 <div class="pd-desc-container pd-accordion-list">
                     <details id="sec-desc" class="pd-accordion-item" open>
                         <summary><span class="pd-accordion-title"><i class="fa-regular fa-clipboard"></i> Mô tả sản phẩm</span><i class="fa-solid fa-chevron-right"></i></summary>
@@ -1656,15 +1650,15 @@
                     <div class="pd-status-title" style="color:#1c8c52;">Có thể giao ngay</div>
                     <div class="pd-status-note">Tình trạng sản phẩm ổn định${v.stock ? ` • Số lượng còn: <strong>${v.stock}</strong>` : ''}</div>
                 `;
-            } else if (v.status === 'order' || v.status === 'out') {
+            } else if (v.status === Dự kiến có hàng' || v.status === 'out') {
                 const expectedDate = v.date || v.expected_date || '10-15 ngày';
                 if (stockLabel) {
-                    stockLabel.innerText = 'Hàng order';
+                    stockLabel.innerText = 'Hết hàng';
                     stockLabel.style.color = 'var(--primary-red)';
                 }
 
                 box.innerHTML = `
-                    <div class="pd-status-pill order">Hàng order</div>
+                    <div class="pd-status-pill order">Hết hàng tạm thời</div>
                     <div class="pd-status-title">Hết hàng tạm thời</div>
                     <div class="pd-status-divider"></div>
                     <div class="pd-status-line"><i class="fa-regular fa-calendar-days"></i><span>Dự kiến có hàng: <strong>${expectedDate}</strong></span></div>
