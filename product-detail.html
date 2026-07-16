@@ -1641,40 +1641,52 @@
             if (!box) return;
 
             const stockLabel = document.getElementById('pd-stock-label');
-            if (v.status === 'instock') {
+            const state = normalizeVariantState(v || {});
+
+            if (state.key === 'available') {
                 if (stockLabel) {
-                    stockLabel.innerText = v.stock ? `Còn ${v.stock} sp` : 'Còn hàng';
+                    stockLabel.innerText = state.stockCount !== null
+                        ? `Còn ${state.stockCount} sản phẩm`
+                        : 'Còn hàng';
                     stockLabel.style.color = '#27ae60';
                 }
+
                 box.innerHTML = `
-                    <div class="pd-status-pill instock">Sẵn hàng</div>
+                    <div class="pd-status-pill instock">Còn hàng</div>
                     <div class="pd-status-title" style="color:#1c8c52;">Có thể giao ngay</div>
-                    <div class="pd-status-note">Tình trạng sản phẩm ổn định${v.stock ? ` • Số lượng còn: <strong>${v.stock}</strong>` : ''}</div>
+                    <div class="pd-status-note">${state.stockCount !== null
+                        ? `Số lượng còn: <strong>${state.stockCount} sản phẩm</strong>`
+                        : 'Số lượng đang được shop cập nhật.'}</div>
                 `;
-            } else if (v.status === 'order' || v.status === 'out') {
-                const expectedDate = v.date || v.expected_date || '10-15 ngày';
+                return;
+            }
+
+            if (state.key === 'order') {
                 if (stockLabel) {
-                    stockLabel.innerText = 'Hàng order';
+                    stockLabel.innerText = 'Hàng order 10-15 ngày';
                     stockLabel.style.color = 'var(--primary-red)';
                 }
 
                 box.innerHTML = `
                     <div class="pd-status-pill order">Hàng order</div>
-                    <div class="pd-status-title">Hết hàng tạm thời</div>
+                    <div class="pd-status-title">Thời gian dự kiến 10-15 ngày</div>
                     <div class="pd-status-divider"></div>
-                    <div class="pd-status-line"><i class="fa-regular fa-calendar-days"></i><span>Dự kiến có hàng: <strong>${expectedDate}</strong></span></div>
+                    <div class="pd-status-line"><i class="fa-solid fa-plane"></i><span>Trạng thái: <strong>Hàng order 10-15 ngày</strong></span></div>
                 `;
-            } else {
-                if (stockLabel) {
-                    stockLabel.innerText = 'Hết hàng';
-                    stockLabel.style.color = '#888';
-                }
-                box.innerHTML = `
-                    <div class="pd-status-pill out">Tạm hết hàng</div>
-                    <div class="pd-status-title" style="color:#666;">Sản phẩm đang tạm hết</div>
-                    <div class="pd-status-note">Vui lòng theo dõi lại sau hoặc liên hệ shop để được hỗ trợ.</div>
-                `;
+                return;
             }
+
+            if (stockLabel) {
+                stockLabel.innerText = 'Hết hàng tạm thời';
+                stockLabel.style.color = '#888';
+            }
+
+            box.innerHTML = `
+                <div class="pd-status-pill out">Hết hàng tạm thời</div>
+                <div class="pd-status-title" style="color:#666;">Sản phẩm đang tạm hết hàng</div>
+                <div class="pd-status-divider"></div>
+                <div class="pd-status-line"><i class="fa-regular fa-calendar-days"></i><span>Dự kiến có hàng: <strong>${escapePdHtml(state.expected || 'Đang cập nhật')}</strong></span></div>
+            `;
         }
 
 
@@ -1716,47 +1728,52 @@
                 .replace(/đ/g, 'd')
                 .replace(/[\s_-]+/g, ' ');
 
+            const expectedFromAdmin = variant && (variant.date || variant.expected_date) || 'Đang cập nhật';
             const soldOutValues = [
                 'soldout', 'sold out', 'outofstock', 'out of stock',
                 'unavailable', 'het hang', 'tam het hang'
             ];
 
-            if (soldOutValues.some(item => normalized.includes(item))) {
+            // out = Hết hàng tạm thời, hiển thị ngày dự kiến lấy từ Admin.
+            if (normalized === 'out' || soldOutValues.some(item => normalized.includes(item))) {
                 return {
                     key: 'soldout',
-                    label: 'Hết hàng',
-                    detail: 'Tạm hết hàng',
+                    label: `Hết hàng tạm thời • Dự kiến ${expectedFromAdmin}`,
+                    detail: `Hết hàng tạm thời – Dự kiến có hàng ${expectedFromAdmin}`,
                     icon: 'fa-circle-xmark',
-                    disabled: true
+                    disabled: true,
+                    expected: expectedFromAdmin,
+                    stockCount: 0
                 };
             }
 
-            // Giữ nguyên logic cũ: status "order" hoặc "out" được xem là hàng order.
+            // order = Hàng order cố định 10-15 ngày.
             if (
-                normalized === 'out' ||
                 normalized.includes('order') ||
                 normalized.includes('preorder') ||
                 normalized.includes('hang dat')
             ) {
-                const expected = variant && (variant.date || variant.expected_date) || '10-15 ngày';
                 return {
                     key: 'order',
-                    label: `Order ${expected}`,
-                    detail: `Hàng order (${expected})`,
+                    label: 'Hàng order 10-15 ngày',
+                    detail: 'Hàng order 10-15 ngày',
                     icon: 'fa-plane',
                     disabled: false,
-                    expected
+                    expected: '10-15 ngày',
+                    stockCount: null
                 };
             }
 
+            // instock = hiển thị đúng số lượng còn lại từ Admin.
             const stock = Number(variant && variant.stock);
-            const stockText = Number.isFinite(stock) && stock > 0 ? ` (${stock})` : '';
+            const hasStock = Number.isFinite(stock) && stock >= 0;
             return {
                 key: 'available',
-                label: `Còn hàng${stockText}`,
-                detail: `Còn hàng${stockText}`,
+                label: hasStock ? `Còn ${stock} sản phẩm` : 'Còn hàng',
+                detail: hasStock ? `Còn hàng: ${stock} sản phẩm` : 'Còn hàng',
                 icon: 'fa-circle-check',
-                disabled: false
+                disabled: false,
+                stockCount: hasStock ? stock : null
             };
         }
 
@@ -1847,10 +1864,12 @@
             }).join('');
 
             const deliveryNote = selectedState.key === 'order'
-                ? `<i class="fa-regular fa-clock"></i><span>Dự kiến giao hàng: <strong>${escapePdHtml(selectedState.expected || '10-15 ngày')}</strong> đối với sản phẩm order</span>`
+                ? `<i class="fa-regular fa-clock"></i><span>Trạng thái: <strong>Hàng order 10-15 ngày</strong>.</span>`
                 : selectedState.key === 'available'
-                    ? `<i class="fa-solid fa-truck-fast"></i><span>Sản phẩm đang có hàng và sẽ được shop xử lý sớm.</span>`
-                    : `<i class="fa-solid fa-circle-exclamation"></i><span>Phân loại này đang hết hàng, vui lòng chọn sản phẩm khác.</span>`;
+                    ? `<i class="fa-solid fa-truck-fast"></i><span>${selectedState.stockCount !== null
+                        ? `Còn <strong>${selectedState.stockCount} sản phẩm</strong>, shop sẽ xử lý sớm.`
+                        : 'Sản phẩm đang có hàng và sẽ được shop xử lý sớm.'}</span>`
+                    : `<i class="fa-regular fa-calendar-days"></i><span>Hết hàng tạm thời. Dự kiến có hàng: <strong>${escapePdHtml(selectedState.expected || 'Đang cập nhật')}</strong>.</span>`;
 
             modal.innerHTML = `
                 <button type="button" class="pd-selector-backdrop" onclick="closeProductSelector()" aria-label="Đóng"></button>
@@ -1875,7 +1894,7 @@
 
                         <div class="pd-selector-helper">
                             <i class="fa-solid fa-circle-info"></i>
-                            <span>Chọn phân loại để xem chính xác sản phẩm còn hàng, hàng order hoặc đã hết hàng.</span>
+                            <span>Chọn phân loại để xem số lượng còn lại, hàng order hoặc ngày dự kiến có hàng.</span>
                         </div>
 
                         <h3 class="pd-selector-section-title">Chọn loại / phân loại</h3>
