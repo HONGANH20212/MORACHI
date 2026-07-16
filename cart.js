@@ -190,12 +190,453 @@ window.openBuyNowCheckout = function(item) {
 };
 
 // ==============================================================
-// 9. GIAO DIỆN & TÍNH NĂNG THANH TOÁN (CHECKOUT)
+// ĐỊA CHỈ NHẬN HÀNG LƯU RIÊNG TRÊN TỪNG THIẾT BỊ/TRÌNH DUYỆT
+// - localStorage chỉ tồn tại trên đúng trình duyệt + thiết bị + domain hiện tại.
+// - Không đồng bộ địa chỉ sang máy khác và không gửi địa chỉ lên server trước khi đặt hàng.
 // ==============================================================
+const MORACHI_ADDRESS_CACHE_KEY = 'morachi_checkout_addresses_v1';
+const MORACHI_SELECTED_ADDRESS_KEY = 'morachi_checkout_selected_address_v1';
+let checkoutEditingAddressId = '';
+let checkoutTemporaryAddress = null;
+
+function checkoutEscapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function getCheckoutSavedAddresses() {
+    try {
+        const value = JSON.parse(localStorage.getItem(MORACHI_ADDRESS_CACHE_KEY) || '[]');
+        return Array.isArray(value) ? value.filter(item => item && item.id) : [];
+    } catch (error) {
+        console.warn('Không đọc được cache địa chỉ MORACHI:', error);
+        return [];
+    }
+}
+
+function persistCheckoutSavedAddresses(addresses) {
+    try {
+        localStorage.setItem(MORACHI_ADDRESS_CACHE_KEY, JSON.stringify((addresses || []).slice(0, 10)));
+        return true;
+    } catch (error) {
+        console.warn('Không lưu được cache địa chỉ MORACHI:', error);
+        return false;
+    }
+}
+
+function getCheckoutSelectedAddressId() {
+    try {
+        return localStorage.getItem(MORACHI_SELECTED_ADDRESS_KEY) || '';
+    } catch (error) {
+        return '';
+    }
+}
+
+function setCheckoutSelectedAddressId(id) {
+    try {
+        if (id) localStorage.setItem(MORACHI_SELECTED_ADDRESS_KEY, String(id));
+        else localStorage.removeItem(MORACHI_SELECTED_ADDRESS_KEY);
+    } catch (error) {}
+}
+
+function getCheckoutSelectedAddress() {
+    if (checkoutTemporaryAddress) return checkoutTemporaryAddress;
+    const addresses = getCheckoutSavedAddresses();
+    const selectedId = getCheckoutSelectedAddressId();
+    return addresses.find(item => String(item.id) === String(selectedId)) || addresses[0] || null;
+}
+
+function buildCheckoutFullAddress(address) {
+    if (!address) return '';
+    const values = [address.address, address.wardName, address.districtName, address.provinceName]
+        .map(value => String(value || '').trim())
+        .filter(Boolean);
+    const result = [];
+    values.forEach(value => {
+        const normalized = value.toLowerCase().replace(/\s+/g, ' ');
+        const duplicated = result.some(existing => {
+            const current = existing.toLowerCase().replace(/\s+/g, ' ');
+            return current.includes(normalized) || normalized.includes(current);
+        });
+        if (!duplicated) result.push(value);
+    });
+    return result.join(', ');
+}
+
+function renderCheckoutAddressSummary() {
+    const target = document.getElementById('chk-address-summary');
+    if (!target) return;
+
+    const selected = getCheckoutSelectedAddress();
+    if (!selected) {
+        target.innerHTML = `
+            <button type="button" class="checkout-address-empty" onclick="openCheckoutAddressEditor()">
+                <span class="checkout-address-empty-icon"><i class="fas fa-map-marker-alt"></i></span>
+                <span>
+                    <strong>Thêm địa chỉ nhận hàng</strong>
+                    <small>Nhập thông tin giao hàng để tiếp tục đặt hàng</small>
+                </span>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        `;
+        return;
+    }
+
+    target.innerHTML = `
+        <button type="button" class="checkout-address-selected" onclick="openCheckoutAddressList()">
+            <span class="checkout-address-pin"><i class="fas fa-map-marker-alt"></i></span>
+            <span class="checkout-address-copy">
+                <span class="checkout-address-person">
+                    <strong>${checkoutEscapeHtml(selected.name)}</strong>
+                    <em></em>
+                    <span>${checkoutEscapeHtml(selected.phone)}</span>
+                </span>
+                <span class="checkout-address-text">${checkoutEscapeHtml(buildCheckoutFullAddress(selected))}</span>
+            </span>
+            <i class="fas fa-chevron-right checkout-address-arrow"></i>
+        </button>
+    `;
+
+    applyCheckoutAddressToForm(selected);
+}
+
+function applyCheckoutAddressToForm(address) {
+    if (!address) return;
+    const name = document.getElementById('chk-name');
+    const phone = document.getElementById('chk-phone');
+    const detail = document.getElementById('chk-address');
+    if (name) name.value = address.name || '';
+    if (phone) phone.value = address.phone || '';
+    if (detail) detail.value = address.address || '';
+
+    const province = document.getElementById('chk-province');
+    const district = document.getElementById('chk-district');
+    const ward = document.getElementById('chk-ward');
+    if (province) {
+        province.innerHTML = `<option value="${checkoutEscapeHtml(address.provinceCode || '')}" selected>${checkoutEscapeHtml(address.provinceName || 'Tỉnh/Thành phố')}</option>`;
+    }
+    if (district) {
+        district.innerHTML = `<option value="${checkoutEscapeHtml(address.districtCode || '')}" selected>${checkoutEscapeHtml(address.districtName || 'Quận/Huyện')}</option>`;
+    }
+    if (ward) {
+        ward.innerHTML = `<option value="${checkoutEscapeHtml(address.wardCode || '')}" selected>${checkoutEscapeHtml(address.wardName || 'Phường/Xã')}</option>`;
+    }
+}
+
+function renderCheckoutAddressList() {
+    const body = document.getElementById('checkout-address-sheet-body');
+    const title = document.getElementById('checkout-address-sheet-title');
+    if (!body || !title) return;
+
+    title.textContent = 'Địa chỉ nhận hàng';
+    const addresses = getCheckoutSavedAddresses();
+    const selectedId = getCheckoutSelectedAddressId();
+
+    body.innerHTML = `
+        <div class="checkout-address-list">
+            ${addresses.length ? addresses.map((item, index) => `
+                <div class="checkout-address-list-item ${String(item.id) === String(selectedId) ? 'selected' : ''}">
+                    <button type="button" class="checkout-address-radio" onclick="selectCheckoutSavedAddress('${checkoutEscapeHtml(item.id)}')" aria-label="Chọn địa chỉ">
+                        <span></span>
+                    </button>
+                    <button type="button" class="checkout-address-list-main" onclick="selectCheckoutSavedAddress('${checkoutEscapeHtml(item.id)}')">
+                        <span class="checkout-address-list-person"><strong>${checkoutEscapeHtml(item.name)}</strong><em></em>${checkoutEscapeHtml(item.phone)}</span>
+                        <span>${checkoutEscapeHtml(buildCheckoutFullAddress(item))}</span>
+                    </button>
+                    <button type="button" class="checkout-address-edit-link" onclick="openCheckoutAddressEditor('${checkoutEscapeHtml(item.id)}')">Sửa</button>
+                </div>
+            `).join('') : `
+                <div class="checkout-address-list-empty">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <strong>Chưa có địa chỉ được lưu</strong>
+                    <span>Địa chỉ chỉ được lưu trên thiết bị này.</span>
+                </div>
+            `}
+            <button type="button" class="checkout-add-address-btn" onclick="openCheckoutAddressEditor()">
+                <i class="fas fa-plus"></i> Thêm địa chỉ mới
+            </button>
+            <div class="checkout-device-cache-note">
+                <i class="fas fa-shield-alt"></i>
+                <div>
+                    <strong>Dữ liệu được lưu (cache) tại thiết bị</strong>
+                    <span>Thông tin địa chỉ và phương thức thanh toán chỉ được lưu trên trình duyệt này để dùng cho lần sau.</span>
+                    <small><i class="fas fa-check"></i> Bảo mật và không tự đồng bộ sang thiết bị khác</small>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+window.openCheckoutAddressList = function() {
+    const sheet = document.getElementById('checkout-address-sheet');
+    if (!sheet) return;
+    renderCheckoutAddressList();
+    sheet.classList.add('active');
+};
+
+window.closeCheckoutAddressSheet = function() {
+    const sheet = document.getElementById('checkout-address-sheet');
+    if (sheet) sheet.classList.remove('active');
+};
+
+window.selectCheckoutSavedAddress = function(id) {
+    const addresses = getCheckoutSavedAddresses();
+    const address = addresses.find(item => String(item.id) === String(id));
+    if (!address) return;
+    checkoutTemporaryAddress = null;
+    setCheckoutSelectedAddressId(address.id);
+    applyCheckoutAddressToForm(address);
+    renderCheckoutAddressSummary();
+    closeCheckoutAddressSheet();
+};
+
+async function fillCheckoutAddressEditor(address) {
+    await preFetchProvinces();
+
+    const provinceSelect = document.getElementById('addr-province');
+    const districtSelect = document.getElementById('addr-district');
+    const wardSelect = document.getElementById('addr-ward');
+    if (!provinceSelect || !districtSelect || !wardSelect) return;
+
+    provinceSelect.innerHTML = '<option value="">Tỉnh / Thành phố</option>';
+    vnProvinces.forEach(item => provinceSelect.add(new Option(item.name, item.code)));
+
+    document.getElementById('addr-name').value = address?.name || '';
+    document.getElementById('addr-phone').value = address?.phone || '';
+    document.getElementById('addr-address').value = address?.address || '';
+    document.getElementById('addr-save-address').checked = address ? true : true;
+
+    if (address?.provinceCode) {
+        provinceSelect.value = String(address.provinceCode);
+        await checkoutAddressProvinceChanged();
+        districtSelect.value = String(address.districtCode || '');
+        checkoutAddressDistrictChanged();
+        wardSelect.value = String(address.wardCode || '');
+    } else {
+        districtSelect.innerHTML = '<option value="">Quận / Huyện</option>';
+        wardSelect.innerHTML = '<option value="">Phường / Xã</option>';
+    }
+}
+
+window.openCheckoutAddressEditor = async function(id = '') {
+    const body = document.getElementById('checkout-address-sheet-body');
+    const title = document.getElementById('checkout-address-sheet-title');
+    const sheet = document.getElementById('checkout-address-sheet');
+    if (!body || !title || !sheet) return;
+
+    const addresses = getCheckoutSavedAddresses();
+    const address = id ? addresses.find(item => String(item.id) === String(id)) : null;
+    checkoutEditingAddressId = address?.id || '';
+    title.textContent = 'Địa chỉ nhận hàng';
+
+    body.innerHTML = `
+        <form class="checkout-address-form" onsubmit="event.preventDefault(); saveCheckoutAddress();">
+            <label>Họ và tên</label>
+            <input type="text" id="addr-name" placeholder="Nhập họ và tên" autocomplete="name" required>
+
+            <label>Số điện thoại</label>
+            <input type="tel" id="addr-phone" placeholder="Nhập số điện thoại" autocomplete="tel" required>
+
+            <label>Tỉnh / Thành phố</label>
+            <select id="addr-province" onchange="checkoutAddressProvinceChanged()" required>
+                <option value="">Tỉnh / Thành phố</option>
+            </select>
+
+            <label>Quận / Huyện</label>
+            <select id="addr-district" onchange="checkoutAddressDistrictChanged()" required>
+                <option value="">Quận / Huyện</option>
+            </select>
+
+            <label>Phường / Xã</label>
+            <select id="addr-ward" required>
+                <option value="">Phường / Xã</option>
+            </select>
+
+            <label>Địa chỉ cụ thể</label>
+            <div class="checkout-address-detail-wrap">
+                <input type="text" id="addr-address" placeholder="Số nhà, tên đường, tòa nhà..." autocomplete="street-address" required>
+                <div id="addr-address-suggestions" class="checkout-address-suggestions"></div>
+            </div>
+
+            <label class="checkout-save-address-toggle">
+                <span>Lưu địa chỉ này</span>
+                <input type="checkbox" id="addr-save-address" checked>
+                <span class="checkout-toggle-ui"></span>
+            </label>
+
+            <button type="submit" class="checkout-save-address-submit">Lưu địa chỉ</button>
+        </form>
+    `;
+
+    sheet.classList.add('active');
+    await fillCheckoutAddressEditor(address);
+    setupCheckoutAddressEditorAutocomplete();
+};
+
+function setupCheckoutAddressEditorAutocomplete() {
+    const addressInput = document.getElementById('addr-address');
+    const dropdown = document.getElementById('addr-address-suggestions');
+    if (!addressInput || !dropdown || addressInput.dataset.autocompleteReady) return;
+    addressInput.dataset.autocompleteReady = '1';
+
+    addressInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
+        if (query.length < 3) {
+            dropdown.style.display = 'none';
+            return;
+        }
+
+        const province = document.getElementById('addr-province');
+        const district = document.getElementById('addr-district');
+        let context = '';
+        if (district?.value) context += ', ' + district.options[district.selectedIndex].text;
+        if (province?.value) context += ', ' + province.options[province.selectedIndex].text;
+
+        searchTimeout = setTimeout(async () => {
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + context)}&countrycodes=vn&format=json&limit=5`);
+                const results = await response.json();
+                if (!Array.isArray(results) || !results.length) {
+                    dropdown.style.display = 'none';
+                    return;
+                }
+                dropdown.innerHTML = results.map((item, index) => `
+                    <button type="button" data-index="${index}"><i class="fas fa-map-marker-alt"></i>${checkoutEscapeHtml(item.display_name)}</button>
+                `).join('');
+                dropdown.style.display = 'block';
+                dropdown.querySelectorAll('button').forEach(button => {
+                    button.onclick = () => {
+                        const item = results[Number(button.dataset.index)];
+                        const parts = String(item.display_name || '').split(',');
+                        addressInput.value = [parts[0], parts[1]].filter(Boolean).map(value => value.trim()).join(', ');
+                        dropdown.style.display = 'none';
+                    };
+                });
+            } catch (error) {
+                dropdown.style.display = 'none';
+            }
+        }, 500);
+    });
+}
+
+window.checkoutAddressProvinceChanged = async function() {
+    const provinceSelect = document.getElementById('addr-province');
+    const districtSelect = document.getElementById('addr-district');
+    const wardSelect = document.getElementById('addr-ward');
+    if (!provinceSelect || !districtSelect || !wardSelect) return;
+
+    const provinceCode = provinceSelect.value;
+    districtSelect.innerHTML = '<option value="">Đang tải...</option>';
+    districtSelect.disabled = true;
+    wardSelect.innerHTML = '<option value="">Phường / Xã</option>';
+
+    if (!provinceCode) {
+        districtSelect.innerHTML = '<option value="">Quận / Huyện</option>';
+        districtSelect.disabled = false;
+        return;
+    }
+
+    const province = await ensureProvinceDetail(provinceCode);
+    districtSelect.innerHTML = '<option value="">Quận / Huyện</option>';
+    (province?.districts || []).forEach(item => districtSelect.add(new Option(item.name, item.code)));
+    districtSelect.disabled = false;
+};
+
+window.checkoutAddressDistrictChanged = function() {
+    const provinceCode = document.getElementById('addr-province')?.value;
+    const districtCode = document.getElementById('addr-district')?.value;
+    const wardSelect = document.getElementById('addr-ward');
+    if (!wardSelect) return;
+
+    wardSelect.innerHTML = '<option value="">Phường / Xã</option>';
+    const province = vnProvinces.find(item => String(item.code) === String(provinceCode));
+    const district = (province?.districts || []).find(item => String(item.code) === String(districtCode));
+    (district?.wards || []).forEach(item => wardSelect.add(new Option(item.name, item.code)));
+};
+
+window.saveCheckoutAddress = function() {
+    const name = document.getElementById('addr-name')?.value.trim() || '';
+    const phone = document.getElementById('addr-phone')?.value.trim() || '';
+    const provinceSelect = document.getElementById('addr-province');
+    const districtSelect = document.getElementById('addr-district');
+    const wardSelect = document.getElementById('addr-ward');
+    const detail = document.getElementById('addr-address')?.value.trim() || '';
+    const saveOnDevice = document.getElementById('addr-save-address')?.checked !== false;
+
+    if (!name || !phone || !provinceSelect?.value || !districtSelect?.value || !wardSelect?.value || !detail) {
+        alert('Vui lòng nhập đầy đủ thông tin địa chỉ nhận hàng.');
+        return;
+    }
+
+    const phonePattern = /^(0|\+84)[0-9\s.-]{8,13}$/;
+    if (!phonePattern.test(phone)) {
+        alert('Số điện thoại chưa đúng định dạng.');
+        return;
+    }
+
+    const address = {
+        id: checkoutEditingAddressId || `addr_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        name,
+        phone,
+        provinceCode: provinceSelect.value,
+        provinceName: provinceSelect.options[provinceSelect.selectedIndex]?.text || '',
+        districtCode: districtSelect.value,
+        districtName: districtSelect.options[districtSelect.selectedIndex]?.text || '',
+        wardCode: wardSelect.value,
+        wardName: wardSelect.options[wardSelect.selectedIndex]?.text || '',
+        address: detail,
+        updatedAt: new Date().toISOString()
+    };
+
+    checkoutTemporaryAddress = address;
+
+    if (saveOnDevice) {
+        const addresses = getCheckoutSavedAddresses();
+        const index = addresses.findIndex(item => String(item.id) === String(address.id));
+        if (index >= 0) addresses[index] = address;
+        else addresses.unshift(address);
+        persistCheckoutSavedAddresses(addresses);
+        setCheckoutSelectedAddressId(address.id);
+        checkoutTemporaryAddress = null;
+    }
+
+    applyCheckoutAddressToForm(address);
+    renderCheckoutAddressSummary();
+    closeCheckoutAddressSheet();
+};
+
+async function initializeCheckoutAddressCache() {
+    await preFetchProvinces();
+    const selected = getCheckoutSelectedAddress();
+    if (selected) {
+        if (!getCheckoutSelectedAddressId() && selected.id) setCheckoutSelectedAddressId(selected.id);
+        applyCheckoutAddressToForm(selected);
+    }
+    renderCheckoutAddressSummary();
+}
+
+function renderCheckoutOrderItems(items) {
+    return cloneCheckoutItems(items).map(item => `
+        <div class="checkout-order-product">
+            <img src="${checkoutEscapeHtml(item.image || 'images/icon-logo.png')}" alt="${checkoutEscapeHtml(item.title || 'Sản phẩm')}" onerror="this.src='images/icon-logo.png'">
+            <div class="checkout-order-product-info">
+                <strong>${checkoutEscapeHtml(item.title || 'Sản phẩm')}</strong>
+                <span>Phân loại: ${checkoutEscapeHtml(item.variant || 'Mặc định')}</span>
+                <span>SL: ${Number(item.quantity || 1)}</span>
+                <b>${toPriceNumber(item.price).toLocaleString('vi-VN')}đ</b>
+            </div>
+        </div>
+    `).join('');
+}
 
 function openCheckoutModal() {
     if (!Array.isArray(cart) || cart.length === 0) {
-        alert("Giỏ hàng của bạn đang trống!");
+        alert('Giỏ hàng của bạn đang trống!');
         return;
     }
 
@@ -210,17 +651,13 @@ function openCheckoutModal() {
     const subtotal = getCheckoutSubtotal();
     const total = subtotal + shippingFee;
 
-    const timestamp = new Date().getTime().toString();
+    const timestamp = Date.now().toString();
     const randomNum = Math.floor(10 + Math.random() * 90);
     currentCheckoutOrderId = 'MO' + timestamp.slice(-4) + randomNum;
 
-    // THÔNG TIN NGÂN HÀNG
-    const BANK_ID = "MB";
-    const BANK_ACCOUNT = "2470168848012";
-    const ACCOUNT_NAME = "VO THI HONG ANH";
-
+    const BANK_ACCOUNT = '2470168848012';
+    const ACCOUNT_NAME = 'VO THI HONG ANH';
     const qrUrl = 'images/Screenshot_222.png';
-    const cartItemsHtml = renderCheckoutItemsHtml(checkoutItems);
 
     let modal = document.getElementById('checkout-modal');
     if (!modal) {
@@ -231,215 +668,112 @@ function openCheckoutModal() {
     }
 
     modal.innerHTML = `
-        <div class="checkout-box new-checkout-layout">
-            <div class="chk-header-gradient">
-                <div class="chk-hdr-left">
-                    <div class="chk-bag-icon"><i class="fas fa-shopping-bag"></i></div>
-                    <div>
-                        <h2>THÔNG TIN ĐƠN HÀNG</h2>
-                        <p>Vui lòng kiểm tra thông tin và xác nhận đặt hàng</p>
+        <div class="checkout-box checkout-mobile-order">
+            <header class="checkout-mobile-header">
+                <button type="button" onclick="closeCheckoutModal()" aria-label="Quay lại"><i class="fas fa-arrow-left"></i></button>
+                <h2>Đặt hàng</h2>
+                <span></span>
+            </header>
+
+            <main class="checkout-mobile-content">
+                <section class="checkout-order-section checkout-address-section">
+                    <div class="checkout-section-title">
+                        <span>1</span>
+                        <h3>Địa chỉ nhận hàng</h3>
                     </div>
-                </div>
-                <div class="chk-hdr-right">
-                    <div class="chk-action-btn" title="Chia sẻ"><i class="fas fa-share-alt"></i><span>Chia sẻ</span></div>
-                    <div class="chk-action-btn" title="Lưu đơn"><i class="fas fa-file-invoice"></i><span>Lưu đơn</span></div>
-                    <div class="chk-action-btn" title="Tải xuống"><i class="fas fa-download"></i><span>Tải xuống</span></div>
-                    <button class="close-modal-btn" onclick="closeCheckoutModal()"><i class="fas fa-times"></i></button>
-                </div>
-            </div>
+                    <div id="chk-address-summary"></div>
+                    <button type="button" class="checkout-add-address-inline" onclick="openCheckoutAddressEditor()">
+                        <i class="fas fa-plus"></i> Thêm địa chỉ mới
+                    </button>
+                </section>
 
-            <div class="chk-body-wrapper">
-                <div class="chk-col-summary">
-                    <div class="chk-card-section chk-summary-section">
-                        <div class="chk-sec-title">
-                            <div class="step-circle">1</div>
-                            <div>
-                                <h3>THÔNG TIN SẢN PHẨM</h3>
-                                <p>Kiểm tra lại sản phẩm và chi phí</p>
-                            </div>
-                        </div>
-
-                        <div class="chk-product-list">
-                            ${cartItemsHtml}
-                        </div>
-
-                        <div class="chk-cost-lines">
-                            <div class="cost-line">
-                                <span>Tạm tính</span>
-                                <strong id="chk-subtotal">${subtotal.toLocaleString('vi-VN')} đ</strong>
-                            </div>
-                            <div class="cost-line">
-                                <span>Phí giao hàng</span>
-                                <strong>15.000 đ</strong>
-                            </div>
-                            <div class="cost-line free-ship-notice">
-                                <i class="fas fa-truck"></i> Phí ship đồng giá 15k toàn quốc
-                            </div>
-                        </div>
-
-                        <div class="chk-total-wrapper">
-                            <span>TỔNG CỘNG</span>
-                            <span class="total-price-big" id="chk-total">${total.toLocaleString('vi-VN')} đ</span>
-                        </div>
+                <section class="checkout-order-section">
+                    <div class="checkout-section-title dark">
+                        <span>2</span>
+                        <h3>Thông tin đơn hàng</h3>
                     </div>
-                </div>
+                    <div class="checkout-order-products">${renderCheckoutOrderItems(checkoutItems)}</div>
+                    <div class="checkout-cost-summary">
+                        <div><span>Tạm tính</span><strong>${subtotal.toLocaleString('vi-VN')}đ</strong></div>
+                        <div><span>Phí vận chuyển</span><strong>${shippingFee.toLocaleString('vi-VN')}đ</strong></div>
+                        <div><span>Giảm giá</span><strong>-</strong></div>
+                        <div class="checkout-grand-total"><span>Tổng cộng</span><strong id="chk-total">${total.toLocaleString('vi-VN')}đ</strong></div>
+                    </div>
+                </section>
 
-                <div class="chk-col-form">
-                    <div class="chk-card-section">
-                        <div class="chk-sec-title">
-                            <div class="step-circle">2</div>
+                <section class="checkout-order-section">
+                    <div class="checkout-section-title dark">
+                        <span>3</span>
+                        <h3>Phương thức thanh toán</h3>
+                    </div>
+                    <div class="checkout-payment-list">
+                        <label class="checkout-payment-option">
+                            <i class="fas fa-money-bill-wave cod-icon"></i>
+                            <span><strong>Thanh toán khi nhận hàng (COD)</strong><small>Thanh toán bằng tiền mặt khi nhận hàng</small></span>
+                            <input type="radio" name="chk-payment" value="cod" checked onchange="toggleBankInfo()">
+                            <em></em>
+                        </label>
+                        <label class="checkout-payment-option">
+                            <i class="fas fa-university bank-icon"></i>
+                            <span><strong>Chuyển khoản qua VietQR</strong><small>Mã QR tự động điền số tiền &amp; nội dung đơn hàng</small></span>
+                            <input type="radio" name="chk-payment" value="bank" onchange="toggleBankInfo()">
+                            <em></em>
+                        </label>
+                    </div>
+
+                    <div id="bank-info-box" class="checkout-bank-box" style="display:none;">
+                        <strong>Mã đơn hàng: <span id="chk-order-id">${currentCheckoutOrderId}</span></strong>
+                        <div class="checkout-bank-content">
                             <div>
-                                <h3>THÔNG TIN GIAO HÀNG</h3>
-                                <p>Nhập thông tin địa chỉ trước sát nhập</p>
+                                <span>Ngân hàng: MB Quân Đội</span>
+                                <span>Chủ tài khoản: ${ACCOUNT_NAME}</span>
+                                <span>Số tài khoản: ${BANK_ACCOUNT}</span>
+                                <span>Số tiền: <b id="chk-qr-amount">${total.toLocaleString('vi-VN')}đ</b></span>
+                                <span>Nội dung CK: <b id="chk-qr-content">${currentCheckoutOrderId}</b></span>
                             </div>
-                        </div>
-
-                        <div class="chk-form-area">
-                            <div class="chk-input-group">
-                                <i class="fas fa-user"></i>
-                                <input type="text" id="chk-name" placeholder="Họ và tên" required>
-                            </div>
-                            <div class="chk-input-group">
-                                <i class="fas fa-phone-alt"></i>
-                                <input type="tel" id="chk-phone" placeholder="Số điện thoại" required>
-                            </div>
-
-                            <div class="chk-select-row">
-                                <div class="chk-input-group chk-select-wrap">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                    <select id="chk-province" style="width: 100%;"><option value="">Tỉnh/Thành phố</option></select>
-                                </div>
-                                <div class="chk-input-group chk-select-wrap">
-                                    <i class="fas fa-building"></i>
-                                    <select id="chk-district" style="width: 100%;"><option value="">Quận/Huyện</option></select>
-                                </div>
-                                <div class="chk-input-group chk-select-wrap">
-                                    <i class="fas fa-home"></i>
-                                    <select id="chk-ward" style="width: 100%;"><option value="">Phường/Xã</option></select>
-                                </div>
-                            </div>
-
-                            <div class="chk-input-group" style="position: relative;">
-                                <i class="fas fa-map"></i>
-                                <input type="text" id="chk-address" placeholder="Địa chỉ cụ thể (Số nhà, đường, tòa nhà...)" required autocomplete="off">
-                                <div id="address-suggestions" style="position: absolute; background: white; border: 1px solid #ddd; width: 100%; max-height: 220px; overflow-y: auto; z-index: 1000; display: none; box-shadow: 0 10px 20px rgba(0,0,0,0.15); border-radius: 6px; top: calc(100% - 2px); left: 0;"></div>
-                            </div>
-                        </div>
-
-                        <div class="chk-alert-box alert-orange">
-                            <i class="fas fa-shield-alt"></i>
-                            <div>
-                                <strong>Thông tin của bạn được bảo mật</strong>
-                                <span>Chúng tôi cam kết bảo vệ thông tin cá nhân của bạn</span>
-                            </div>
+                            <img id="chk-qr-img" src="${qrUrl}" alt="QR chuyển khoản">
                         </div>
                     </div>
-                </div>
+                </section>
+            </main>
 
-                <div class="chk-payment-full">
-                    <div class="chk-card-section">
-                        <div class="chk-sec-title">
-                            <div class="step-circle">3</div>
-                            <div>
-                                <h3>PHƯƠNG THỨC THANH TOÁN</h3>
-                                <p>Chọn phương thức thanh toán phù hợp</p>
-                            </div>
-                        </div>
-
-                        <div class="chk-payment-options">
-                            <label class="payment-card">
-                                <i class="fas fa-money-bill-wave" style="color: #2ecc71;"></i>
-                                <div class="pay-info">
-                                    <strong>Thanh toán khi nhận hàng (COD)</strong>
-                                    <span>Thanh toán bằng tiền mặt khi nhận hàng</span>
-                                </div>
-                                <input type="radio" name="chk-payment" value="cod" checked onchange="toggleBankInfo()">
-                                <span class="custom-radio"></span>
-                            </label>
-
-                            <label class="payment-card">
-                                <i class="fas fa-university" style="color: #3498db;"></i>
-                                <div class="pay-info">
-                                    <strong>Chuyển khoản qua VietQR</strong>
-                                    <span>Mã QR tự động điền số tiền & nội dung đơn hàng</span>
-                                </div>
-                                <input type="radio" name="chk-payment" value="bank" onchange="toggleBankInfo()">
-                                <span class="custom-radio"></span>
-                            </label>
-                        </div>
-
-                        <div id="bank-info-box" style="display: none; background: #fafafa; padding: 15px; border-radius: 8px; border: 1px dashed #f57224; margin-top: 10px; margin-bottom: 15px; font-size: 13px;">
-                            <div style="color: #f57224; font-weight: bold; margin-bottom: 15px; text-align: center; font-size: 15px; border-bottom: 1px dashed #ccc; padding-bottom: 10px;">
-                                MÃ ĐƠN HÀNG: <span id="chk-order-id" style="font-size: 18px;">${currentCheckoutOrderId}</span>
-                            </div>
-                            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
-                                <div style="flex: 1; min-width: 200px; line-height: 1.6;">
-                                    <strong>Ngân hàng:</strong> MB Quân Đội<br>
-                                    <strong>Chủ tài khoản:</strong> ${ACCOUNT_NAME}<br>
-                                    <strong>Số tài khoản:</strong> ${BANK_ACCOUNT}<br>
-                                    <strong>Số tiền:</strong> <span id="chk-qr-amount" style="color: #e74c3c; font-weight:bold; font-size:15px;">${total.toLocaleString('vi-VN')} đ</span><br>
-                                    <strong>Nội dung CK:</strong> <span id="chk-qr-content" style="color: #e74c3c; font-weight:bold; font-size:15px;">${currentCheckoutOrderId}</span>
-                                </div>
-                                <div style="text-align: center; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                                    <img id="chk-qr-img" src="${qrUrl}" alt="QR Ngân Hàng" style="width: 130px; height: 130px; border-radius: 4px; object-fit: contain;">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="chk-alert-box alert-gray">
-                            <i class="fas fa-info-circle"></i>
-                            <div>
-                                <strong>Lưu ý</strong>
-                                <span>Đơn hàng sẽ được xử lý và giao đến bạn trong thời gian sớm nhất.</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="chk-footer-area">
-                <button class="btn-final-submit btn-checkout-confirm" onclick="submitOrder()">
-                    <div class="submit-left">
-                        <i class="fas fa-lock"></i>
-                        <div class="submit-texts">
-                            <strong>HOÀN TẤT ĐẶT HÀNG</strong>
-                            <span>Xác nhận thông tin và đặt hàng ngay</span>
-                        </div>
-                    </div>
-                    <i class="fas fa-arrow-right right-arr"></i>
+            <footer class="checkout-mobile-footer">
+                <button class="btn-checkout-confirm" onclick="submitOrder()">
+                    <span class="submit-texts"><strong>Đặt hàng</strong><small>Xác nhận thông tin và tạo đơn hàng</small></span>
                 </button>
+                <p><i class="fas fa-lock"></i> Thông tin của bạn được bảo mật</p>
+            </footer>
 
-                <p class="terms-text">Bằng việc nhấn nút "Hoàn tất đặt hàng", bạn đồng ý với Điều khoản sử dụng và Chính sách bảo mật của chúng tôi.</p>
+            <div id="checkout-address-sheet" class="checkout-address-sheet" aria-hidden="true">
+                <div class="checkout-address-sheet-backdrop" onclick="closeCheckoutAddressSheet()"></div>
+                <div class="checkout-address-sheet-panel">
+                    <header>
+                        <button type="button" onclick="closeCheckoutAddressSheet()"><i class="fas fa-times"></i></button>
+                        <h3 id="checkout-address-sheet-title">Địa chỉ nhận hàng</h3>
+                        <span></span>
+                    </header>
+                    <div id="checkout-address-sheet-body" class="checkout-address-sheet-body"></div>
+                </div>
+            </div>
+
+            <div class="checkout-hidden-address-fields" aria-hidden="true">
+                <input id="chk-name" type="text">
+                <input id="chk-phone" type="tel">
+                <select id="chk-province"><option value="">Tỉnh / Thành phố</option></select>
+                <select id="chk-district"><option value="">Quận / Huyện</option></select>
+                <select id="chk-ward"><option value="">Phường / Xã</option></select>
+                <input id="chk-address" type="text">
+                <div id="address-suggestions"></div>
             </div>
         </div>
     `;
 
-    setupAddressAutocomplete();
-
-    // Đổ dữ liệu Tỉnh thành vào (nếu đã tải xong ở Background)
-    const pSelect = document.getElementById('chk-province');
-    if (pSelect && vnProvinces.length > 0 && pSelect.options.length <= 1) {
-        vnProvinces.forEach(p => {
-            pSelect.add(new Option(p.name, p.code));
-        });
-    }
-
     modal.classList.add('active');
     document.documentElement.classList.add('checkout-open');
     document.body.classList.add('checkout-open');
-
-    const checkoutScroller = modal.querySelector('.chk-body-wrapper');
-    if (checkoutScroller) checkoutScroller.scrollTop = 0;
-
-    // Đợi popup mở xong mới vẽ Select2 để tránh khung chọn bị ép 0px.
-    setTimeout(() => {
-        if (typeof applySelect2 === 'function') applySelect2();
-        if (typeof window.jQuery !== 'undefined') {
-            $('.select2-container').css('width', '100%');
-            $('#chk-province, #chk-district, #chk-ward').trigger('change.select2');
-        }
-    }, 350);
+    initializeCheckoutAddressCache();
 }
+
 
 window.closeCheckoutModal = function() {
     const modal = document.getElementById('checkout-modal');
@@ -448,6 +782,8 @@ window.closeCheckoutModal = function() {
     document.body.classList.remove('checkout-open');
     checkoutItems = [];
     isBuyNowMode = false;
+    checkoutEditingAddressId = '';
+    checkoutTemporaryAddress = null;
 };
 
 window.toggleBankInfo = function() {
@@ -713,7 +1049,7 @@ window.submitOrder = async function() {
     btn.disabled = true;
     
     const textNode = btn.querySelector('.submit-texts strong');
-    if(textNode) textNode.innerText = "ĐANG XỬ LÝ...";
+    if(textNode) textNode.innerText = "Đang xử lý...";
 
     const name = document.getElementById('chk-name').value.trim();
     const phone = document.getElementById('chk-phone').value.trim();
@@ -721,7 +1057,7 @@ window.submitOrder = async function() {
     
     if (!name || !phone || !address || !document.getElementById('chk-province').value) {
         alert("Vui lòng điền đầy đủ Thông tin giao hàng!");
-        if(textNode) textNode.innerText = "HOÀN TẤT ĐẶT HÀNG";
+        if(textNode) textNode.innerText = "Đặt hàng";
         btn.disabled = false;
         return;
     }
@@ -733,7 +1069,7 @@ window.submitOrder = async function() {
 
     if (!checkoutItems || checkoutItems.length === 0) {
         alert("Không tìm thấy sản phẩm trong đơn hàng. Vui lòng thử lại!");
-        if(textNode) textNode.innerText = "HOÀN TẤT ĐẶT HÀNG";
+        if(textNode) textNode.innerText = "Đặt hàng";
         btn.disabled = false;
         return;
     }
@@ -763,7 +1099,7 @@ window.submitOrder = async function() {
                 executeOrderSubmit(btn, name, phone, address);
             }, 
             function() {
-                if(textNode) textNode.innerText = "HOÀN TẤT ĐẶT HÀNG";
+                if(textNode) textNode.innerText = "Đặt hàng";
                 btn.disabled = false;
             }
         );
@@ -844,7 +1180,7 @@ async function executeOrderSubmit(btn, name, phone, address) {
         isBuyNowMode = false;
         closeCheckoutModal();
         
-        if(textNode) textNode.innerText = "HOÀN TẤT ĐẶT HÀNG";
+        if(textNode) textNode.innerText = "Đặt hàng";
         btn.disabled = false;
     }
 }
@@ -1014,664 +1350,565 @@ if(oldCheckoutStyle) oldCheckoutStyle.remove();
 const checkoutStyle = document.createElement('style');
 checkoutStyle.id = 'checkout-style';
 checkoutStyle.innerHTML = `
-    .checkout-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; display: flex; justify-content: center; align-items: center; visibility: hidden; opacity: 0; transition: 0.3s; padding: 20px;}
-    .checkout-modal.active { visibility: visible; opacity: 1; }
-    
-    .new-checkout-layout { background: #f4f5f7; width: 100%; max-width: 1000px; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.2); transform: translateY(-20px); transition: 0.3s; display:flex; flex-direction: column; max-height: 95vh; font-family: 'Segoe UI', Tahoma, sans-serif;}
-    .checkout-modal.active .new-checkout-layout { transform: translateY(0); }
+    html.checkout-open,
+    body.checkout-open { overflow: hidden !important; }
 
-    .chk-header-gradient { background: linear-gradient(135deg, #ff8c3a, #9c1515); color: white; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; }
-    .chk-hdr-left { display: flex; align-items: center; gap: 15px; }
-    .chk-bag-icon { background: white; color: #9c1515; width: 45px; height: 45px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    .chk-hdr-left h2 {
-        margin: 0 0 4px 0;
-        font-family: 'Segoe UI', Tahoma, sans-serif;
-        font-size: 18px;
-        font-weight: 800;
-        letter-spacing: 0.2px;
-        line-height: 1.15;
+    .checkout-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 100000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 18px;
+        background: rgba(20, 20, 24, .58);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity .22s ease, visibility .22s ease;
+        font-family: Inter, 'Segoe UI', Arial, sans-serif;
     }
-    .chk-hdr-left p { margin: 0; font-size: 13px; opacity: 0.9; }
-    .chk-hdr-right { display: flex; gap: 15px; align-items: center;}
-    .chk-action-btn { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; cursor: pointer; opacity: 0.9; transition: 0.2s;}
-    .chk-action-btn:hover { opacity: 1; transform: translateY(-2px); }
-    .chk-action-btn i { width: 32px; height: 32px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; }
-    .close-modal-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; margin-left: 10px; opacity: 0.8; }
-    .close-modal-btn:hover { opacity: 1; }
 
-    .chk-body-wrapper {
+    .checkout-modal.active { opacity: 1; visibility: visible; }
+
+    .checkout-mobile-order {
+        position: relative;
+        width: min(100%, 540px);
+        max-height: min(94vh, 880px);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border-radius: 22px;
+        background: #fff;
+        color: #222328;
+        box-shadow: 0 24px 70px rgba(0,0,0,.24);
+        transform: translateY(18px);
+        transition: transform .22s ease;
+    }
+
+    .checkout-modal.active .checkout-mobile-order { transform: translateY(0); }
+
+    .checkout-mobile-header {
+        min-height: 62px;
         display: grid;
-        grid-template-columns: 0.9fr 1.6fr;
-        gap: 20px;
-        padding: 20px 30px;
-        overflow-y: auto;
-        flex: 1;
+        grid-template-columns: 44px 1fr 44px;
+        align-items: center;
+        padding: 8px 14px;
+        background: #fff;
+        border-bottom: 1px solid #ececef;
+        flex: 0 0 auto;
     }
 
-    .chk-col-summary {
-        grid-column: 1;
+    .checkout-mobile-header button {
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: #c90d1b;
+        font-size: 19px;
+        cursor: pointer;
     }
 
-    .chk-col-form {
-        grid-column: 2;
-    }
-
-    .chk-payment-full {
-        grid-column: 1 / -1;
-    }
-
-    .chk-summary-section {
-        height: 100%;
-    }
-
-    @media (max-width: 768px) {
-        .chk-body-wrapper {
-            grid-template-columns: 1fr;
-            padding: 15px;
-        }
-
-        .chk-col-summary,
-        .chk-col-form,
-        .chk-payment-full {
-            grid-column: 1;
-        }
-        .submit-texts strong {
-            font-size: 16px;
-            letter-spacing: 0.15px;
-        }
-    }
-
-    .chk-card-section { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
-    .chk-sec-title { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-    .step-circle { width: 28px; height: 28px; background: #9c1515; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
-    .chk-sec-title h3 { margin: 0 0 3px 0; font-size: 15px; color: #111; font-weight: 700; }
-    .chk-sec-title p { margin: 0; font-size: 12px; color: #777; }
-
-    .chk-input-group { position: relative; margin-bottom: 12px; }
-    .chk-input-group i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #9c1515; z-index: 10; font-size: 14px; pointer-events: none;}
-    .chk-form-area input[type="text"], .chk-form-area input[type="tel"] { width: 100%; padding: 13px 15px 13px 40px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; color: #333; outline: none; transition: 0.2s; box-sizing: border-box;}
-    .chk-form-area input:focus { border-color: #9c1515; box-shadow: 0 0 0 3px rgba(245, 85, 35, 0.1); }
-    .chk-select-row { display: flex; gap: 10px; }
-    .chk-select-row .chk-input-group { flex: 1; }
-
-    /* Fix triệt để Select2 CSS: Đảm bảo độ rộng 100% và canh lề chữ */
-    .select2-container { width: 100% !important; display: block; }
-    .chk-select-wrap .select2-container--default .select2-selection--single { height: 46px; border: 1px solid #e0e0e0; border-radius: 8px; outline: none; width: 100% !important; display: flex; align-items: center;}
-    .chk-select-wrap .select2-container--default .select2-selection--single .select2-selection__rendered { padding-left: 40px !important; color: #333; font-size: 13.5px; width: 100%; text-align: left; }
-    .chk-select-wrap .select2-container--default .select2-selection--single .select2-selection__arrow { height: 46px !important; right: 10px !important; }
-
-    /* Fix Menu trỏ xuống */
-    .select2-container--open { z-index: 999999 !important; }
-    .select2-dropdown { border-color: #9c1515; border-radius: 8px; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.15); z-index: 999999 !important; }
-    .select2-container--default .select2-results__option--highlighted[aria-selected], .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable { background-color: #9c1515 !important; color: white !important;}
-    /* FIX SELECT2 KHÔNG LÀM NHẢY / CO GIÃN KHỐI ĐỊA CHỈ */
-    .chk-select-row {
-        display: grid !important;
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-        gap: 10px !important;
-        align-items: start !important;
-    }
-
-    .chk-select-row .chk-input-group {
-        min-width: 0 !important;
-        width: 100% !important;
-        height: 46px !important;
-        margin-bottom: 12px !important;
-        flex: none !important;
-    }
-
-    .chk-select-wrap {
-        height: 46px !important;
-        overflow: visible !important;
-    }
-
-    .chk-select-wrap select {
-        width: 100% !important;
-        height: 46px !important;
-    }
-
-    .chk-select-wrap .select2-container {
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: 100% !important;
-        display: block !important;
-    }
-
-    .chk-select-wrap .select2-container--default .select2-selection--single {
-        height: 46px !important;
-        min-height: 46px !important;
-        max-height: 46px !important;
-        display: flex !important;
-        align-items: center !important;
-        overflow: hidden !important;
-    }
-
-    .chk-select-wrap .select2-selection__rendered {
-        width: 100% !important;
-        max-width: 100% !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        white-space: nowrap !important;
-        padding-right: 28px !important;
-        box-sizing: border-box !important;
-    }
-
-    .chk-select-wrap .select2-selection__arrow {
-        height: 46px !important;
-    }
-
-    .select2-container--open {
-        z-index: 10000000 !important;
-    }
-
-    .select2-dropdown {
-        z-index: 10000000 !important;
-        box-sizing: border-box !important;
-    }
-
-    .select2-results__options {
-        max-height: 220px !important;
-    }
-
-    /* Mobile: mỗi ô địa chỉ xuống 1 dòng, không làm bể layout */
-    @media (max-width: 768px) {
-        .chk-select-row {
-            grid-template-columns: 1fr !important;
-            gap: 10px !important;
-        }
-
-        .chk-select-row .chk-input-group {
-            height: 46px !important;
-            margin-bottom: 0 !important;
-        }
-    }
-
-    /* FIX HIỂN THỊ ĐỦ TÊN ĐỊA CHỈ NHƯNG KHÔNG LÀM NHẢY LAYOUT */
-    .chk-select-row {
-        display: grid !important;
-        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-        gap: 10px !important;
-        align-items: start !important;
-    }
-
-    .chk-select-row .chk-input-group,
-    .chk-select-wrap {
-        min-width: 0 !important;
-        width: 100% !important;
-        height: 58px !important;
-        flex: none !important;
-        overflow: visible !important;
-        margin-bottom: 12px !important;
-    }
-
-    .chk-select-wrap select {
-        width: 100% !important;
-        height: 58px !important;
-    }
-
-    .chk-select-wrap .select2-container {
-        width: 100% !important;
-        min-width: 0 !important;
-        max-width: 100% !important;
-        display: block !important;
-    }
-
-    .chk-select-wrap .select2-container--default .select2-selection--single {
-        height: 58px !important;
-        min-height: 58px !important;
-        max-height: 58px !important;
-        display: flex !important;
-        align-items: center !important;
-        overflow: hidden !important;
-        border: 1px solid #e0e0e0 !important;
-        border-radius: 8px !important;
-        background: #fff !important;
-        box-sizing: border-box !important;
-    }
-
-    .chk-select-wrap .select2-selection__rendered {
-        width: 100% !important;
-        max-width: 100% !important;
-        padding-left: 40px !important;
-        padding-right: 30px !important;
-        padding-top: 8px !important;
-        padding-bottom: 6px !important;
-        box-sizing: border-box !important;
-        line-height: 1.25 !important;
-        white-space: normal !important;
-        overflow: hidden !important;
-        text-overflow: clip !important;
-        display: -webkit-box !important;
-        -webkit-line-clamp: 2 !important;
-        -webkit-box-orient: vertical !important;
-        font-size: 13px !important;
-        color: #333 !important;
-    }
-
-    .chk-select-wrap .select2-selection__arrow {
-        height: 58px !important;
-        right: 8px !important;
-    }
-
-    .select2-container--open {
-        z-index: 10000000 !important;
-    }
-
-    .select2-dropdown {
-        z-index: 10000000 !important;
-        box-sizing: border-box !important;
-    }
-
-    .select2-results__options {
-        max-height: 220px !important;
-    }
-
-    /* Mobile: mỗi ô địa chỉ 1 dòng riêng, dễ đọc đầy đủ hơn */
-    @media (max-width: 768px) {
-        .chk-select-row {
-            grid-template-columns: 1fr !important;
-            gap: 10px !important;
-        }
-
-        .chk-select-row .chk-input-group,
-        .chk-select-wrap {
-            height: 56px !important;
-            margin-bottom: 0 !important;
-        }
-
-        .chk-select-wrap .select2-container--default .select2-selection--single {
-            height: 56px !important;
-            min-height: 56px !important;
-            max-height: 56px !important;
-        }
-
-        .chk-select-wrap .select2-selection__rendered {
-            font-size: 14px !important;
-            padding-top: 8px !important;
-            padding-bottom: 6px !important;
-        }
-
-        .chk-select-wrap .select2-selection__arrow {
-            height: 56px !important;
-        }
-    }
-
-    .chk-alert-box { display: flex; gap: 12px; padding: 12px 15px; border-radius: 8px; font-size: 12.5px; margin-top: 15px; }
-    .chk-alert-box i { font-size: 18px; margin-top: 2px; }
-    .chk-alert-box strong { display: block; margin-bottom: 2px; font-size: 13px; }
-    .alert-orange { background: #fff5eb; color: #d35400; border: 1px dashed #ffbca8; }
-    .alert-gray { background: #f8f9fa; color: #555; border: 1px dashed #ddd; }
-
-    .payment-card { display: flex; align-items: center; padding: 15px; border: 1px solid #e0e0e0; border-radius: 10px; margin-bottom: 12px; cursor: pointer; transition: 0.2s; position: relative; }
-    .payment-card:hover { border-color: #9c1515; background: #fffaf7; }
-    .payment-card i { font-size: 24px; margin-right: 15px; width: 30px; text-align: center; }
-    .pay-info strong { display: block; font-size: 14px; color: #222; margin-bottom: 3px; }
-    .pay-info span { font-size: 12px; color: #888; }
-    .payment-card input[type="radio"] { position: absolute; opacity: 0; cursor: pointer; }
-    .custom-radio { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); height: 20px; width: 20px; border-radius: 50%; border: 2px solid #ddd; }
-    .payment-card input:checked ~ .custom-radio { border-color: #9c1515; background: #9c1515; }
-    .payment-card input:checked ~ .custom-radio:after { content: ""; position: absolute; top: 4px; left: 4px; width: 8px; height: 8px; border-radius: 50%; background: white; }
-    .payment-card:has(input:checked) { border-color: #9c1515; background: #fffaf7; }
-
-    .chk-product-list { max-height: 250px; overflow-y: auto; border-bottom: 1px dashed #e0e0e0; padding-bottom: 15px; margin-bottom: 15px; }
-    .chk-product-list::-webkit-scrollbar { width: 4px; }
-    .chk-product-list::-webkit-scrollbar-thumb { background: #ddd; border-radius: 4px; }
-    .chk-item-row { display: flex; gap: 12px; margin-bottom: 15px; align-items: center; }
-    .chk-item-row img { width: 50px; height: 50px; border-radius: 6px; border: 1px solid #eee; object-fit: contain; }
-    .chk-item-info { flex: 1; }
-    .chk-item-title { font-size: 13px; font-weight: bold; color: #222; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 3px;}
-    .chk-item-variant { font-size: 11px; color: #777; margin-bottom: 2px;}
-    .chk-item-qty-label { font-size: 11px; color: #777; }
-    .chk-item-price { text-align: right; }
-    .chk-item-price .price { font-size: 13px; font-weight: bold; color: #111; }
-    .chk-item-price .qty { font-size: 11px; color: #999; margin-top: 3px; }
-
-    .cost-line { display: flex; justify-content: space-between; font-size: 13px; color: #555; margin-bottom: 10px; }
-    .cost-line strong { color: #111; }
-    .free-ship-notice { color: #e74c3c; font-size: 11px; font-weight: 500; margin-top: 5px; }
-    
-    .chk-total-wrapper { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 15px; margin-top: 10px; }
-    .chk-total-wrapper span:first-child { font-weight: 800; font-size: 15px; color: #111; }
-    .total-price-big { font-size: 22px; font-weight: bold; color: #9c1515; }
-
-    .chk-footer-area { padding: 20px 30px; background: white; border-top: 1px solid #eee; }
-
-    .btn-final-submit { width: 100%; background: linear-gradient(90deg, #ff8c3a, #9c1515); color: white; border: none; border-radius: 10px; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(245, 85, 35, 0.3); outline: none;}
-    .btn-final-submit:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(245, 85, 35, 0.4); }
-    .submit-left { display: flex; align-items: center; gap: 15px; text-align: left;}
-    .submit-left i { font-size: 22px; }
-    .submit-texts strong {
-        display: block;
-        font-family: 'Segoe UI', Tahoma, sans-serif;
-        font-size: 18px;
+    .checkout-mobile-header h2 {
+        margin: 0;
+        text-align: center;
+        font-size: 17px;
         font-weight: 800;
-        letter-spacing: 0.2px;
-        line-height: 1.15;
-        margin-bottom: 3px;
-        text-transform: uppercase;
+        color: #1f2024;
     }
-    .submit-texts span { font-size: 12px; opacity: 0.9; }
-    .right-arr { font-size: 20px; }
 
-    .terms-text { text-align: center; font-size: 11px; color: #999; margin: 15px 0 0 0; }
+    .checkout-mobile-content {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        padding: 0 18px 18px;
+        background: #fff;
+    }
 
-    @media (max-width: 850px) {
-        html.checkout-open,
-        body.checkout-open {
-            overflow: hidden !important;
-            height: 100% !important;
+    .checkout-order-section {
+        padding: 19px 0;
+        border-bottom: 1px solid #ececef;
+    }
+
+    .checkout-order-section:last-child { border-bottom: 0; }
+
+    .checkout-section-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    .checkout-section-title > span {
+        width: 25px;
+        height: 25px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #c90d1b;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 800;
+        flex: 0 0 auto;
+    }
+
+    .checkout-section-title.dark > span { background: #2e3035; }
+
+    .checkout-section-title h3 {
+        margin: 0;
+        color: #26272b;
+        font-size: 14px;
+        font-weight: 800;
+    }
+
+    .checkout-address-empty,
+    .checkout-address-selected {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px;
+        border: 1.5px solid #df2633;
+        border-radius: 12px;
+        background: #fff;
+        color: #25262a;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .checkout-address-empty > span:nth-child(2),
+    .checkout-address-copy { flex: 1; min-width: 0; }
+
+    .checkout-address-empty strong,
+    .checkout-address-empty small {
+        display: block;
+    }
+
+    .checkout-address-empty strong { font-size: 13px; color: #c90d1b; }
+    .checkout-address-empty small { margin-top: 4px; color: #7c7f86; font-size: 11px; line-height: 1.4; }
+
+    .checkout-address-empty-icon,
+    .checkout-address-pin {
+        width: 32px;
+        height: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #fff1f2;
+        color: #c90d1b;
+        flex: 0 0 auto;
+    }
+
+    .checkout-address-person {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 5px;
+        font-size: 12px;
+        line-height: 1.3;
+    }
+
+    .checkout-address-person strong { font-size: 13px; }
+    .checkout-address-person em,
+    .checkout-address-list-person em { width: 1px; height: 14px; background: #d7d8dc; }
+
+    .checkout-address-text {
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        color: #494c53;
+        font-size: 11.5px;
+        line-height: 1.45;
+    }
+
+    .checkout-address-arrow { color: #757981; font-size: 12px; }
+
+    .checkout-add-address-inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 13px;
+        padding: 7px 4px;
+        border: 0;
+        background: transparent;
+        color: #c90d1b;
+        font-size: 12px;
+        font-weight: 750;
+        cursor: pointer;
+    }
+
+    .checkout-order-products { display: flex; flex-direction: column; gap: 13px; }
+
+    .checkout-order-product {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .checkout-order-product img {
+        width: 82px;
+        height: 82px;
+        object-fit: contain;
+        border: 1px solid #ececef;
+        border-radius: 10px;
+        background: #fff;
+        flex: 0 0 auto;
+    }
+
+    .checkout-order-product-info { min-width: 0; flex: 1; }
+    .checkout-order-product-info strong {
+        display: -webkit-box;
+        overflow: hidden;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        margin-bottom: 5px;
+        color: #303136;
+        font-size: 13px;
+        line-height: 1.35;
+    }
+    .checkout-order-product-info span { display: block; color: #74777e; font-size: 11px; line-height: 1.45; }
+    .checkout-order-product-info b { display: block; margin-top: 7px; color: #d20e1d; font-size: 13px; }
+
+    .checkout-cost-summary {
+        margin-top: 17px;
+        padding-top: 12px;
+        border-top: 1px solid #ededf0;
+    }
+    .checkout-cost-summary > div {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 6px 0;
+        color: #4d5056;
+        font-size: 12px;
+    }
+    .checkout-cost-summary strong { color: #34363a; font-weight: 700; }
+    .checkout-cost-summary .checkout-grand-total {
+        margin-top: 7px;
+        padding-top: 12px;
+        border-top: 1px solid #ededf0;
+        align-items: center;
+        color: #202126;
+        font-weight: 800;
+    }
+    .checkout-cost-summary .checkout-grand-total strong { color: #d20e1d; font-size: 23px; }
+
+    .checkout-payment-list { display: flex; flex-direction: column; gap: 10px; }
+    .checkout-payment-option {
+        position: relative;
+        min-height: 65px;
+        display: grid;
+        grid-template-columns: 34px 1fr 22px;
+        gap: 10px;
+        align-items: center;
+        padding: 12px 14px;
+        border: 1px solid #e5e6e9;
+        border-radius: 11px;
+        background: #fff;
+        cursor: pointer;
+    }
+    .checkout-payment-option:has(input:checked) { border-color: #db1c29; background: #fffafa; }
+    .checkout-payment-option > i { font-size: 20px; text-align: center; }
+    .checkout-payment-option .cod-icon { color: #2caf63; }
+    .checkout-payment-option .bank-icon { color: #307ccb; }
+    .checkout-payment-option > span { min-width: 0; }
+    .checkout-payment-option strong,
+    .checkout-payment-option small { display: block; }
+    .checkout-payment-option strong { color: #34363a; font-size: 12px; line-height: 1.35; }
+    .checkout-payment-option small { margin-top: 3px; color: #72757c; font-size: 10.5px; line-height: 1.35; }
+    .checkout-payment-option input { position: absolute; opacity: 0; pointer-events: none; }
+    .checkout-payment-option em {
+        width: 17px;
+        height: 17px;
+        border: 1.5px solid #c8cad0;
+        border-radius: 50%;
+        background: #fff;
+    }
+    .checkout-payment-option input:checked + em { border: 5px solid #d20e1d; }
+
+    .checkout-bank-box {
+        margin-top: 12px;
+        padding: 14px;
+        border: 1px dashed #df5963;
+        border-radius: 12px;
+        background: #fff9f9;
+        color: #3e4045;
+        font-size: 11px;
+    }
+    .checkout-bank-box > strong { display: block; margin-bottom: 12px; color: #c90d1b; }
+    .checkout-bank-content { display: flex; gap: 12px; align-items: center; }
+    .checkout-bank-content > div { flex: 1; min-width: 0; }
+    .checkout-bank-content span { display: block; margin: 4px 0; line-height: 1.35; }
+    .checkout-bank-content b { color: #c90d1b; }
+    .checkout-bank-content img { width: 105px; height: 105px; object-fit: contain; border-radius: 8px; background: #fff; }
+
+    .checkout-mobile-footer {
+        flex: 0 0 auto;
+        padding: 12px 18px max(12px, env(safe-area-inset-bottom));
+        border-top: 1px solid #ececef;
+        background: rgba(255,255,255,.98);
+        box-shadow: 0 -7px 20px rgba(0,0,0,.06);
+    }
+    .btn-checkout-confirm {
+        width: 100%;
+        min-height: 52px;
+        border: 0;
+        border-radius: 8px;
+        background: linear-gradient(90deg, #dc0b1b, #c40b18);
+        color: #fff;
+        cursor: pointer;
+        box-shadow: 0 8px 18px rgba(201,13,27,.18);
+    }
+    .btn-checkout-confirm:disabled { opacity: .68; cursor: wait; }
+    .btn-checkout-confirm .submit-texts strong,
+    .btn-checkout-confirm .submit-texts small { display: block; }
+    .btn-checkout-confirm .submit-texts strong { font-size: 14px; font-weight: 800; }
+    .btn-checkout-confirm .submit-texts small { margin-top: 2px; font-size: 10px; opacity: .88; }
+    .checkout-mobile-footer p { margin: 8px 0 0; text-align: center; color: #7c7f86; font-size: 10px; }
+    .checkout-mobile-footer p i { margin-right: 5px; }
+
+    .checkout-address-sheet {
+        position: absolute;
+        inset: 0;
+        z-index: 30;
+        pointer-events: none;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity .2s ease, visibility .2s ease;
+    }
+    .checkout-address-sheet.active { pointer-events: auto; opacity: 1; visibility: visible; }
+    .checkout-address-sheet-backdrop { position: absolute; inset: 0; background: rgba(18,18,22,.42); }
+    .checkout-address-sheet-panel {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        max-height: 92%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border-radius: 22px 22px 0 0;
+        background: #fff;
+        box-shadow: 0 -18px 46px rgba(0,0,0,.17);
+        transform: translateY(25px);
+        transition: transform .22s ease;
+    }
+    .checkout-address-sheet.active .checkout-address-sheet-panel { transform: translateY(0); }
+    .checkout-address-sheet-panel > header {
+        min-height: 58px;
+        display: grid;
+        grid-template-columns: 42px 1fr 42px;
+        align-items: center;
+        padding: 7px 12px;
+        border-bottom: 1px solid #ececef;
+    }
+    .checkout-address-sheet-panel > header button {
+        width: 38px;
+        height: 38px;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: #55585e;
+        cursor: pointer;
+        font-size: 17px;
+    }
+    .checkout-address-sheet-panel > header h3 { margin: 0; text-align: center; font-size: 15px; font-weight: 800; }
+    .checkout-address-sheet-body { min-height: 0; overflow-y: auto; padding: 10px 18px 18px; }
+
+    .checkout-address-list-item {
+        display: grid;
+        grid-template-columns: 25px 1fr 38px;
+        gap: 8px;
+        align-items: center;
+        padding: 14px 0;
+        border-bottom: 1px solid #ececef;
+    }
+    .checkout-address-radio,
+    .checkout-address-list-main,
+    .checkout-address-edit-link { border: 0; background: transparent; cursor: pointer; }
+    .checkout-address-radio { width: 22px; height: 22px; padding: 0; }
+    .checkout-address-radio span {
+        width: 16px;
+        height: 16px;
+        display: block;
+        border: 1.5px solid #c8cad0;
+        border-radius: 50%;
+    }
+    .checkout-address-list-item.selected .checkout-address-radio span { border: 5px solid #d20e1d; }
+    .checkout-address-list-main { min-width: 0; padding: 0; text-align: left; color: #55585e; font-size: 11px; line-height: 1.45; }
+    .checkout-address-list-person { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; color: #3a3c41; }
+    .checkout-address-list-person strong { font-size: 12px; }
+    .checkout-address-edit-link { color: #d20e1d; font-size: 11px; font-weight: 750; }
+    .checkout-add-address-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin: 13px 0 4px;
+        padding: 8px 4px;
+        border: 0;
+        background: transparent;
+        color: #d20e1d;
+        font-size: 12px;
+        font-weight: 750;
+        cursor: pointer;
+    }
+    .checkout-address-list-empty { padding: 28px 10px; text-align: center; color: #7a7d84; }
+    .checkout-address-list-empty i { display: block; margin-bottom: 10px; color: #d20e1d; font-size: 27px; }
+    .checkout-address-list-empty strong,
+    .checkout-address-list-empty span { display: block; }
+    .checkout-address-list-empty strong { color: #34363a; font-size: 13px; }
+    .checkout-address-list-empty span { margin-top: 5px; font-size: 11px; }
+
+    .checkout-device-cache-note {
+        display: flex;
+        gap: 11px;
+        margin-top: 14px;
+        padding: 15px;
+        border: 1px solid #f0dadc;
+        border-radius: 13px;
+        background: #fff8f7;
+    }
+    .checkout-device-cache-note > i { color: #3c3f45; font-size: 18px; }
+    .checkout-device-cache-note strong,
+    .checkout-device-cache-note span,
+    .checkout-device-cache-note small { display: block; }
+    .checkout-device-cache-note strong { color: #34363a; font-size: 12px; }
+    .checkout-device-cache-note span { margin-top: 5px; color: #666a71; font-size: 10.5px; line-height: 1.45; }
+    .checkout-device-cache-note small { margin-top: 9px; color: #249d58; font-size: 10px; }
+    .checkout-device-cache-note small i { margin-right: 5px; }
+
+    .checkout-address-form { padding-top: 4px; }
+    .checkout-address-form > label:not(.checkout-save-address-toggle) {
+        display: block;
+        margin: 12px 0 6px;
+        color: #35373c;
+        font-size: 11px;
+        font-weight: 700;
+    }
+    .checkout-address-form input[type="text"],
+    .checkout-address-form input[type="tel"],
+    .checkout-address-form select {
+        width: 100%;
+        height: 44px;
+        padding: 0 12px;
+        border: 1px solid #e0e1e5;
+        border-radius: 8px;
+        outline: none;
+        background: #fff;
+        color: #303237;
+        font-size: 13px;
+        box-sizing: border-box;
+    }
+    .checkout-address-form input:focus,
+    .checkout-address-form select:focus { border-color: #d20e1d; box-shadow: 0 0 0 3px rgba(210,14,29,.07); }
+    .checkout-address-detail-wrap { position: relative; }
+    .checkout-address-suggestions {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: calc(100% + 4px);
+        z-index: 5;
+        display: none;
+        max-height: 180px;
+        overflow-y: auto;
+        border: 1px solid #e0e1e5;
+        border-radius: 9px;
+        background: #fff;
+        box-shadow: 0 10px 26px rgba(0,0,0,.13);
+    }
+    .checkout-address-suggestions button {
+        width: 100%;
+        display: flex;
+        gap: 8px;
+        padding: 10px 12px;
+        border: 0;
+        border-bottom: 1px solid #efeff1;
+        background: #fff;
+        color: #4a4d54;
+        text-align: left;
+        font-size: 10.5px;
+        line-height: 1.4;
+        cursor: pointer;
+    }
+    .checkout-address-suggestions button i { color: #d20e1d; margin-top: 2px; }
+
+    .checkout-save-address-toggle {
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        margin-top: 12px;
+        cursor: pointer;
+    }
+    .checkout-save-address-toggle > span:first-child { flex: 1; color: #404247; font-size: 11px; }
+    .checkout-save-address-toggle input { position: absolute; opacity: 0; }
+    .checkout-toggle-ui {
+        position: relative;
+        width: 42px;
+        height: 24px;
+        border-radius: 999px;
+        background: #d8d9dd;
+        transition: .18s ease;
+    }
+    .checkout-toggle-ui::after {
+        content: '';
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #fff;
+        box-shadow: 0 2px 5px rgba(0,0,0,.18);
+        transition: .18s ease;
+    }
+    .checkout-save-address-toggle input:checked + .checkout-toggle-ui { background: #d20e1d; }
+    .checkout-save-address-toggle input:checked + .checkout-toggle-ui::after { transform: translateX(18px); }
+    .checkout-save-address-submit {
+        width: 100%;
+        height: 48px;
+        margin-top: 13px;
+        border: 0;
+        border-radius: 8px;
+        background: linear-gradient(90deg, #dc0b1b, #c40b18);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .checkout-hidden-address-fields { display: none !important; }
+
+    @media (max-width: 600px) {
+        .checkout-modal { padding: 0; background: #fff; }
+        .checkout-mobile-order {
+            width: 100%;
+            height: 100%;
+            max-height: none;
+            border-radius: 0;
+            box-shadow: none;
         }
-
-        .checkout-modal {
-            inset: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            height: 100svh !important;
-            height: 100dvh !important;
-            padding: max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom)) !important;
-            align-items: stretch !important;
-            justify-content: center !important;
-            overflow: hidden !important;
-            box-sizing: border-box !important;
-        }
-
-        .new-checkout-layout {
-            width: 100% !important;
-            max-width: 100% !important;
-            height: calc(100vh - 16px) !important;
-            height: calc(100svh - 16px) !important;
-            height: calc(100dvh - 16px) !important;
-            max-height: none !important;
-            border-radius: 16px !important;
-            transform: none !important;
-            overflow: hidden !important;
-            display: flex !important;
-            flex-direction: column !important;
-        }
-
-        .checkout-modal.active .new-checkout-layout {
-            transform: none !important;
-        }
-
-        .chk-header-gradient {
-            flex: 0 0 auto !important;
-            min-height: 58px !important;
-            padding: 10px 12px !important;
-            flex-direction: row !important;
-            align-items: center !important;
-            gap: 8px !important;
-        }
-
-        .chk-hdr-left {
-            flex: 1 1 auto !important;
-            min-width: 0 !important;
-            gap: 10px !important;
-        }
-
-        .chk-bag-icon {
-            width: 38px !important;
-            height: 38px !important;
-            min-width: 38px !important;
-            border-radius: 10px !important;
-            font-size: 16px !important;
-        }
-
-        .chk-hdr-left h2 {
-            font-size: 15px !important;
-            line-height: 1.15 !important;
-            margin: 0 0 2px 0 !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-        }
-
-        .chk-hdr-left p {
-            font-size: 11px !important;
-            line-height: 1.2 !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-            max-width: 100% !important;
-        }
-
-        .chk-hdr-right {
-            width: auto !important;
-            flex: 0 0 auto !important;
-            gap: 6px !important;
-            justify-content: flex-end !important;
-        }
-
-        .chk-action-btn {
-            display: none !important;
-        }
-
-        .close-modal-btn {
-            width: 36px !important;
-            height: 36px !important;
-            margin-left: 0 !important;
-            padding: 0 !important;
-            border-radius: 50% !important;
-            background: rgba(255,255,255,0.18) !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            font-size: 22px !important;
-            opacity: 1 !important;
-            flex-shrink: 0 !important;
-        }
-
-        .chk-body-wrapper {
-            display: block !important;
-            grid-template-columns: 1fr !important;
-            flex: 1 1 auto !important;
-            min-height: 0 !important;
-            overflow-y: auto !important;
-            -webkit-overflow-scrolling: touch !important;
-            padding: 12px !important;
-            padding-bottom: calc(18px + env(safe-area-inset-bottom)) !important;
-        }
-
-        .chk-col-summary,
-        .chk-col-form,
-        .chk-payment-full {
-            grid-column: 1 !important;
-            width: 100% !important;
-        }
-
-        .chk-card-section {
-            padding: 16px !important;
-            border-radius: 14px !important;
-            margin-bottom: 12px !important;
-        }
-
-        .chk-summary-section {
-            height: auto !important;
-        }
-
-        .chk-sec-title {
-            gap: 10px !important;
-            margin-bottom: 14px !important;
-            align-items: flex-start !important;
-        }
-
-        .step-circle {
-            width: 28px !important;
-            height: 28px !important;
-            min-width: 28px !important;
-            font-size: 14px !important;
-        }
-
-        .chk-sec-title h3 {
-            font-size: 15px !important;
-            line-height: 1.25 !important;
-        }
-
-        .chk-sec-title p {
-            font-size: 12px !important;
-            line-height: 1.35 !important;
-        }
-
-        .chk-product-list {
-            max-height: none !important;
-            overflow: visible !important;
-            padding-bottom: 14px !important;
-            margin-bottom: 14px !important;
-        }
-
-        .chk-item-row {
-            align-items: flex-start !important;
-            gap: 10px !important;
-        }
-
-        .chk-item-row img {
-            width: 48px !important;
-            height: 48px !important;
-            min-width: 48px !important;
-        }
-
-        .chk-item-info {
-            min-width: 0 !important;
-        }
-
-        .chk-item-title {
-            font-size: 13px !important;
-            line-height: 1.3 !important;
-            -webkit-line-clamp: 2 !important;
-        }
-
-        .chk-item-price {
-            min-width: 76px !important;
-            flex-shrink: 0 !important;
-        }
-
-        .chk-item-price .price {
-            font-size: 13px !important;
-            white-space: nowrap !important;
-        }
-
-        .cost-line,
-        .chk-total-wrapper {
-            gap: 10px !important;
-        }
-
-        .free-ship-notice {
-            justify-content: space-between !important;
-            text-align: right !important;
-            line-height: 1.3 !important;
-        }
-
-        .total-price-big {
-            font-size: 22px !important;
-            white-space: nowrap !important;
-        }
-
-        .chk-select-row {
-            flex-direction: column !important;
-            gap: 0 !important;
-        }
-
-        .chk-form-area input[type="text"],
-        .chk-form-area input[type="tel"] {
-            height: 46px !important;
-            font-size: 16px !important;
-            padding-top: 10px !important;
-            padding-bottom: 10px !important;
-        }
-
-        .chk-select-wrap .select2-container--default .select2-selection--single {
-            height: 46px !important;
-        }
-
-        .payment-card {
-            padding: 13px 42px 13px 12px !important;
-            min-height: 58px !important;
-        }
-
-        .payment-card i {
-            font-size: 22px !important;
-            margin-right: 10px !important;
-            width: 26px !important;
-        }
-
-        .pay-info strong {
-            font-size: 13px !important;
-            line-height: 1.3 !important;
-        }
-
-        .pay-info span {
-            font-size: 11px !important;
-            line-height: 1.25 !important;
-        }
-
-        .chk-footer-area {
-            flex: 0 0 auto !important;
-            padding: 10px 12px max(10px, env(safe-area-inset-bottom)) !important;
-            background: rgba(255,255,255,0.98) !important;
-            box-shadow: 0 -8px 22px rgba(0,0,0,0.08) !important;
-        }
-
-        .btn-final-submit {
-            min-height: 56px !important;
-            padding: 12px 14px !important;
-            border-radius: 12px !important;
-        }
-
-        .submit-left {
-            gap: 10px !important;
-            min-width: 0 !important;
-        }
-
-        .submit-left i {
-            font-size: 20px !important;
-            flex-shrink: 0 !important;
-        }
-
-        .submit-texts {
-            min-width: 0 !important;
-        }
-
-        .submit-texts strong {
-            font-size: 15px !important;
-            line-height: 1.1 !important;
-            white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
-        }
-
-        .submit-texts span {
-            font-size: 11px !important;
-            line-height: 1.2 !important;
-        }
-
-        .right-arr {
-            font-size: 20px !important;
-            flex-shrink: 0 !important;
-        }
-
-        .terms-text {
-            font-size: 10px !important;
-            line-height: 1.35 !important;
-            margin-top: 8px !important;
-        }
+        .checkout-mobile-content { padding-left: 15px; padding-right: 15px; }
+        .checkout-order-product img { width: 78px; height: 78px; }
+        .checkout-address-sheet-panel { max-height: 94%; }
     }
 
     @media (max-width: 360px) {
-        .chk-card-section { padding: 14px !important; }
-        .total-price-big { font-size: 20px !important; }
-        .btn-final-submit { min-height: 52px !important; }
-        .submit-texts strong { font-size: 14px !important; }
-        .submit-texts span { font-size: 10px !important; }
-    }
-
-    @media (max-width: 850px) and (max-height: 680px) {
-        .chk-header-gradient { min-height: 50px !important; padding-top: 8px !important; padding-bottom: 8px !important; }
-        .chk-bag-icon { width: 34px !important; height: 34px !important; min-width: 34px !important; }
-        .chk-hdr-left p { display: none !important; }
-        .chk-footer-area { padding-top: 8px !important; padding-bottom: max(8px, env(safe-area-inset-bottom)) !important; }
-        .terms-text { display: none !important; }
+        .checkout-mobile-content { padding-left: 12px; padding-right: 12px; }
+        .checkout-order-product img { width: 68px; height: 68px; }
+        .checkout-cost-summary .checkout-grand-total strong { font-size: 20px; }
+        .checkout-bank-content { align-items: flex-start; }
+        .checkout-bank-content img { width: 88px; height: 88px; }
     }
 `;
 document.head.appendChild(checkoutStyle);
+
 
 // ==============================================================
 // 10. TÍNH NĂNG NÚT LIÊN HỆ NỔI (FLOATING CONTACT) TỰ ĐỘNG
