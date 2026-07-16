@@ -707,6 +707,456 @@
             .pd-mobile-service-strip { grid-template-columns: 1fr; }
         }
 
+
+
+        .pd-purchase-hint {
+            margin: 14px 0 18px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 9px;
+            border: 1px solid #f1d3d6;
+            border-radius: 13px;
+            background: #fff8f8;
+            color: #656870;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+        .pd-purchase-hint i { margin-top: 2px; color: var(--primary-red); }
+        .pd-purchase-hint strong { color: var(--primary-red); }
+
+        /* =============================================================
+           PRODUCT OPTION SELECTOR - BOTTOM SHEET
+           Chỉ mở khi khách nhấn Thêm giỏ hàng hoặc Mua ngay.
+           Không thay đổi logic giỏ hàng / checkout hiện có.
+           ============================================================= */
+        body.pd-selector-open { overflow: hidden !important; touch-action: none; }
+
+        .pd-selector-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 5000;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 0;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .22s ease, visibility .22s ease;
+        }
+
+        .pd-selector-modal.active {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .pd-selector-backdrop {
+            position: absolute;
+            inset: 0;
+            border: 0;
+            padding: 0;
+            background: rgba(16, 18, 22, .58);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            cursor: pointer;
+        }
+
+        .pd-selector-sheet {
+            position: relative;
+            z-index: 1;
+            width: min(100%, 640px);
+            max-height: min(92dvh, 860px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+            border-radius: 28px 28px 0 0;
+            box-shadow: 0 -16px 50px rgba(0, 0, 0, .18);
+            transform: translateY(28px);
+            transition: transform .28s cubic-bezier(.2,.8,.2,1);
+        }
+
+        .pd-selector-modal.active .pd-selector-sheet { transform: translateY(0); }
+
+        .pd-selector-handle {
+            width: 58px;
+            height: 5px;
+            margin: 10px auto 4px;
+            border-radius: 99px;
+            background: #d8d9dc;
+            flex: 0 0 auto;
+        }
+
+        .pd-selector-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            z-index: 3;
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            border: 0;
+            border-radius: 50%;
+            background: #f5f5f6;
+            color: #676a72;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 19px;
+        }
+
+        .pd-selector-scroll {
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            padding: 12px 22px 18px;
+            scrollbar-width: thin;
+        }
+
+        .pd-selector-product {
+            display: grid;
+            grid-template-columns: 104px minmax(0, 1fr);
+            gap: 16px;
+            align-items: center;
+            padding: 4px 42px 16px 0;
+            border-bottom: 1px solid #ececef;
+        }
+
+        .pd-selector-product-image {
+            width: 104px;
+            height: 104px;
+            padding: 7px;
+            border: 1px solid #e8e8eb;
+            border-radius: 17px;
+            background: #fff;
+            object-fit: contain;
+        }
+
+        .pd-selector-product-title {
+            margin: 0 0 7px;
+            color: #1d1f24;
+            font-size: 16px;
+            font-weight: 800;
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .pd-selector-price-row {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 9px;
+        }
+
+        .pd-selector-price {
+            color: var(--primary-red);
+            font-size: 25px;
+            line-height: 1;
+            font-weight: 800;
+        }
+
+        .pd-selector-old-price {
+            color: #aaaeb6;
+            font-size: 13px;
+            text-decoration: line-through;
+        }
+
+        .pd-selector-current-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            min-height: 30px;
+            padding: 6px 10px;
+            border-radius: 9px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .pd-selector-current-status::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            flex: 0 0 auto;
+        }
+
+        .pd-selector-current-status.available { color: #139654; background: #eaf9f0; }
+        .pd-selector-current-status.order { color: #d52234; background: #fff0f2; }
+        .pd-selector-current-status.soldout { color: #81848b; background: #f0f1f3; }
+
+        .pd-selector-helper {
+            margin: 10px 0 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            color: #777b84;
+            font-size: 11.5px;
+            line-height: 1.5;
+        }
+
+        .pd-selector-helper i { margin-top: 2px; color: #666b75; }
+
+        .pd-selector-section-title {
+            margin: 17px 0 12px;
+            color: #202126;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .pd-selector-options {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .pd-selector-option {
+            position: relative;
+            min-width: 0;
+            min-height: 76px;
+            padding: 10px 34px 10px 10px;
+            display: grid;
+            grid-template-columns: 50px minmax(0, 1fr);
+            gap: 9px;
+            align-items: center;
+            border: 1.5px solid #e4e5e8;
+            border-radius: 13px;
+            background: #fff;
+            color: #25272c;
+            text-align: left;
+            cursor: pointer;
+            transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+        }
+
+        .pd-selector-option:hover:not(:disabled) {
+            border-color: #d7a4a8;
+            transform: translateY(-1px);
+        }
+
+        .pd-selector-option.selected {
+            border-color: #e20c1d;
+            background: #fffdfd;
+            box-shadow: 0 7px 18px rgba(186,26,26,.08);
+        }
+
+        .pd-selector-option:disabled,
+        .pd-selector-option.soldout {
+            cursor: not-allowed;
+            background: #f8f8f9;
+            color: #9699a0;
+            opacity: .72;
+        }
+
+        .pd-selector-option-image {
+            width: 50px;
+            height: 50px;
+            padding: 3px;
+            border: 1px solid #ececef;
+            border-radius: 9px;
+            background: #fff;
+            object-fit: contain;
+        }
+
+        .pd-selector-option-name {
+            color: inherit;
+            font-size: 12px;
+            font-weight: 750;
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .pd-selector-option-status {
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 10.5px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .pd-selector-option-status::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            flex: 0 0 auto;
+        }
+
+        .pd-selector-option-status.available { color: #159b56; }
+        .pd-selector-option-status.order { color: #dc3547; }
+        .pd-selector-option-status.soldout { color: #9699a0; }
+
+        .pd-selector-check {
+            position: absolute;
+            top: 9px;
+            right: 9px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: #d90d1a;
+            color: #fff;
+            font-size: 13px;
+            box-shadow: 0 5px 12px rgba(201,13,27,.2);
+        }
+
+        .pd-selector-option.selected .pd-selector-check { display: flex; }
+
+        .pd-selector-quantity-row {
+            margin-top: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .pd-selector-quantity-label {
+            color: #25272c;
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .pd-selector-qty {
+            display: grid;
+            grid-template-columns: 42px 48px 42px;
+            height: 42px;
+            overflow: hidden;
+            border: 1px solid #dfe1e5;
+            border-radius: 10px;
+            background: #fff;
+        }
+
+        .pd-selector-qty button,
+        .pd-selector-qty input {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background: transparent;
+            text-align: center;
+            color: #27292e;
+            font-size: 16px;
+        }
+
+        .pd-selector-qty button { cursor: pointer; font-size: 19px; }
+        .pd-selector-qty button + input,
+        .pd-selector-qty input + button { border-left: 1px solid #ececef; }
+        .pd-selector-qty input { outline: none; font-weight: 700; }
+
+        .pd-selector-delivery-note {
+            min-height: 20px;
+            margin-top: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #666a73;
+            font-size: 11.5px;
+            line-height: 1.45;
+        }
+
+        .pd-selector-delivery-note strong { color: var(--primary-red); }
+
+        .pd-selector-footer {
+            flex: 0 0 auto;
+            padding: 11px 18px calc(11px + env(safe-area-inset-bottom));
+            border-top: 1px solid #ececef;
+            background: rgba(255,255,255,.98);
+        }
+
+        .pd-selector-confirm {
+            width: 100%;
+            min-height: 54px;
+            padding: 12px 18px;
+            border: 0;
+            border-radius: 12px;
+            background: linear-gradient(90deg, #df0d1d, #c20b17);
+            color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 800;
+            box-shadow: 0 10px 20px rgba(201,13,27,.18);
+        }
+
+        .pd-selector-confirm:disabled {
+            cursor: not-allowed;
+            background: #c8c9cd;
+            box-shadow: none;
+        }
+
+        .pd-selector-toast {
+            position: fixed;
+            left: 50%;
+            bottom: calc(90px + env(safe-area-inset-bottom));
+            z-index: 6000;
+            max-width: calc(100vw - 32px);
+            padding: 11px 16px;
+            border-radius: 999px;
+            background: #24262b;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 10px 28px rgba(0,0,0,.2);
+            transform: translate(-50%, 18px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .2s ease, transform .2s ease;
+        }
+
+        .pd-selector-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+        @media (min-width: 769px) {
+            .pd-selector-modal { padding: 22px; }
+            .pd-selector-sheet { border-radius: 26px; max-height: calc(100dvh - 44px); }
+        }
+
+        @media (max-width: 520px) {
+            .pd-selector-scroll { padding: 10px 14px 14px; }
+            .pd-selector-product {
+                grid-template-columns: 82px minmax(0, 1fr);
+                gap: 12px;
+                padding-right: 34px;
+            }
+            .pd-selector-product-image { width: 82px; height: 82px; border-radius: 14px; }
+            .pd-selector-product-title { font-size: 13px; margin-bottom: 5px; }
+            .pd-selector-price { font-size: 21px; }
+            .pd-selector-current-status { min-height: 27px; padding: 5px 8px; font-size: 10.5px; }
+            .pd-selector-options { gap: 8px; }
+            .pd-selector-option {
+                min-height: 69px;
+                grid-template-columns: 42px minmax(0, 1fr);
+                gap: 7px;
+                padding: 8px 29px 8px 8px;
+                border-radius: 10px;
+            }
+            .pd-selector-option-image { width: 42px; height: 42px; border-radius: 7px; }
+            .pd-selector-option-name { font-size: 10.7px; }
+            .pd-selector-option-status { font-size: 9.5px; }
+            .pd-selector-check { width: 23px; height: 23px; right: 6px; top: 6px; }
+            .pd-selector-section-title { margin-top: 14px; font-size: 13px; }
+            .pd-selector-quantity-label { font-size: 13px; }
+            .pd-selector-qty { grid-template-columns: 36px 42px 36px; height: 38px; }
+            .pd-selector-footer { padding-left: 12px; padding-right: 12px; }
+            .pd-selector-confirm { min-height: 50px; font-size: 14px; }
+        }
+
+        @media (max-width: 350px) {
+            .pd-selector-options { grid-template-columns: 1fr; }
+            .pd-selector-product { grid-template-columns: 72px minmax(0,1fr); }
+            .pd-selector-product-image { width: 72px; height: 72px; }
+        }
+
     </style>
 </head>
 
@@ -1002,37 +1452,9 @@
                         </div>
                         ${savePercent ? `<div class="pd-save-text">Tiết kiệm ${formatVND(oldPriceNumber - currentPriceNumber)} (${savePercent}%)</div>` : ''}
 
-                        <div class="pd-status pd-status-card" id="pd-status-view"></div>
-
-                        ${variants.length > 0 ? `
-                            <div class="pd-variants">
-                                <span class="pd-variant-label">Chọn loại / phân loại</span>
-                                <div class="pd-variant-list">
-                                    ${variants.map((v, i) => `
-                                        <button class="pd-btn-v ${i === 0 ? 'active' : ''}" onclick="selectVariant(${JSON.stringify(v).replace(/"/g, '&quot;')}, this, '${p.current_price}')">
-                                            ${v.name}
-                                        </button>
-                                    `).join('')}
-                                </div>
-                            </div>
-                        ` : ''}
-
-                        <div class="pd-purchase-summary">
-                            <div class="pd-summary-col">
-                                <span class="pd-summary-label">Số lượng</span>
-                                <div class="pd-qty-control">
-                                    <button type="button" onclick="changeProductQty(-1)">−</button>
-                                    <input type="text" id="pd-qty" value="1" inputmode="numeric" aria-label="Số lượng">
-                                    <button type="button" onclick="changeProductQty(1)">+</button>
-                                </div>
-                                <span class="pd-stock-label" id="pd-stock-label">Còn hàng</span>
-                            </div>
-                            <div class="pd-summary-col">
-                                <span class="pd-summary-label">Tổng tiền</span>
-                                <div class="pd-total-box">
-                                    <strong id="pd-total-price">${formatVND(p.current_price)}</strong>
-                                </div>
-                            </div>
+                        <div class="pd-purchase-hint">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span>Nhấn <strong>Thêm giỏ hàng</strong> hoặc <strong>Mua ngay</strong> để chọn phân loại, xem số lượng còn lại và trạng thái hàng.</span>
                         </div>
 
                         <div class="pd-mobile-guarantee-card">
@@ -1098,12 +1520,6 @@
                 updateVariantStatus({ status: 'instock', stock: 10 });
             }
 
-            const qtyInput = document.getElementById('pd-qty');
-            if (qtyInput) {
-                qtyInput.addEventListener('input', updateTotalPriceDisplay);
-                qtyInput.addEventListener('blur', updateTotalPriceDisplay);
-            }
-            updateTotalPriceDisplay();
             bindTabScroll();
         }
 
@@ -1180,67 +1596,11 @@
         }
 
         function handleAddToCart() {
-            if (!currentProduct) return;
-            const v = currentVariant || {};
-            
-            const cartItem = {
-                id: currentProduct.id,
-                title: currentProduct.title,
-                brand: currentProduct.brand,
-                image: v.image || currentProduct.thumbnail,
-                variant: v.name || 'Mặc định',
-                price: v.price || currentProduct.current_price,
-                status: v.status || 'instock', 
-                date: v.date || v.expected_date || 'Đang cập nhật',
-                quantity: getSelectedQuantity()
-            };
-            
-            if(typeof addToCart === 'function') {
-                addToCart(cartItem);
-                
-                const btn = document.querySelector('.pd-btn-cart');
-                const originalHtml = btn.innerHTML;
-                btn.innerHTML = '<i class="fas fa-check"></i> Đã thêm';
-                btn.style.background = '#27ae60';
-                btn.style.color = 'white';
-                btn.style.borderColor = '#27ae60';
-                
-                setTimeout(() => {
-                    btn.innerHTML = originalHtml;
-                    btn.style.background = '';
-                    btn.style.color = '';
-                    btn.style.borderColor = '';
-                }, 1500);
-
-            } else {
-                alert('Lỗi: File cart.js chưa được tải!');
-            }
+            openProductSelector('cart');
         }
 
         function handleBuyNow() {
-            if (!currentProduct) return;
-
-            const v = currentVariant || {};
-
-            const buyNowItem = {
-                id: currentProduct.id,
-                title: currentProduct.title,
-                brand: currentProduct.brand,
-                image: v.image || currentProduct.thumbnail,
-                variant: v.name || 'Mặc định',
-                price: v.price || currentProduct.current_price,
-                status: v.status || 'instock',
-                date: v.date || v.expected_date || 'Đang cập nhật',
-                quantity: getSelectedQuantity()
-            };
-
-            if (typeof openBuyNowCheckout === 'function') {
-                openBuyNowCheckout(buyNowItem);
-            } else if (typeof openCheckoutModal === 'function') {
-                openCheckoutModal([buyNowItem], 'buy-now');
-            } else {
-                alert('Lỗi: File cart.js chưa được tải!');
-            }
+            openProductSelector('buy');
         }
 
         function switchImage(url, el, index = 1, total = 1) {
@@ -1321,6 +1681,334 @@
                 `;
             }
         }
+
+
+        let productSelectorMode = 'cart';
+        let productSelectorVariantIndex = 0;
+        let productSelectorQuantity = 1;
+
+        function escapePdHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function getProductSelectorVariants() {
+            const variants = Array.isArray(currentProduct && currentProduct.variants)
+                ? currentProduct.variants
+                : [];
+
+            if (variants.length) return variants;
+
+            return [{
+                name: 'Mặc định',
+                image: currentProduct && currentProduct.thumbnail,
+                price: currentProduct && currentProduct.current_price,
+                status: 'instock',
+                stock: null,
+                date: ''
+            }];
+        }
+
+        function normalizeVariantState(variant) {
+            const value = String(variant && variant.status || '').toLowerCase().trim();
+            const normalized = value
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/đ/g, 'd')
+                .replace(/[\s_-]+/g, ' ');
+
+            const soldOutValues = [
+                'soldout', 'sold out', 'outofstock', 'out of stock',
+                'unavailable', 'het hang', 'tam het hang'
+            ];
+
+            if (soldOutValues.some(item => normalized.includes(item))) {
+                return {
+                    key: 'soldout',
+                    label: 'Hết hàng',
+                    detail: 'Tạm hết hàng',
+                    icon: 'fa-circle-xmark',
+                    disabled: true
+                };
+            }
+
+            // Giữ nguyên logic cũ: status "order" hoặc "out" được xem là hàng order.
+            if (
+                normalized === 'out' ||
+                normalized.includes('order') ||
+                normalized.includes('preorder') ||
+                normalized.includes('hang dat')
+            ) {
+                const expected = variant && (variant.date || variant.expected_date) || '10-15 ngày';
+                return {
+                    key: 'order',
+                    label: `Order ${expected}`,
+                    detail: `Hàng order (${expected})`,
+                    icon: 'fa-plane',
+                    disabled: false,
+                    expected
+                };
+            }
+
+            const stock = Number(variant && variant.stock);
+            const stockText = Number.isFinite(stock) && stock > 0 ? ` (${stock})` : '';
+            return {
+                key: 'available',
+                label: `Còn hàng${stockText}`,
+                detail: `Còn hàng${stockText}`,
+                icon: 'fa-circle-check',
+                disabled: false
+            };
+        }
+
+        function getSelectorVariantPrice(variant) {
+            return variant && variant.price ? variant.price : currentProduct.current_price;
+        }
+
+        function getSelectorVariantImage(variant) {
+            return variant && variant.image ? variant.image : currentProduct.thumbnail || 'images/icon-logo.png';
+        }
+
+        function openProductSelector(mode) {
+            if (!currentProduct) return;
+
+            productSelectorMode = mode === 'buy' ? 'buy' : 'cart';
+            productSelectorQuantity = 1;
+
+            const variants = getProductSelectorVariants();
+            const currentIndex = variants.findIndex(item => item === currentVariant || (
+                currentVariant && item && item.name === currentVariant.name
+            ));
+            productSelectorVariantIndex = currentIndex >= 0 ? currentIndex : 0;
+
+            let modal = document.getElementById('pd-selector-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'pd-selector-modal';
+                modal.className = 'pd-selector-modal';
+                modal.setAttribute('role', 'dialog');
+                modal.setAttribute('aria-modal', 'true');
+                modal.setAttribute('aria-label', 'Chọn phân loại sản phẩm');
+                document.body.appendChild(modal);
+            }
+
+            renderProductSelector();
+            document.body.classList.add('pd-selector-open');
+            requestAnimationFrame(() => modal.classList.add('active'));
+        }
+
+        function closeProductSelector() {
+            const modal = document.getElementById('pd-selector-modal');
+            if (!modal) return;
+            modal.classList.remove('active');
+            document.body.classList.remove('pd-selector-open');
+            window.setTimeout(() => {
+                if (!modal.classList.contains('active')) modal.innerHTML = '';
+            }, 260);
+        }
+
+        function renderProductSelector() {
+            const modal = document.getElementById('pd-selector-modal');
+            if (!modal || !currentProduct) return;
+
+            const variants = getProductSelectorVariants();
+            if (productSelectorVariantIndex < 0 || productSelectorVariantIndex >= variants.length) {
+                productSelectorVariantIndex = 0;
+            }
+
+            const selectedVariant = variants[productSelectorVariantIndex] || variants[0];
+            const selectedState = normalizeVariantState(selectedVariant);
+            const selectedPrice = getSelectorVariantPrice(selectedVariant);
+            const selectedImage = getSelectorVariantImage(selectedVariant);
+            const oldPrice = currentProduct.old_price;
+            const ctaText = productSelectorMode === 'buy' ? 'Mua ngay' : 'Thêm vào giỏ hàng';
+
+            const optionHtml = variants.map((variant, index) => {
+                const state = normalizeVariantState(variant);
+                const isSelected = index === productSelectorVariantIndex;
+                const image = getSelectorVariantImage(variant);
+                const name = variant && variant.name ? variant.name : 'Mặc định';
+
+                return `
+                    <button
+                        type="button"
+                        class="pd-selector-option ${isSelected ? 'selected' : ''} ${state.key}"
+                        onclick="selectProductSelectorVariant(${index})"
+                        ${state.disabled ? 'disabled' : ''}
+                        aria-pressed="${isSelected ? 'true' : 'false'}"
+                    >
+                        <img class="pd-selector-option-image" src="${escapePdHtml(image)}" alt="${escapePdHtml(name)}" onerror="this.src='images/icon-logo.png'">
+                        <span>
+                            <span class="pd-selector-option-name">${escapePdHtml(name)}</span>
+                            <span class="pd-selector-option-status ${state.key}">${escapePdHtml(state.label)}</span>
+                        </span>
+                        <span class="pd-selector-check"><i class="fa-solid fa-check"></i></span>
+                    </button>
+                `;
+            }).join('');
+
+            const deliveryNote = selectedState.key === 'order'
+                ? `<i class="fa-regular fa-clock"></i><span>Dự kiến giao hàng: <strong>${escapePdHtml(selectedState.expected || '10-15 ngày')}</strong> đối với sản phẩm order</span>`
+                : selectedState.key === 'available'
+                    ? `<i class="fa-solid fa-truck-fast"></i><span>Sản phẩm đang có hàng và sẽ được shop xử lý sớm.</span>`
+                    : `<i class="fa-solid fa-circle-exclamation"></i><span>Phân loại này đang hết hàng, vui lòng chọn sản phẩm khác.</span>`;
+
+            modal.innerHTML = `
+                <button type="button" class="pd-selector-backdrop" onclick="closeProductSelector()" aria-label="Đóng"></button>
+                <section class="pd-selector-sheet">
+                    <div class="pd-selector-handle"></div>
+                    <button type="button" class="pd-selector-close" onclick="closeProductSelector()" aria-label="Đóng bảng chọn sản phẩm">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+
+                    <div class="pd-selector-scroll">
+                        <div class="pd-selector-product">
+                            <img class="pd-selector-product-image" src="${escapePdHtml(selectedImage)}" alt="${escapePdHtml(currentProduct.title)}" onerror="this.src='images/icon-logo.png'">
+                            <div>
+                                <h2 class="pd-selector-product-title">${escapePdHtml(currentProduct.title)}</h2>
+                                <div class="pd-selector-price-row">
+                                    <span class="pd-selector-price">${formatVND(selectedPrice)}</span>
+                                    ${oldPrice ? `<span class="pd-selector-old-price">${formatVND(oldPrice)}</span>` : ''}
+                                </div>
+                                <span class="pd-selector-current-status ${selectedState.key}">${escapePdHtml(selectedState.detail)}</span>
+                            </div>
+                        </div>
+
+                        <div class="pd-selector-helper">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <span>Chọn phân loại để xem chính xác sản phẩm còn hàng, hàng order hoặc đã hết hàng.</span>
+                        </div>
+
+                        <h3 class="pd-selector-section-title">Chọn loại / phân loại</h3>
+                        <div class="pd-selector-options">${optionHtml}</div>
+
+                        <div class="pd-selector-quantity-row">
+                            <span class="pd-selector-quantity-label">Số lượng</span>
+                            <div class="pd-selector-qty">
+                                <button type="button" onclick="changeProductSelectorQuantity(-1)" aria-label="Giảm số lượng">−</button>
+                                <input id="pd-selector-qty-input" value="${productSelectorQuantity}" inputmode="numeric" aria-label="Số lượng" onchange="syncProductSelectorQuantity(this.value)" onblur="syncProductSelectorQuantity(this.value)">
+                                <button type="button" onclick="changeProductSelectorQuantity(1)" aria-label="Tăng số lượng">+</button>
+                            </div>
+                        </div>
+
+                        <div class="pd-selector-delivery-note">${deliveryNote}</div>
+                    </div>
+
+                    <div class="pd-selector-footer">
+                        <button
+                            type="button"
+                            class="pd-selector-confirm"
+                            onclick="confirmProductSelector()"
+                            ${selectedState.disabled ? 'disabled' : ''}
+                        >${selectedState.disabled ? 'Sản phẩm đã hết hàng' : ctaText}</button>
+                    </div>
+                </section>
+            `;
+        }
+
+        function selectProductSelectorVariant(index) {
+            const variants = getProductSelectorVariants();
+            const variant = variants[index];
+            if (!variant || normalizeVariantState(variant).disabled) return;
+
+            productSelectorVariantIndex = index;
+            currentVariant = variant;
+
+            // Giữ hành vi cũ: khi chọn phân loại, ảnh và giá trang sản phẩm cũng cập nhật.
+            const mainImage = document.getElementById('pd-main-image');
+            if (mainImage) mainImage.src = getSelectorVariantImage(variant);
+
+            const priceView = document.getElementById('pd-price-view');
+            if (priceView) priceView.innerText = formatVND(getSelectorVariantPrice(variant));
+
+            renderProductSelector();
+        }
+
+        function syncProductSelectorQuantity(value) {
+            productSelectorQuantity = Math.max(1, parseInt(value || '1', 10) || 1);
+            const input = document.getElementById('pd-selector-qty-input');
+            if (input) input.value = productSelectorQuantity;
+        }
+
+        function changeProductSelectorQuantity(delta) {
+            productSelectorQuantity = Math.max(1, productSelectorQuantity + delta);
+            const input = document.getElementById('pd-selector-qty-input');
+            if (input) input.value = productSelectorQuantity;
+        }
+
+        function buildProductSelectorItem() {
+            const variants = getProductSelectorVariants();
+            const variant = variants[productSelectorVariantIndex] || variants[0] || {};
+
+            return {
+                id: currentProduct.id,
+                title: currentProduct.title,
+                brand: currentProduct.brand,
+                image: getSelectorVariantImage(variant),
+                variant: variant.name || 'Mặc định',
+                price: getSelectorVariantPrice(variant),
+                status: variant.status || 'instock',
+                date: variant.date || variant.expected_date || 'Đang cập nhật',
+                quantity: productSelectorQuantity
+            };
+        }
+
+        function showProductSelectorToast(message) {
+            let toast = document.getElementById('pd-selector-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'pd-selector-toast';
+                toast.className = 'pd-selector-toast';
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = `<i class="fa-solid fa-circle-check"></i>&nbsp; ${escapePdHtml(message)}`;
+            toast.classList.add('show');
+            clearTimeout(window.__pdSelectorToastTimer);
+            window.__pdSelectorToastTimer = setTimeout(() => toast.classList.remove('show'), 1800);
+        }
+
+        function confirmProductSelector() {
+            if (!currentProduct) return;
+
+            const variants = getProductSelectorVariants();
+            const variant = variants[productSelectorVariantIndex] || variants[0];
+            const state = normalizeVariantState(variant);
+            if (state.disabled) return;
+
+            syncProductSelectorQuantity(document.getElementById('pd-selector-qty-input')?.value || productSelectorQuantity);
+            currentVariant = variant;
+            const item = buildProductSelectorItem();
+            const mode = productSelectorMode;
+
+            closeProductSelector();
+
+            if (mode === 'buy') {
+                if (typeof openBuyNowCheckout === 'function') {
+                    window.setTimeout(() => openBuyNowCheckout(item), 220);
+                } else if (typeof openCheckoutModal === 'function') {
+                    window.setTimeout(() => openCheckoutModal([item], 'buy-now'), 220);
+                } else {
+                    alert('Lỗi: File cart.js chưa được tải!');
+                }
+                return;
+            }
+
+            if (typeof addToCart === 'function') {
+                addToCart(item);
+                showProductSelectorToast('Đã thêm sản phẩm vào giỏ hàng');
+            } else {
+                alert('Lỗi: File cart.js chưa được tải!');
+            }
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') closeProductSelector();
+        });
+
         document.addEventListener("DOMContentLoaded", initDetail);
     </script>
 </body>
