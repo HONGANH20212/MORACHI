@@ -690,23 +690,80 @@ function openCheckoutModal() {
                         </label>
                     </div>
 
-                    <div id="bank-info-box" class="checkout-bank-box" style="display:none;">
-                        <strong>Mã đơn hàng: <span id="chk-order-id">${currentCheckoutOrderId}</span></strong>
-                        <div class="checkout-bank-content">
-                            <div>
-                                <span>Ngân hàng: MB Quân Đội</span>
-                                <span>Chủ tài khoản: ${ACCOUNT_NAME}</span>
-                                <span>Số tài khoản: ${BANK_ACCOUNT}</span>
-                                <span>Số tiền: <b id="chk-qr-amount">${total.toLocaleString('vi-VN')}đ</b></span>
-                                <span>Nội dung CK: <b id="chk-qr-content">${currentCheckoutOrderId}</b></span>
-                            </div>
-                            <img id="chk-qr-img" src="${qrUrl}" alt="QR chuyển khoản">
-                        </div>
-                    </div>
+                    <div id="bank-info-box" style="display:none;"></div>
                 </section>
             </main>
 
+            <div id="bank-payment-popup" class="bank-payment-popup" aria-hidden="true">
+                <div class="bank-payment-backdrop" onclick="closeBankPaymentPopup()"></div>
+
+                <section class="bank-payment-dialog" role="dialog" aria-modal="true" aria-labelledby="bank-payment-title">
+                    <div class="bank-payment-handle"></div>
+
+                    <header class="bank-payment-header">
+                        <button type="button" class="bank-payment-close" onclick="closeBankPaymentPopup()" aria-label="Đóng">
+                            <i class="fas fa-times"></i>
+                        </button>
+                        <div>
+                            <span class="bank-payment-icon"><i class="fas fa-qrcode"></i></span>
+                            <h3 id="bank-payment-title">Thanh toán chuyển khoản</h3>
+                            <p>Quét mã VietQR hoặc tải ảnh QR về thiết bị</p>
+                        </div>
+                    </header>
+
+                    <div class="bank-payment-body">
+                        <div class="bank-payment-order-code">
+                            <span>Mã đơn hàng</span>
+                            <strong id="chk-order-id">${currentCheckoutOrderId}</strong>
+                        </div>
+
+                        <div class="bank-payment-qr-wrap">
+                            <img id="chk-qr-img" src="${qrUrl}" alt="Mã QR chuyển khoản VietQR">
+                            <button type="button" class="bank-payment-download" onclick="downloadBankQrImage()" aria-label="Tải ảnh QR xuống">
+                                <i class="fas fa-arrow-down"></i>
+                                <span>Tải ảnh QR</span>
+                            </button>
+                        </div>
+
+                        <div class="bank-payment-details">
+                            <div>
+                                <span>Ngân hàng</span>
+                                <strong>MB Quân Đội</strong>
+                            </div>
+                            <div>
+                                <span>Chủ tài khoản</span>
+                                <strong>${ACCOUNT_NAME}</strong>
+                            </div>
+                            <div>
+                                <span>Số tài khoản</span>
+                                <strong class="bank-copy-value">${BANK_ACCOUNT}</strong>
+                            </div>
+                            <div>
+                                <span>Số tiền</span>
+                                <strong id="chk-qr-amount" class="bank-payment-amount">${total.toLocaleString('vi-VN')}đ</strong>
+                            </div>
+                            <div>
+                                <span>Nội dung chuyển khoản</span>
+                                <strong id="chk-qr-content" class="bank-payment-content">${currentCheckoutOrderId}</strong>
+                            </div>
+                        </div>
+
+                        <div class="bank-payment-note">
+                            <i class="fas fa-circle-info"></i>
+                            <span>Vui lòng chuyển đúng số tiền và nội dung để shop xác nhận đơn nhanh hơn.</span>
+                        </div>
+                    </div>
+
+                    <footer class="bank-payment-footer">
+                        <button type="button" onclick="closeBankPaymentPopup()">
+                            Tôi đã lưu thông tin
+                        </button>
+                    </footer>
+                </section>
+            </div>
+
             <footer class="checkout-mobile-footer">
+
                 <button class="btn-checkout-confirm" onclick="submitOrder()">
                     <span class="submit-texts"><strong>Đặt hàng</strong><small>Xác nhận thông tin và tạo đơn hàng</small></span>
                 </button>
@@ -752,13 +809,84 @@ window.closeCheckoutModal = function() {
     isBuyNowMode = false;
     checkoutEditingAddressId = '';
     checkoutTemporaryAddress = null;
+    closeBankPaymentPopup();
 };
 
 window.toggleBankInfo = function() {
     const checkedInput = document.querySelector('input[name="chk-payment"]:checked');
     const method = checkedInput ? checkedInput.value : 'cod';
+
     const box = document.getElementById('bank-info-box');
-    if (box) box.style.display = method === 'bank' ? 'block' : 'none';
+    if (box) box.style.display = 'none';
+
+    if (method === 'bank') {
+        openBankPaymentPopup();
+    } else {
+        closeBankPaymentPopup();
+    }
+};
+
+window.openBankPaymentPopup = function() {
+    const popup = document.getElementById('bank-payment-popup');
+    if (!popup) return;
+
+    popup.classList.add('active');
+    popup.setAttribute('aria-hidden', 'false');
+    document.documentElement.classList.add('bank-payment-open');
+    document.body.classList.add('bank-payment-open');
+};
+
+window.closeBankPaymentPopup = function() {
+    const popup = document.getElementById('bank-payment-popup');
+    if (!popup) return;
+
+    popup.classList.remove('active');
+    popup.setAttribute('aria-hidden', 'true');
+    document.documentElement.classList.remove('bank-payment-open');
+    document.body.classList.remove('bank-payment-open');
+};
+
+window.downloadBankQrImage = async function() {
+    const qrImage = document.getElementById('chk-qr-img');
+    if (!qrImage || !qrImage.src) {
+        alert('Không tìm thấy ảnh QR để tải xuống.');
+        return;
+    }
+
+    const orderCode = (
+        document.getElementById('chk-order-id')?.textContent ||
+        currentCheckoutOrderId ||
+        'MORACHI'
+    ).trim();
+
+    const safeFileName = `MORACHI-QR-${orderCode.replace(/[^a-zA-Z0-9_-]/g, '')}.png`;
+
+    try {
+        const response = await fetch(qrImage.src, { cache: 'no-store' });
+        if (!response.ok) throw new Error('Không tải được ảnh QR');
+
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+
+        link.href = objectUrl;
+        link.download = safeFileName;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+    } catch (error) {
+        // Một số trình duyệt iPhone không hỗ trợ download trực tiếp.
+        // Mở ảnh QR trong tab mới để người dùng nhấn giữ và lưu ảnh.
+        const fallback = document.createElement('a');
+        fallback.href = qrImage.src;
+        fallback.target = '_blank';
+        fallback.rel = 'noopener';
+        document.body.appendChild(fallback);
+        fallback.click();
+        fallback.remove();
+    }
 };
 
 // ==========================================
@@ -1584,6 +1712,274 @@ checkoutStyle.innerHTML = `
         box-shadow: 0 4px 14px rgba(201, 13, 27, 0.08);
     }
 
+
+    .bank-payment-popup {
+        position: fixed;
+        inset: 0;
+        z-index: 10030;
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 16px;
+    }
+
+    .bank-payment-popup.active {
+        display: flex;
+    }
+
+    .bank-payment-backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(17, 18, 22, 0.55);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+    }
+
+    .bank-payment-dialog {
+        position: relative;
+        z-index: 1;
+        width: min(100%, 430px);
+        max-height: min(92vh, 760px);
+        overflow-y: auto;
+        border-radius: 24px;
+        background: #fff;
+        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+        animation: bankPopupSlideUp .24s ease-out;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    @keyframes bankPopupSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(28px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .bank-payment-handle {
+        width: 54px;
+        height: 5px;
+        margin: 9px auto 2px;
+        border-radius: 999px;
+        background: #d8d9dd;
+    }
+
+    .bank-payment-header {
+        position: relative;
+        padding: 17px 52px 14px 20px;
+        border-bottom: 1px solid #ededf0;
+        text-align: center;
+    }
+
+    .bank-payment-header > div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .bank-payment-icon {
+        width: 43px;
+        height: 43px;
+        margin-bottom: 8px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        background: linear-gradient(145deg, #df0d1d, #bb0b17);
+        font-size: 20px;
+        box-shadow: 0 8px 18px rgba(201, 13, 27, .2);
+    }
+
+    .bank-payment-header h3 {
+        margin: 0;
+        color: #23252a;
+        font-size: 17px;
+        line-height: 1.3;
+    }
+
+    .bank-payment-header p {
+        margin: 5px 0 0;
+        color: #74777f;
+        font-size: 11px;
+        line-height: 1.45;
+    }
+
+    .bank-payment-close {
+        position: absolute;
+        top: 14px;
+        right: 14px;
+        width: 36px;
+        height: 36px;
+        border: 0;
+        border-radius: 50%;
+        background: #f3f3f5;
+        color: #676a72;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    .bank-payment-body {
+        padding: 17px 20px 14px;
+    }
+
+    .bank-payment-order-code {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 11px 13px;
+        border: 1px solid #f3d3d6;
+        border-radius: 12px;
+        background: #fff8f8;
+    }
+
+    .bank-payment-order-code span {
+        color: #777a82;
+        font-size: 11px;
+    }
+
+    .bank-payment-order-code strong {
+        color: #c90d1b;
+        font-size: 13px;
+        word-break: break-all;
+    }
+
+    .bank-payment-qr-wrap {
+        padding: 18px 0 14px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .bank-payment-qr-wrap img {
+        width: min(64vw, 255px);
+        height: min(64vw, 255px);
+        max-width: 255px;
+        max-height: 255px;
+        object-fit: contain;
+        border: 1px solid #ebd9db;
+        border-radius: 16px;
+        background: #fff;
+        padding: 7px;
+        box-shadow: 0 10px 30px rgba(46, 18, 21, .11);
+    }
+
+    .bank-payment-download {
+        min-height: 42px;
+        margin-top: 13px;
+        padding: 9px 17px;
+        border: 1px solid #cf101d;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        color: #c90d1b;
+        background: #fff;
+        cursor: pointer;
+        font-weight: 700;
+        font-size: 12px;
+    }
+
+    .bank-payment-download i {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        background: #c90d1b;
+        font-size: 11px;
+    }
+
+    .bank-payment-details {
+        overflow: hidden;
+        border: 1px solid #ececef;
+        border-radius: 14px;
+        background: #fff;
+    }
+
+    .bank-payment-details > div {
+        min-height: 43px;
+        padding: 9px 13px;
+        display: grid;
+        grid-template-columns: minmax(110px, .9fr) minmax(0, 1.2fr);
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid #eeeeef;
+    }
+
+    .bank-payment-details > div:last-child {
+        border-bottom: 0;
+    }
+
+    .bank-payment-details span {
+        color: #777a82;
+        font-size: 10.5px;
+    }
+
+    .bank-payment-details strong {
+        color: #303238;
+        font-size: 11.5px;
+        text-align: right;
+        word-break: break-word;
+    }
+
+    .bank-payment-details .bank-payment-amount,
+    .bank-payment-details .bank-payment-content {
+        color: #c90d1b;
+        font-size: 13px;
+    }
+
+    .bank-payment-note {
+        margin-top: 12px;
+        padding: 11px 12px;
+        display: flex;
+        align-items: flex-start;
+        gap: 9px;
+        border-radius: 11px;
+        color: #7d5a21;
+        background: #fff8e8;
+        font-size: 10.5px;
+        line-height: 1.5;
+    }
+
+    .bank-payment-note i {
+        margin-top: 2px;
+        color: #d68b13;
+    }
+
+    .bank-payment-footer {
+        position: sticky;
+        bottom: 0;
+        padding: 11px 20px max(12px, env(safe-area-inset-bottom));
+        border-top: 1px solid #ececef;
+        background: rgba(255,255,255,.98);
+    }
+
+    .bank-payment-footer button {
+        width: 100%;
+        min-height: 48px;
+        border: 0;
+        border-radius: 11px;
+        color: #fff;
+        background: linear-gradient(90deg, #df0d1d, #bf0c18);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 800;
+        box-shadow: 0 8px 20px rgba(201, 13, 27, .18);
+    }
+
+    html.bank-payment-open,
+    body.bank-payment-open {
+        overflow: hidden !important;
+    }
+
     .checkout-mobile-footer {
         flex: 0 0 auto;
         padding: 12px 18px max(12px, env(safe-area-inset-bottom));
@@ -1842,6 +2238,22 @@ checkoutStyle.innerHTML = `
         .checkout-mobile-content { padding-left: 15px; padding-right: 15px; }
         .checkout-order-product img { width: 78px; height: 78px; }
         .checkout-address-sheet-panel { max-height: 94%; }
+
+        .bank-payment-popup {
+            padding: 0;
+        }
+
+        .bank-payment-dialog {
+            width: 100%;
+            max-height: 94vh;
+            border-radius: 24px 24px 0 0;
+        }
+
+        .bank-payment-qr-wrap img {
+            width: min(68vw, 245px);
+            height: min(68vw, 245px);
+        }
+
         .checkout-bank-content img {
             width: 132px;
             height: 132px;
