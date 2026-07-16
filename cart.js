@@ -706,7 +706,7 @@ function openCheckoutModal() {
                         </button>
                         <div>
                             <h3 id="bank-payment-title">Thanh toán chuyển khoản</h3>
-                            <p>Quét mã VietQR hoặc tải ảnh QR về thiết bị</p>
+                            <p>Quét mã VietQR để thanh toán</p>
                         </div>
                     </header>
 
@@ -836,54 +836,7 @@ window.closeBankPaymentPopup = function() {
     document.body.classList.remove('bank-payment-open');
 };
 
-window.downloadBankQrImage = async function() {
-    const qrImage = document.getElementById('chk-qr-img');
-    if (!qrImage || !qrImage.src) {
-        alert('Không tìm thấy ảnh QR để tải xuống.');
-        return;
-    }
 
-    const orderCode = (
-        document.getElementById('chk-order-id')?.textContent ||
-        currentCheckoutOrderId ||
-        'MORACHI'
-    ).trim();
-
-    const safeFileName = `MORACHI-QR-${orderCode.replace(/[^a-zA-Z0-9_-]/g, '')}.png`;
-    const ua = navigator.userAgent || '';
-    const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
-
-    // iPhone / Safari thường lỗi với kiểu tải blob. Mở ảnh trực tiếp để người dùng nhấn giữ và lưu.
-    if (isIOS || isSafari) {
-        window.open(qrImage.src, '_blank', 'noopener');
-        return;
-    }
-
-    try {
-        const response = await fetch(qrImage.src, { cache: 'no-store', mode: 'cors' });
-        if (!response.ok) throw new Error('Không tải được ảnh QR');
-
-        const blob = await response.blob();
-        const objectUrl = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = objectUrl;
-        link.download = safeFileName;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-
-        setTimeout(() => URL.revokeObjectURL(objectUrl), 2000);
-    } catch (error) {
-        const fallback = document.createElement('a');
-        fallback.href = qrImage.src;
-        fallback.target = '_blank';
-        fallback.rel = 'noopener';
-        document.body.appendChild(fallback);
-        fallback.click();
-        fallback.remove();
-    }
-};
 
 // ==========================================
 // TẢI DỮ LIỆU ĐỊA CHỈ NGẦM (BACKGROUND PRE-LOAD) VÀ CACHE
@@ -1852,34 +1805,6 @@ checkoutStyle.innerHTML = `
         box-shadow: 0 10px 30px rgba(46, 18, 21, .11);
     }
 
-    .bank-payment-download {
-        min-height: 38px;
-        margin-top: 8px;
-        padding: 8px 14px;
-        border: 1px solid #cf101d;
-        border-radius: 12px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 9px;
-        color: #c90d1b;
-        background: #fff;
-        cursor: pointer;
-        font-weight: 700;
-        font-size: 11px;
-    }
-
-    .bank-payment-download i {
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: #fff;
-        background: #c90d1b;
-        font-size: 11px;
-    }
 
     .bank-payment-details {
         overflow: hidden;
