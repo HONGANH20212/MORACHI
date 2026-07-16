@@ -889,7 +889,7 @@
 
         .pd-selector-current-status.available { color: #139654; background: #eaf9f0; }
         .pd-selector-current-status.order { color: #d52234; background: #fff0f2; }
-        .pd-selector-current-status.soldout { color: #81848b; background: #f0f1f3; }
+        .pd-selector-current-status.soldout { color: #c2410c; background: #fff3e8; }
 
         .pd-selector-helper {
             margin: 10px 0 0;
@@ -945,12 +945,32 @@
             box-shadow: 0 7px 18px rgba(186,26,26,.08);
         }
 
-        .pd-selector-option:disabled,
-        .pd-selector-option.soldout {
+        .pd-selector-option:disabled {
             cursor: not-allowed;
             background: #f8f8f9;
             color: #9699a0;
             opacity: .72;
+        }
+
+        /* Trạng thái out vẫn cho phép khách chọn và mua trước theo ngày dự kiến. */
+        .pd-selector-option.soldout {
+            cursor: pointer !important;
+            pointer-events: auto !important;
+            background: #fffaf5;
+            color: #3f3f46;
+            opacity: 1 !important;
+            border-color: #fdba74;
+        }
+
+        .pd-selector-option.soldout:hover {
+            border-color: #f97316;
+            transform: translateY(-1px);
+        }
+
+        .pd-selector-option.soldout.selected {
+            border-color: #e20c1d;
+            background: #fffdfd;
+            box-shadow: 0 7px 18px rgba(186,26,26,.08);
         }
 
         .pd-selector-option-image {
@@ -995,7 +1015,7 @@
 
         .pd-selector-option-status.available { color: #159b56; }
         .pd-selector-option-status.order { color: #dc3547; }
-        .pd-selector-option-status.soldout { color: #9699a0; }
+        .pd-selector-option-status.soldout { color: #c2410c; }
 
         .pd-selector-check {
             position: absolute;
@@ -1741,7 +1761,8 @@
                     label: `Hết hàng tạm thời • Dự kiến ${expectedFromAdmin}`,
                     detail: `Hết hàng tạm thời – Dự kiến có hàng ${expectedFromAdmin}`,
                     icon: 'fa-circle-xmark',
-                    disabled: true,
+                    // Vẫn cho phép chọn/mua vì khách đã được thông báo ngày dự kiến có hàng.
+                    purchasable: true,
                     expected: expectedFromAdmin,
                     stockCount: 0
                 };
@@ -1758,7 +1779,7 @@
                     label: 'Hàng order 10-15 ngày',
                     detail: 'Hàng order 10-15 ngày',
                     icon: 'fa-plane',
-                    disabled: false,
+                    purchasable: true,
                     expected: '10-15 ngày',
                     stockCount: null
                 };
@@ -1772,7 +1793,7 @@
                 label: hasStock ? `Còn ${stock} sản phẩm` : 'Còn hàng',
                 detail: hasStock ? `Còn hàng: ${stock} sản phẩm` : 'Còn hàng',
                 icon: 'fa-circle-check',
-                disabled: false,
+                purchasable: true,
                 stockCount: hasStock ? stock : null
             };
         }
@@ -1850,7 +1871,6 @@
                         type="button"
                         class="pd-selector-option ${isSelected ? 'selected' : ''} ${state.key}"
                         onclick="selectProductSelectorVariant(${index})"
-                        ${state.disabled ? 'disabled' : ''}
                         aria-pressed="${isSelected ? 'true' : 'false'}"
                     >
                         <img class="pd-selector-option-image" src="${escapePdHtml(image)}" alt="${escapePdHtml(name)}" onerror="this.src='images/icon-logo.png'">
@@ -1917,8 +1937,7 @@
                             type="button"
                             class="pd-selector-confirm"
                             onclick="confirmProductSelector()"
-                            ${selectedState.disabled ? 'disabled' : ''}
-                        >${selectedState.disabled ? 'Sản phẩm đã hết hàng' : ctaText}</button>
+                        >${ctaText}</button>
                     </div>
                 </section>
             `;
@@ -1927,7 +1946,7 @@
         function selectProductSelectorVariant(index) {
             const variants = getProductSelectorVariants();
             const variant = variants[index];
-            if (!variant || normalizeVariantState(variant).disabled) return;
+            if (!variant) return;
 
             productSelectorVariantIndex = index;
             currentVariant = variant;
@@ -1990,8 +2009,7 @@
 
             const variants = getProductSelectorVariants();
             const variant = variants[productSelectorVariantIndex] || variants[0];
-            const state = normalizeVariantState(variant);
-            if (state.disabled) return;
+            normalizeVariantState(variant);
 
             syncProductSelectorQuantity(document.getElementById('pd-selector-qty-input')?.value || productSelectorQuantity);
             currentVariant = variant;
