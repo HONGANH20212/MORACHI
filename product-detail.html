@@ -889,7 +889,7 @@
 
         .pd-selector-current-status.available { color: #139654; background: #eaf9f0; }
         .pd-selector-current-status.order { color: #d52234; background: #fff0f2; }
-        .pd-selector-current-status.soldout { color: #c2410c; background: #fff3e8; }
+        .pd-selector-current-status.soldout { color: #81848b; background: #f0f1f3; }
 
         .pd-selector-helper {
             margin: 10px 0 0;
@@ -956,14 +956,14 @@
         .pd-selector-option.soldout {
             cursor: pointer !important;
             pointer-events: auto !important;
-            background: #fffaf5;
-            color: #3f3f46;
+            background: #fff8f8;
+            color: #34363b;
             opacity: 1 !important;
-            border-color: #fdba74;
+            border-color: #efb3b9;
         }
 
         .pd-selector-option.soldout:hover {
-            border-color: #f97316;
+            border-color: #df7e87;
             transform: translateY(-1px);
         }
 
@@ -971,6 +971,19 @@
             border-color: #e20c1d;
             background: #fffdfd;
             box-shadow: 0 7px 18px rgba(186,26,26,.08);
+        }
+
+        .pd-selector-option.soldout:disabled {
+            cursor: pointer !important;
+            pointer-events: auto !important;
+            opacity: 1 !important;
+            color: #34363b !important;
+            background: #fff8f8 !important;
+            border-color: #efb3b9 !important;
+        }
+
+        .pd-selector-option.soldout:disabled .pd-selector-option-name {
+            color: #34363b !important;
         }
 
         .pd-selector-option-image {
@@ -1015,7 +1028,7 @@
 
         .pd-selector-option-status.available { color: #159b56; }
         .pd-selector-option-status.order { color: #dc3547; }
-        .pd-selector-option-status.soldout { color: #c2410c; }
+        .pd-selector-option-status.soldout { color: #9699a0; }
 
         .pd-selector-check {
             position: absolute;
@@ -1705,7 +1718,7 @@
                 <div class="pd-status-pill out">Hết hàng tạm thời</div>
                 <div class="pd-status-title" style="color:#666;">Sản phẩm đang tạm hết hàng</div>
                 <div class="pd-status-divider"></div>
-                <div class="pd-status-line"><i class="fa-regular fa-calendar-days"></i><span>Dự kiến có hàng: <strong>${escapePdHtml(state.expected || 'Đang cập nhật')}</strong></span></div>
+                <div class="pd-status-line"><i class="fa-regular fa-calendar-days"></i><span><strong>${escapePdHtml(state.availabilityText || 'Order 10-15 ngày')}</strong></span></div>
             `;
         }
 
@@ -1748,22 +1761,36 @@
                 .replace(/đ/g, 'd')
                 .replace(/[\s_-]+/g, ' ');
 
-            const expectedFromAdmin = variant && (variant.date || variant.expected_date) || 'Đang cập nhật';
+            const rawExpectedFromAdmin = String(
+                variant && (variant.date || variant.expected_date) || ''
+            ).trim();
+            const expectedFromAdmin = rawExpectedFromAdmin &&
+                rawExpectedFromAdmin.toLowerCase() !== 'đang cập nhật'
+                ? rawExpectedFromAdmin
+                : '';
             const soldOutValues = [
                 'soldout', 'sold out', 'outofstock', 'out of stock',
                 'unavailable', 'het hang', 'tam het hang'
             ];
 
-            // out = Hết hàng tạm thời, hiển thị ngày dự kiến lấy từ Admin.
+            // out = Hết hàng tạm thời.
+            // Có ngày từ Admin: hiển thị ngày dự kiến.
+            // Chưa có ngày: mặc định hiển thị Order 10-15 ngày.
             if (normalized === 'out' || soldOutValues.some(item => normalized.includes(item))) {
+                const availabilityText = expectedFromAdmin
+                    ? `Dự kiến có hàng ${expectedFromAdmin}`
+                    : 'Order 10-15 ngày';
+
                 return {
                     key: 'soldout',
-                    label: `Hết hàng tạm thời • Dự kiến ${expectedFromAdmin}`,
-                    detail: `Hết hàng tạm thời – Dự kiến có hàng ${expectedFromAdmin}`,
+                    label: `Hết hàng tạm thời • ${availabilityText}`,
+                    detail: `Hết hàng tạm thời • ${availabilityText}`,
                     icon: 'fa-circle-xmark',
-                    // Vẫn cho phép chọn/mua vì khách đã được thông báo ngày dự kiến có hàng.
-                    purchasable: true,
-                    expected: expectedFromAdmin,
+                    // Vẫn cho phép chọn/mua vì khách đã được thông báo thời gian dự kiến.
+                    disabled: false,
+                    expected: expectedFromAdmin || '10-15 ngày',
+                    availabilityText,
+                    hasAdminExpectedDate: Boolean(expectedFromAdmin),
                     stockCount: 0
                 };
             }
@@ -1779,7 +1806,7 @@
                     label: 'Hàng order 10-15 ngày',
                     detail: 'Hàng order 10-15 ngày',
                     icon: 'fa-plane',
-                    purchasable: true,
+                    disabled: false,
                     expected: '10-15 ngày',
                     stockCount: null
                 };
@@ -1793,7 +1820,7 @@
                 label: hasStock ? `Còn ${stock} sản phẩm` : 'Còn hàng',
                 detail: hasStock ? `Còn hàng: ${stock} sản phẩm` : 'Còn hàng',
                 icon: 'fa-circle-check',
-                purchasable: true,
+                disabled: false,
                 stockCount: hasStock ? stock : null
             };
         }
@@ -1871,6 +1898,7 @@
                         type="button"
                         class="pd-selector-option ${isSelected ? 'selected' : ''} ${state.key}"
                         onclick="selectProductSelectorVariant(${index})"
+                        aria-disabled="false"
                         aria-pressed="${isSelected ? 'true' : 'false'}"
                     >
                         <img class="pd-selector-option-image" src="${escapePdHtml(image)}" alt="${escapePdHtml(name)}" onerror="this.src='images/icon-logo.png'">
@@ -1889,7 +1917,7 @@
                     ? `<i class="fa-solid fa-truck-fast"></i><span>${selectedState.stockCount !== null
                         ? `Còn <strong>${selectedState.stockCount} sản phẩm</strong>, shop sẽ xử lý sớm.`
                         : 'Sản phẩm đang có hàng và sẽ được shop xử lý sớm.'}</span>`
-                    : `<i class="fa-regular fa-calendar-days"></i><span>Hết hàng tạm thời. Dự kiến có hàng: <strong>${escapePdHtml(selectedState.expected || 'Đang cập nhật')}</strong>.</span>`;
+                    : `<i class="fa-regular fa-calendar-days"></i><span>Hết hàng tạm thời • <strong>${escapePdHtml(selectedState.availabilityText || 'Order 10-15 ngày')}</strong>.</span>`;
 
             modal.innerHTML = `
                 <button type="button" class="pd-selector-backdrop" onclick="closeProductSelector()" aria-label="Đóng"></button>
@@ -1937,6 +1965,7 @@
                             type="button"
                             class="pd-selector-confirm"
                             onclick="confirmProductSelector()"
+                            aria-disabled="false"
                         >${ctaText}</button>
                     </div>
                 </section>
@@ -2009,7 +2038,8 @@
 
             const variants = getProductSelectorVariants();
             const variant = variants[productSelectorVariantIndex] || variants[0];
-            normalizeVariantState(variant);
+            const state = normalizeVariantState(variant);
+            // Mọi trạng thái, bao gồm out, đều được phép chọn và mua trước.
 
             syncProductSelectorQuantity(document.getElementById('pd-selector-qty-input')?.value || productSelectorQuantity);
             currentVariant = variant;
