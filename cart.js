@@ -718,10 +718,6 @@ function openCheckoutModal() {
 
                         <div class="bank-payment-qr-wrap">
                             <img id="chk-qr-img" src="${qrUrl}" alt="Mã QR chuyển khoản VietQR">
-                            <button type="button" class="bank-payment-download" onclick="downloadBankQrImage()" aria-label="Tải ảnh QR xuống">
-                                <i class="fas fa-arrow-down"></i>
-                                <span>Tải ảnh QR</span>
-                            </button>
                         </div>
 
                         <div class="bank-payment-details">
