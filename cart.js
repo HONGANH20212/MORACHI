@@ -626,7 +626,7 @@ function openCheckoutModal() {
 
     const BANK_ACCOUNT = '2470168848012';
     const ACCOUNT_NAME = 'VO THI HONG ANH';
-    const qrUrl = 'images/Screenshot_222.png';
+    const qrUrl = 'images/Screenshot_18.png';
 
     let modal = document.getElementById('checkout-modal');
     if (!modal) {
