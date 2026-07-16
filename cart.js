@@ -434,7 +434,7 @@ window.openCheckoutAddressEditor = async function(id = '') {
     title.textContent = 'Địa chỉ nhận hàng';
 
     body.innerHTML = `
-        <form class="checkout-address-form" onsubmit="event.preventDefault(); saveCheckoutAddress();">
+        <form class="checkout-address-form" autocomplete="off" onsubmit="event.preventDefault(); saveCheckoutAddress();">
             <label>Họ và tên</label>
             <input type="text" id="addr-name" placeholder="Nhập họ và tên" autocomplete="name" required>
 
@@ -458,8 +458,16 @@ window.openCheckoutAddressEditor = async function(id = '') {
 
             <label>Địa chỉ cụ thể</label>
             <div class="checkout-address-detail-wrap">
-                <input type="text" id="addr-address" placeholder="Số nhà, tên đường, tòa nhà..." autocomplete="street-address" required>
-                <div id="addr-address-suggestions" class="checkout-address-suggestions"></div>
+                <input
+                    type="text"
+                    id="addr-address"
+                    placeholder="Số nhà, tên đường, tòa nhà..."
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="sentences"
+                    spellcheck="false"
+                    required
+                >
             </div>
 
             <label class="checkout-save-address-toggle">
@@ -474,54 +482,15 @@ window.openCheckoutAddressEditor = async function(id = '') {
 
     sheet.classList.add('active');
     await fillCheckoutAddressEditor(address);
-    setupCheckoutAddressEditorAutocomplete();
 };
 
 function setupCheckoutAddressEditorAutocomplete() {
-    const addressInput = document.getElementById('addr-address');
+    // Đã tắt hoàn toàn gợi ý địa chỉ để người dùng tự nhập chính xác.
     const dropdown = document.getElementById('addr-address-suggestions');
-    if (!addressInput || !dropdown || addressInput.dataset.autocompleteReady) return;
-    addressInput.dataset.autocompleteReady = '1';
-
-    addressInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        const query = this.value.trim();
-        if (query.length < 3) {
-            dropdown.style.display = 'none';
-            return;
-        }
-
-        const province = document.getElementById('addr-province');
-        const district = document.getElementById('addr-district');
-        let context = '';
-        if (district?.value) context += ', ' + district.options[district.selectedIndex].text;
-        if (province?.value) context += ', ' + province.options[province.selectedIndex].text;
-
-        searchTimeout = setTimeout(async () => {
-            try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + context)}&countrycodes=vn&format=json&limit=5`);
-                const results = await response.json();
-                if (!Array.isArray(results) || !results.length) {
-                    dropdown.style.display = 'none';
-                    return;
-                }
-                dropdown.innerHTML = results.map((item, index) => `
-                    <button type="button" data-index="${index}"><i class="fas fa-map-marker-alt"></i>${checkoutEscapeHtml(item.display_name)}</button>
-                `).join('');
-                dropdown.style.display = 'block';
-                dropdown.querySelectorAll('button').forEach(button => {
-                    button.onclick = () => {
-                        const item = results[Number(button.dataset.index)];
-                        const parts = String(item.display_name || '').split(',');
-                        addressInput.value = [parts[0], parts[1]].filter(Boolean).map(value => value.trim()).join(', ');
-                        dropdown.style.display = 'none';
-                    };
-                });
-            } catch (error) {
-                dropdown.style.display = 'none';
-            }
-        }, 500);
-    });
+    if (dropdown) {
+        dropdown.innerHTML = '';
+        dropdown.style.display = 'none';
+    }
 }
 
 window.checkoutAddressProvinceChanged = async function() {
@@ -762,8 +731,7 @@ function openCheckoutModal() {
                 <select id="chk-province"><option value="">Tỉnh / Thành phố</option></select>
                 <select id="chk-district"><option value="">Quận / Huyện</option></select>
                 <select id="chk-ward"><option value="">Phường / Xã</option></select>
-                <input id="chk-address" type="text">
-                <div id="address-suggestions"></div>
+                <input id="chk-address" type="text" autocomplete="off">
             </div>
         </div>
     `;
@@ -978,67 +946,24 @@ window.loadWards = function() {
 };
 
 // ==========================================
-// TÍNH NĂNG GỢI Ý ĐỊA CHỈ (AUTOCOMPLETE) 
+// GỢI Ý ĐỊA CHỈ ĐÃ ĐƯỢC TẮT HOÀN TOÀN
 // ==========================================
 let searchTimeout;
 window.setupAddressAutocomplete = function() {
-    const addressInput = document.getElementById('chk-address');
+    clearTimeout(searchTimeout);
+
     const dropdown = document.getElementById('address-suggestions');
-    if (!addressInput || !dropdown) return;
+    if (dropdown) {
+        dropdown.innerHTML = '';
+        dropdown.style.display = 'none';
+    }
 
-    addressInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        const query = this.value.trim();
-        
-        if (query.length < 3) {
-            dropdown.style.display = 'none';
-            return;
-        }
-
-        const provEl = document.getElementById('chk-province');
-        const distEl = document.getElementById('chk-district');
-        let context = "";
-        if(distEl && distEl.options[distEl.selectedIndex]?.value) context += ", " + distEl.options[distEl.selectedIndex].text;
-        if(provEl && provEl.options[provEl.selectedIndex]?.value) context += ", " + provEl.options[provEl.selectedIndex].text;
-
-        searchTimeout = setTimeout(async () => {
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query + context)}&countrycodes=vn&format=json&limit=5`);
-                const data = await res.json();
-                
-                if (data && data.length > 0) {
-                    dropdown.innerHTML = data.map((item, index) => `
-                        <div class="suggestion-item" data-index="${index}" style="padding: 12px 15px; border-bottom: 1px solid #f0f0f0; cursor: pointer; font-size: 13px; color: #333; line-height: 1.5; transition: 0.2s;">
-                            <i class="fas fa-map-marker-alt" style="color:#f57224; margin-right:8px;"></i> ${item.display_name}
-                        </div>
-                    `).join('');
-                    dropdown.style.display = 'block';
-
-                    dropdown.querySelectorAll('.suggestion-item').forEach(el => {
-                        el.addEventListener('click', function() {
-                            const idx = this.getAttribute('data-index');
-                            const selectedData = data[idx];
-                            const parts = selectedData.display_name.split(',');
-                            addressInput.value = (parts[0] + (parts[1] ? ', ' + parts[1].trim() : '')).trim();
-                            dropdown.style.display = 'none';
-                        });
-                        el.addEventListener('mouseover', () => el.style.background = '#fff5f0');
-                        el.addEventListener('mouseout', () => el.style.background = 'white');
-                    });
-                } else {
-                    dropdown.style.display = 'none';
-                }
-            } catch (e) {
-                console.error("Lỗi gợi ý địa chỉ:", e);
-            }
-        }, 500); 
-    });
-
-    document.addEventListener('click', function(e) {
-        if (e.target !== addressInput && e.target !== dropdown) {
-            dropdown.style.display = 'none';
-        }
-    });
+    const addressInput = document.getElementById('chk-address');
+    if (addressInput) {
+        addressInput.setAttribute('autocomplete', 'off');
+        addressInput.setAttribute('autocorrect', 'off');
+        addressInput.setAttribute('spellcheck', 'false');
+    }
 };
 
 // ==============================================================
@@ -1643,11 +1568,21 @@ checkoutStyle.innerHTML = `
         font-size: 11px;
     }
     .checkout-bank-box > strong { display: block; margin-bottom: 12px; color: #c90d1b; }
-    .checkout-bank-content { display: flex; gap: 12px; align-items: center; }
+    .checkout-bank-content { display: flex; gap: 16px; align-items: center; }
     .checkout-bank-content > div { flex: 1; min-width: 0; }
     .checkout-bank-content span { display: block; margin: 4px 0; line-height: 1.35; }
     .checkout-bank-content b { color: #c90d1b; }
-    .checkout-bank-content img { width: 105px; height: 105px; object-fit: contain; border-radius: 8px; background: #fff; }
+    .checkout-bank-content img {
+        width: 145px;
+        height: 145px;
+        flex: 0 0 145px;
+        object-fit: contain;
+        border: 1px solid #f0d7da;
+        border-radius: 10px;
+        background: #fff;
+        padding: 3px;
+        box-shadow: 0 4px 14px rgba(201, 13, 27, 0.08);
+    }
 
     .checkout-mobile-footer {
         flex: 0 0 auto;
@@ -1784,6 +1719,16 @@ checkoutStyle.innerHTML = `
     .checkout-device-cache-note small { margin-top: 9px; color: #249d58; font-size: 10px; }
     .checkout-device-cache-note small i { margin-right: 5px; }
 
+
+    /* Tắt hoàn toàn danh sách dự đoán địa chỉ */
+    #addr-address-suggestions,
+    #address-suggestions,
+    .checkout-address-suggestions {
+        display: none !important;
+        visibility: hidden !important;
+        pointer-events: none !important;
+    }
+
     .checkout-address-form { padding-top: 4px; }
     .checkout-address-form > label:not(.checkout-save-address-toggle) {
         display: block;
@@ -1897,14 +1842,23 @@ checkoutStyle.innerHTML = `
         .checkout-mobile-content { padding-left: 15px; padding-right: 15px; }
         .checkout-order-product img { width: 78px; height: 78px; }
         .checkout-address-sheet-panel { max-height: 94%; }
+        .checkout-bank-content img {
+            width: 132px;
+            height: 132px;
+            flex-basis: 132px;
+        }
     }
 
     @media (max-width: 360px) {
         .checkout-mobile-content { padding-left: 12px; padding-right: 12px; }
         .checkout-order-product img { width: 68px; height: 68px; }
         .checkout-cost-summary .checkout-grand-total strong { font-size: 20px; }
-        .checkout-bank-content { align-items: flex-start; }
-        .checkout-bank-content img { width: 88px; height: 88px; }
+        .checkout-bank-content { align-items: flex-start; gap: 10px; }
+        .checkout-bank-content img {
+            width: 118px;
+            height: 118px;
+            flex-basis: 118px;
+        }
     }
 `;
 document.head.appendChild(checkoutStyle);
