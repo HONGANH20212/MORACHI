@@ -46,6 +46,24 @@ function escapeHtml(text) {
         .replace(/'/g, "&#039;");
 }
 
+// Tạo đường dẫn SEO từ tên sản phẩm.
+// Ví dụ: "Phấn phủ đa sắc Canmake" -> "phan-phu-da-sac-canmake"
+function createProductSlug(text) {
+    return String(text || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "D")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+}
+
+function getProductSeoUrl(product) {
+    const slug = createProductSlug(product.slug || product.title || "san-pham");
+    return `/san-pham/${slug}`;
+}
+
 // --- Xử lý giao diện ---
 function getSearchElements() {
     const searchBar = document.querySelector(".search-bar");
@@ -106,7 +124,8 @@ function renderProducts(products) {
     }
 
     productList.innerHTML = products.map((product) => {
-        const id = product.id; 
+        const id = product.id;
+        const productUrl = getProductSeoUrl(product);
         const title = escapeHtml(product.title || "");
         const brand = escapeHtml(product.brand || "");
         const thumbnail = escapeHtml(product.thumbnail || "images/icon-logo.png");
@@ -128,7 +147,7 @@ function renderProducts(products) {
 
         // RENDER HTML THEO FORMAT MỚI
         return `
-            <div class="product-card" onclick="window.location.href='product-detail.html?id=${id}'">
+            <div class="product-card" onclick="window.location.href='${productUrl}'">
                 ${discountBadgeHTML}
                 
                 <button class="btn-wishlist" onclick="event.stopPropagation(); this.classList.toggle('active');">
@@ -153,7 +172,7 @@ function renderProducts(products) {
                         ${oldPrice ? `<span class="old-price">${oldPrice}</span>` : ""}
                     </div>
 
-                    <button class="btn-buy-now" onclick="event.stopPropagation(); window.location.href='product-detail.html?id=${id}'">
+                    <button class="btn-buy-now" onclick="event.stopPropagation(); window.location.href='${productUrl}'">
                         <i class="fa-solid fa-cart-shopping"></i> MUA NGAY
                     </button>
                 </div>

@@ -4,7 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <base href="/">
     <title>MORACHI - Chi tiết sản phẩm</title>
+    <meta name="description" id="seo-description" content="Mỹ phẩm Nhật Bản chính hãng tại MORACHI.">
+    <link rel="canonical" id="seo-canonical" href="https://www.morachi.com.vn/">
+    <meta property="og:type" content="product">
+    <meta property="og:title" id="seo-og-title" content="MORACHI - Chi tiết sản phẩm">
+    <meta property="og:description" id="seo-og-description" content="Mỹ phẩm Nhật Bản chính hãng tại MORACHI.">
+    <meta property="og:image" id="seo-og-image" content="https://www.morachi.com.vn/images/icon-logo.png">
+    <meta property="og:url" id="seo-og-url" content="https://www.morachi.com.vn/">
 
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -1355,7 +1363,66 @@
     <script>
         const API_URL = "/api/products";
         const urlParams = new URLSearchParams(window.location.search);
-        const productId = urlParams.get('id');
+        const productId = urlParams.get('id'); // Giữ tương thích URL cũ product-detail.html?id=...
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        const productSlug = pathParts[0] === 'san-pham'
+            ? decodeURIComponent(pathParts.slice(1).join('/'))
+            : '';
+
+        function createProductSlug(text) {
+            return String(text || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/đ/g, 'd')
+                .replace(/Đ/g, 'D')
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '');
+        }
+
+        function findRequestedProduct(products) {
+            const list = Array.isArray(products) ? products : [];
+
+            if (productId) {
+                return list.find(p => String(p.id) === String(productId));
+            }
+
+            if (productSlug) {
+                return list.find(p => createProductSlug(p.slug || p.title) === productSlug);
+            }
+
+            return null;
+        }
+
+        function setMetaContent(selector, value) {
+            const element = document.querySelector(selector);
+            if (element) element.setAttribute('content', value || '');
+        }
+
+        function updateSeoMetadata(product) {
+            const slug = createProductSlug(product.slug || product.title || 'san-pham');
+            const seoPath = `/san-pham/${slug}`;
+            const canonicalUrl = `${window.location.origin}${seoPath}`;
+            const plainDescription = String(product.description || '')
+                .replace(/<[^>]*>/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+            const description = (plainDescription || `${product.title} chính hãng Nhật Bản tại MORACHI.`).slice(0, 160);
+            const imageUrl = new URL(product.thumbnail || 'images/icon-logo.png', window.location.origin).href;
+
+            document.title = `${product.title} | MORACHI`;
+            document.getElementById('seo-description')?.setAttribute('content', description);
+            document.getElementById('seo-canonical')?.setAttribute('href', canonicalUrl);
+            setMetaContent('#seo-og-title', `${product.title} | MORACHI`);
+            setMetaContent('#seo-og-description', description);
+            setMetaContent('#seo-og-image', imageUrl);
+            setMetaContent('#seo-og-url', canonicalUrl);
+
+            // URL cũ vẫn mở được nhưng sẽ được thay bằng URL SEO trên thanh địa chỉ.
+            if (window.location.pathname !== seoPath || window.location.search) {
+                window.history.replaceState({ productId: product.id }, '', seoPath);
+            }
+        }
 
         let currentProduct = null;
         let currentVariant = null;
@@ -1389,8 +1456,8 @@
 
         async function initDetail() {
             const root = document.getElementById('product-detail-root');
-            if (!productId) {
-                root.innerHTML = `<div style="background: white; padding: 50px; text-align: center; border-radius: 8px;">Không tìm thấy mã sản phẩm. <a href="/" style="color: var(--primary-red); font-weight:bold;">Quay về trang chủ</a></div>`;
+            if (!productId && !productSlug) {
+                root.innerHTML = `<div style="background: white; padding: 50px; text-align: center; border-radius: 8px;">Không tìm thấy sản phẩm. <a href="/" style="color: var(--primary-red); font-weight:bold;">Quay về trang chủ</a></div>`;
                 return;
             }
 
@@ -1400,7 +1467,7 @@
             if (cachedData) {
                 try {
                     const products = JSON.parse(cachedData);
-                    const product = products.find(p => p.id === productId);
+                    const product = findRequestedProduct(products);
                     if (product) {
                         currentProduct = product; 
                         renderProductDetail(product);
@@ -1416,7 +1483,7 @@
                 
                 sessionStorage.setItem(cacheKey, JSON.stringify(products));
 
-                const product = products.find(p => p.id === productId);
+                const product = findRequestedProduct(products);
 
                 if (!product) {
                     root.innerHTML = `<div style="background: white; padding: 50px; text-align: center; border-radius: 8px;">Sản phẩm không tồn tại hoặc đã bị xóa.</div>`;
@@ -1431,7 +1498,7 @@
         }
 
         function renderProductDetail(p) {
-            document.title = p.title + " | MORACHI";
+            updateSeoMetadata(p);
             document.getElementById('bread-brand').innerText = p.brand;
             document.getElementById('bread-title').innerText = p.title;
 

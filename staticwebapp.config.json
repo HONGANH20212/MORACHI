@@ -1,4 +1,10 @@
 {
+  "routes": [
+    {
+      "route": "/san-pham/*",
+      "rewrite": "/product-detail.html"
+    }
+  ],
   "navigationFallback": {
     "rewrite": "/index.html"
   },
