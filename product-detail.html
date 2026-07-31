@@ -12,7 +12,15 @@
     <meta property="og:title" id="seo-og-title" content="MORACHI - Chi tiết sản phẩm">
     <meta property="og:description" id="seo-og-description" content="Mỹ phẩm Nhật Bản chính hãng tại MORACHI.">
     <meta property="og:image" id="seo-og-image" content="https://www.morachi.com.vn/images/icon-logo.png">
+    <meta property="og:image:alt" id="seo-og-image-alt" content="MORACHI - Mỹ phẩm Nhật Bản chính hãng">
     <meta property="og:url" id="seo-og-url" content="https://www.morachi.com.vn/">
+    <meta name="robots" content="index,follow,max-image-preview:large">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" id="seo-twitter-title" content="MORACHI - Chi tiết sản phẩm">
+    <meta name="twitter:description" id="seo-twitter-description" content="Mỹ phẩm Nhật Bản chính hãng tại MORACHI.">
+    <meta name="twitter:image" id="seo-twitter-image" content="https://www.morachi.com.vn/images/icon-logo.png">
+    <link rel="image_src" id="seo-image-src" href="https://www.morachi.com.vn/images/icon-logo.png">
+    <script type="application/ld+json" id="product-structured-data">{}</script>
 
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -1408,15 +1416,72 @@
                 .replace(/\s+/g, ' ')
                 .trim();
             const description = (plainDescription || `${product.title} chính hãng Nhật Bản tại MORACHI.`).slice(0, 160);
-            const imageUrl = new URL(product.thumbnail || 'images/icon-logo.png', window.location.origin).href;
 
-            document.title = `${product.title} | MORACHI`;
+            // Ưu tiên ảnh chính, sau đó mới tới ảnh phân loại. Luôn đổi thành URL tuyệt đối để Google có thể crawl.
+            const rawImages = [
+                product.thumbnail,
+                ...(Array.isArray(product.variants) ? product.variants.map(v => v && v.image) : [])
+            ].filter(Boolean);
+            const imageUrls = [...new Set(rawImages.map(image =>
+                new URL(image, window.location.origin).href
+            ))];
+            const imageUrl = imageUrls[0] || new URL('images/icon-logo.png', window.location.origin).href;
+            const pageTitle = `${product.title} | MORACHI`;
+
+            document.title = pageTitle;
             document.getElementById('seo-description')?.setAttribute('content', description);
             document.getElementById('seo-canonical')?.setAttribute('href', canonicalUrl);
-            setMetaContent('#seo-og-title', `${product.title} | MORACHI`);
+            document.getElementById('seo-image-src')?.setAttribute('href', imageUrl);
+
+            setMetaContent('#seo-og-title', pageTitle);
             setMetaContent('#seo-og-description', description);
             setMetaContent('#seo-og-image', imageUrl);
+            setMetaContent('#seo-og-image-alt', product.title || 'Sản phẩm MORACHI');
             setMetaContent('#seo-og-url', canonicalUrl);
+            setMetaContent('#seo-twitter-title', pageTitle);
+            setMetaContent('#seo-twitter-description', description);
+            setMetaContent('#seo-twitter-image', imageUrl);
+
+            // Product structured data giúp Google hiểu ảnh nào thuộc đúng sản phẩm này.
+            const price = Number(String(product.current_price || '').replace(/[^0-9]/g, '')) || 0;
+            const variants = Array.isArray(product.variants) ? product.variants : [];
+            const hasAvailableVariant = variants.length === 0 || variants.some(v => {
+                const status = String(v && v.status || '').toLowerCase();
+                const stock = Number(v && v.stock);
+                return status === 'instock' || status === 'order' || stock > 0;
+            });
+
+            const structuredData = {
+                '@context': 'https://schema.org',
+                '@type': 'Product',
+                name: product.title || '',
+                image: imageUrls.length ? imageUrls : [imageUrl],
+                description,
+                sku: String(product.sku || product.id || ''),
+                brand: {
+                    '@type': 'Brand',
+                    name: product.brand || 'MORACHI'
+                },
+                offers: {
+                    '@type': 'Offer',
+                    url: canonicalUrl,
+                    priceCurrency: 'VND',
+                    price,
+                    itemCondition: 'https://schema.org/NewCondition',
+                    availability: hasAvailableVariant
+                        ? 'https://schema.org/InStock'
+                        : 'https://schema.org/OutOfStock',
+                    seller: {
+                        '@type': 'Organization',
+                        name: 'MORACHI'
+                    }
+                }
+            };
+
+            const structuredDataElement = document.getElementById('product-structured-data');
+            if (structuredDataElement) {
+                structuredDataElement.textContent = JSON.stringify(structuredData);
+            }
 
             // URL cũ vẫn mở được nhưng sẽ được thay bằng URL SEO trên thanh địa chỉ.
             if (window.location.pathname !== seoPath || window.location.search) {
