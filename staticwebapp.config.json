@@ -3,7 +3,7 @@
     {
       "route": "/admin*",
       "allowedRoles": [
-        "morachi-admin"
+        "morachiadmin"
       ],
       "headers": {
         "Cache-Control": "no-store"
