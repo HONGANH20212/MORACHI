@@ -958,21 +958,9 @@
         }
 
         function isOrderEditable(order) {
-            const status = normalizeText(order && order.status);
-
-            // Khách chỉ được hủy/chỉnh sửa khi đơn còn ở bước mới tạo/chờ xác nhận.
-            // Khi đã chuẩn bị, đang giao, hoàn thành/giao xong hoặc đã hủy thì khóa thao tác.
-            const lockedKeywords = [
-                "dang chuan bi",
-                "dang giao",
-                "da giao",
-                "hoan thanh",
-                "da hoan thanh",
-                "da huy"
-            ];
-
-            if (order && order.spx_tracking_code) return false;
-            return !lockedKeywords.some(keyword => status.includes(keyword));
+            // Tạm khóa toàn bộ chức năng khách tự chỉnh sửa/hủy đơn.
+            // Việc cập nhật đơn hàng chỉ thực hiện trong trang admin đã đăng nhập Entra ID.
+            return false;
         }
 
         function getOrderById(orderId) {
@@ -1266,7 +1254,7 @@
                 </div>
             ` : (cancelled ? "" : `
                 <div class="order-locked-note">
-                    <i class="fas fa-lock"></i> Đơn hàng đã chuyển sang bước xử lý nên không thể chỉnh sửa hoặc hủy. Vui lòng liên hệ Shop khi cần hỗ trợ.
+                    <i class="fas fa-lock"></i> Chức năng chỉnh sửa và hủy đơn trực tuyến đang tạm khóa để bảo vệ đơn hàng. Vui lòng liên hệ Shop khi cần hỗ trợ.
                 </div>
             `);
 
@@ -1305,30 +1293,7 @@
             `;
         }
 
-        async function fetchOrdersFallback(keyword) {
-            // Dự phòng cho trường hợp /api/track chưa được deploy bản mới.
-            // Không thay đổi dữ liệu, chỉ đọc /api/orders rồi lọc theo SĐT / mã đơn / mã vận đơn trên trình duyệt.
-            try {
-                const response = await fetch(`/api/orders?t=${Date.now()}&fallback_track=1`, { cache: "no-store" });
-                if (!response.ok) return [];
-                const orders = await response.json();
-                if (!Array.isArray(orders)) return [];
-
-                return orders.filter(order => orderMatchesTrackingQuery(order, keyword));
-            } catch (e) {
-                console.warn("Không thể fallback tra cứu từ /api/orders:", e);
-                return [];
-            }
-        }
-
-        function mergeTrackOrderLists(primary, fallback) {
-            const map = new Map();
-            [...(primary || []), ...(fallback || [])].forEach(order => {
-                const key = String(order.id || order._id || order.order_id || Math.random());
-                if (!map.has(key)) map.set(key, order);
-            });
-            return [...map.values()].sort((a, b) => new Date(b.created_at || b.date || 0) - new Date(a.created_at || a.date || 0));
-        }
+        // Bảo mật: chỉ tra cứu qua /api/track; không tải toàn bộ /api/orders về trình duyệt.
 
         async function fetchOrders() {
             const keyword = document.getElementById('search-phone').value.trim();
@@ -1358,9 +1323,11 @@
                 let orders = [];
                 try { orders = await response.json(); } catch (e) { orders = []; }
 
-                const apiTrackOrders = response.ok && Array.isArray(orders) ? orders : [];
-                const fallbackOrders = await fetchOrdersFallback(keyword);
-                const finalOrders = mergeTrackOrderLists(apiTrackOrders, fallbackOrders);
+                const finalOrders = response.ok && Array.isArray(orders)
+                    ? [...orders].sort((a, b) =>
+                        new Date(b.created_at || b.date || 0) - new Date(a.created_at || a.date || 0)
+                    )
+                    : [];
                 loadingDiv.style.display = "none";
 
                 if (!finalOrders.length) {
