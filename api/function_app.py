@@ -1,8 +1,9 @@
 import os
+import re
 import json
 import uuid
 import mimetypes
-from datetime import datetime
+from datetime import datetime, timedelta
 from email.parser import BytesParser
 from email.policy import default
 
@@ -19,16 +20,29 @@ COSMOS_DB_NAME = os.environ.get("COSMOS_DB_NAME", "morachi-db")
 COSMOS_CONTAINER_NAME = os.environ.get("COSMOS_CONTAINER_NAME", "products")
 
 BLOB_CONNECTION_STRING = os.environ.get("BLOB_CONNECTION_STRING")
+
 BLOB_CONTAINER_NAME = os.environ.get("BLOB_CONTAINER_NAME", "products")
+
+# --- CẤU HÌNH BẢO VỆ ĐƠN HÀNG ---
+ORDER_SHIPPING_FEE = int(os.environ.get("ORDER_SHIPPING_FEE", "15000"))
+ORDER_MAX_ITEMS = int(os.environ.get("ORDER_MAX_ITEMS", "20"))
+ORDER_MAX_QTY_PER_ITEM = int(os.environ.get("ORDER_MAX_QTY_PER_ITEM", "20"))
+ORDER_MAX_BODY_BYTES = int(os.environ.get("ORDER_MAX_BODY_BYTES", "65536"))
+ORDER_MAX_PER_PHONE_30M = int(os.environ.get("ORDER_MAX_PER_PHONE_30M", "3"))
+CORS_ALLOWED_ORIGIN = os.environ.get(
+    "CORS_ALLOWED_ORIGIN",
+    "https://www.morachi.com.vn"
+)
 
 # --- HÀM TRỢ GIÚP (HELPER FUNCTIONS) ---
 
 def cors_headers():
-    """Tạo headers cho phép truy cập từ trình duyệt (CORS)"""
+    """Chỉ cho frontend Morachi gọi API từ trình duyệt."""
     return {
-        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Origin": CORS_ALLOWED_ORIGIN,
         "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type"
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Vary": "Origin"
     }
 
 def json_response(data, status_code=200):
@@ -490,76 +504,565 @@ def merge_order_customer_update(existing_item, body):
 
     return merged_info, name, phone, address, updated_at
 
+
+# =========================================================
+# BẢO VỆ TẠO ĐƠN HÀNG
+# - Không tin giá, tổng tiền, tên sản phẩm hoặc trạng thái từ frontend
+# - Đọc sản phẩm/giá thật từ Cosmos DB
+# - Bắt buộc đủ thông tin khách hàng
+# - Chặn đơn rỗng, 0đ, trạng thái tự đặt và spam cùng SĐT
+# =========================================================
+
+BLOCKED_ORDER_TEXTS = {
+    "n/a",
+    "na",
+    "none",
+    "null",
+    "undefined",
+    "test",
+    "test user",
+    "test address",
+    "khong co",
+    "không có"
+}
+
+
+def parse_money_to_int(value):
+    """Chuyển 199000, '199.000đ' hoặc '199,000' thành số nguyên."""
+    if isinstance(value, bool):
+        return 0
+    if isinstance(value, (int, float)):
+        try:
+            return max(0, int(value))
+        except Exception:
+            return 0
+
+    digits = "".join(ch for ch in str(value or "") if ch.isdigit())
+    return int(digits) if digits else 0
+
+
+def parse_positive_int(value, default=0):
+    try:
+        number = int(value)
+        return number if number > 0 else default
+    except (TypeError, ValueError):
+        return default
+
+
+def is_blocked_order_text(value):
+    return clean_customer_text(value).lower() in BLOCKED_ORDER_TEXTS
+
+
+def validate_new_order_customer(body):
+    """Kiểm tra và trả về customer_info đã chuẩn hóa."""
+    info = body.get("customer_info", {})
+    if not isinstance(info, dict):
+        raise ValueError("Thông tin khách hàng không hợp lệ")
+
+    name = first_customer_value(
+        info.get("name"),
+        info.get("customer_name"),
+        body.get("customer_name"),
+        body.get("name")
+    )
+    phone = normalize_order_phone_for_lookup(
+        first_customer_value(
+            info.get("phone"),
+            info.get("customer_phone"),
+            body.get("customer_phone"),
+            body.get("phone")
+        )
+    )
+    detail = first_customer_value(
+        info.get("address"),
+        info.get("address_detail"),
+        body.get("address"),
+        body.get("address_detail")
+    )
+    ward = first_customer_value(
+        info.get("ward"),
+        info.get("ward_name"),
+        body.get("ward"),
+        body.get("ward_name")
+    )
+    district = first_customer_value(
+        info.get("dist"),
+        info.get("district"),
+        info.get("district_name"),
+        body.get("dist"),
+        body.get("district"),
+        body.get("district_name")
+    )
+    province = first_customer_value(
+        info.get("prov"),
+        info.get("province"),
+        info.get("city"),
+        info.get("province_name"),
+        body.get("prov"),
+        body.get("province"),
+        body.get("city"),
+        body.get("province_name")
+    )
+
+    if len(name) < 2 or len(name) > 100 or is_blocked_order_text(name):
+        raise ValueError("Họ tên người nhận không hợp lệ")
+
+    if not re.fullmatch(r"0\d{9}", phone):
+        raise ValueError("Số điện thoại phải có đúng 10 số và bắt đầu bằng 0")
+
+    if (
+        not detail
+        or not ward
+        or not district
+        or not province
+        or is_blocked_order_text(detail)
+    ):
+        raise ValueError(
+            "Vui lòng nhập đầy đủ địa chỉ cụ thể, Phường/Xã, "
+            "Quận/Huyện và Tỉnh/Thành phố"
+        )
+
+    if len(detail) < 3 or len(detail) > 300:
+        raise ValueError("Địa chỉ cụ thể không hợp lệ")
+
+    full_address = join_address_parts(detail, ward, district, province)
+    if len(full_address) < 10 or len(full_address) > 500:
+        raise ValueError("Địa chỉ nhận hàng không hợp lệ")
+
+    return {
+        "name": name,
+        "phone": phone,
+        "address": full_address,
+        "address_detail": detail,
+        "ward": ward,
+        "dist": district,
+        "district": district,
+        "prov": province,
+        "province": province
+    }
+
+
+def get_product_for_order(container, product_id):
+    """Không tin brand do frontend gửi; tìm sản phẩm bằng id trong database."""
+    query = """
+        SELECT * FROM c
+        WHERE c.id = @id
+          AND NOT IS_DEFINED(c.type)
+    """
+    items = list(container.query_items(
+        query=query,
+        parameters=[{"name": "@id", "value": product_id}],
+        enable_cross_partition_query=True
+    ))
+    return items[0] if items else None
+
+
+def find_product_variant(product, requested_name):
+    variants = product.get("variants", [])
+    if not isinstance(variants, list):
+        variants = []
+
+    if not variants:
+        return None
+
+    requested = clean_customer_text(requested_name).lower()
+    if not requested and len(variants) == 1:
+        return variants[0]
+
+    for variant in variants:
+        if not isinstance(variant, dict):
+            continue
+        if clean_customer_text(variant.get("name")).lower() == requested:
+            return variant
+
+    return None
+
+
+def validate_and_build_order_items(container, raw_items):
+    """Tự lấy tên, ảnh, giá và trạng thái sản phẩm từ Cosmos DB."""
+    if not isinstance(raw_items, list) or not raw_items:
+        raise ValueError("Đơn hàng phải có ít nhất một sản phẩm")
+
+    if len(raw_items) > ORDER_MAX_ITEMS:
+        raise ValueError("Đơn hàng có quá nhiều dòng sản phẩm")
+
+    # Gộp dòng trùng sản phẩm/phân loại để không thể lách giới hạn số lượng.
+    aggregated = {}
+    for raw in raw_items:
+        if not isinstance(raw, dict):
+            raise ValueError("Dữ liệu sản phẩm không hợp lệ")
+
+        product_id = clean_customer_text(raw.get("id"))
+        variant_name = clean_customer_text(raw.get("variant")) or "Mặc định"
+        quantity = parse_positive_int(raw.get("quantity"))
+
+        if not product_id:
+            raise ValueError("Thiếu mã sản phẩm")
+
+        if quantity < 1:
+            raise ValueError("Số lượng sản phẩm không hợp lệ")
+
+        key = (product_id, variant_name.lower())
+        if key not in aggregated:
+            aggregated[key] = {
+                "id": product_id,
+                "variant": variant_name,
+                "quantity": 0
+            }
+        aggregated[key]["quantity"] += quantity
+
+        if aggregated[key]["quantity"] > ORDER_MAX_QTY_PER_ITEM:
+            raise ValueError(
+                f"Số lượng tối đa cho một phân loại là "
+                f"{ORDER_MAX_QTY_PER_ITEM}"
+            )
+
+    safe_items = []
+    product_originals = {}
+    product_updates = {}
+
+    for row in aggregated.values():
+        product_id = row["id"]
+        requested_variant_name = row["variant"]
+        quantity = row["quantity"]
+
+        if product_id not in product_updates:
+            product = get_product_for_order(container, product_id)
+            if not product:
+                raise ValueError("Có sản phẩm không tồn tại hoặc đã bị xóa")
+
+            if clean_customer_text(product.get("status")).lower() != "active":
+                raise ValueError(
+                    f"Sản phẩm {clean_customer_text(product.get('title'))} "
+                    f"đang ngừng bán"
+                )
+
+            # Giữ bản gốc để rollback nếu cập nhật kho/tạo đơn lỗi.
+            product_originals[product_id] = json.loads(json.dumps(product))
+            product_updates[product_id] = product
+
+        product = product_updates[product_id]
+        variants = product.get("variants", [])
+        if not isinstance(variants, list):
+            variants = []
+
+        variant = find_product_variant(product, requested_variant_name)
+        if variants and not variant:
+            raise ValueError(
+                f"Phân loại '{requested_variant_name}' không tồn tại"
+            )
+
+        if variant:
+            variant_name = clean_customer_text(variant.get("name"))
+            unit_price = (
+                parse_money_to_int(variant.get("price"))
+                or parse_money_to_int(product.get("current_price"))
+            )
+            variant_status = (
+                clean_customer_text(variant.get("status")).lower()
+                or "instock"
+            )
+            image = (
+                clean_customer_text(variant.get("image"))
+                or clean_customer_text(product.get("thumbnail"))
+            )
+            expected_date = first_customer_value(
+                variant.get("date"),
+                variant.get("expected_date")
+            )
+
+            # Chỉ trừ kho với hàng có sẵn. Hàng order/out vẫn cho đặt trước.
+            if variant_status == "instock":
+                stock = parse_positive_int(variant.get("stock"), 0)
+                if stock < quantity:
+                    raise ValueError(
+                        f"Phân loại '{variant_name}' chỉ còn {stock} sản phẩm"
+                    )
+                variant["stock"] = stock - quantity
+                if variant["stock"] == 0:
+                    variant["status"] = "out"
+        else:
+            variant_name = "Mặc định"
+            unit_price = parse_money_to_int(product.get("current_price"))
+            variant_status = "instock"
+            image = clean_customer_text(product.get("thumbnail"))
+            expected_date = ""
+
+        if unit_price <= 0:
+            raise ValueError(
+                f"Giá sản phẩm '{clean_customer_text(product.get('title'))}' "
+                f"không hợp lệ"
+            )
+
+        line_total = unit_price * quantity
+        safe_items.append({
+            "id": product_id,
+            "title": clean_customer_text(product.get("title")),
+            "brand": clean_customer_text(product.get("brand")),
+            "image": image,
+            "variant": variant_name,
+            "price": unit_price,
+            "quantity": quantity,
+            "status": variant_status,
+            "date": expected_date,
+            "line_total": line_total
+        })
+
+    return safe_items, product_originals, product_updates
+
+
+def generate_order_code():
+    """Mã đơn do server tạo, không thể thành N/A."""
+    return "MO" + datetime.utcnow().strftime("%m%d%H%M%S") + uuid.uuid4().hex[:4].upper()
+
+
+def find_order_by_code(container, order_code):
+    query = """
+        SELECT TOP 1 * FROM c
+        WHERE c.type = 'order'
+          AND c.order_id = @order_id
+    """
+    found = list(container.query_items(
+        query=query,
+        parameters=[{"name": "@order_id", "value": order_code}],
+        enable_cross_partition_query=True
+    ))
+    return found[0] if found else None
+
+
+def order_code_exists(container, order_code):
+    return find_order_by_code(container, order_code) is not None
+
+
+def enforce_phone_order_limit(container, phone):
+    """Giới hạn cơ bản để giảm spam cùng một SĐT."""
+    cutoff = (datetime.utcnow() - timedelta(minutes=30)).isoformat() + "Z"
+    query = """
+        SELECT TOP 10 c.id FROM c
+        WHERE c.type = 'order'
+          AND c.customer_info.phone = @phone
+          AND c.created_at >= @cutoff
+          AND c.status != 'Đã hủy'
+    """
+    items = list(container.query_items(
+        query=query,
+        parameters=[
+            {"name": "@phone", "value": phone},
+            {"name": "@cutoff", "value": cutoff}
+        ],
+        enable_cross_partition_query=True
+    ))
+    if len(items) >= ORDER_MAX_PER_PHONE_30M:
+        raise PermissionError(
+            "Số điện thoại này đã tạo quá nhiều đơn trong 30 phút. "
+            "Vui lòng liên hệ Shop nếu cần hỗ trợ."
+        )
+
+
+def rollback_product_updates(container, originals, updated_ids):
+    """Cố gắng hoàn nguyên kho nếu tạo đơn bị lỗi giữa chừng."""
+    for product_id in reversed(updated_ids):
+        original = originals.get(product_id)
+        if not original:
+            continue
+        try:
+            container.replace_item(item=product_id, body=original)
+        except Exception as rollback_error:
+            print(
+                f"Không rollback được tồn kho sản phẩm "
+                f"{product_id}: {rollback_error}"
+            )
+
+
+
 # --- ROUTES ĐƠN HÀNG & TRỪ KHO ---
 
 @app.route(route="orders", methods=["GET", "POST", "OPTIONS"])
 def orders_api(req: func.HttpRequest) -> func.HttpResponse:
-    if req.method == "OPTIONS": return options_response()
+    if req.method == "OPTIONS":
+        return options_response()
+
     container = get_cosmos_container()
+
     try:
         if req.method == "GET":
             query = "SELECT * FROM c WHERE c.type = 'order'"
-            items = list(container.query_items(query=query, enable_cross_partition_query=True))
-            items.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+            items = list(container.query_items(
+                query=query,
+                enable_cross_partition_query=True
+            ))
+            items.sort(
+                key=lambda item: item.get("created_at", ""),
+                reverse=True
+            )
             return json_response(items)
 
-        if req.method == "POST":
-            body = req.get_json()
-            items_list = body.get("items", [])
-            
-            # --- LOGIC CẬP NHẬT KHO HÀNG (TRỪ STOCK) ---
-            for item in items_list:
-                p_id = item.get("id")
-                p_brand = item.get("brand") # Phải có brand để xác định Partition Key
-                v_name = item.get("variant")
-                ordered_qty = int(item.get("quantity", 0))
+        # Chặn payload quá lớn trước khi parse JSON.
+        raw_body = req.get_body()
+        if not raw_body:
+            return json_response({"error": "Thiếu dữ liệu đơn hàng"}, 400)
 
-                if p_id and p_brand:
-                    try:
-                        # Truy xuất sản phẩm để sửa
-                        product_doc = container.read_item(item=p_id, partition_key=p_brand)
-                        if "variants" in product_doc:
-                            updated = False
-                            for v in product_doc["variants"]:
-                                if v.get("name") == v_name:
-                                    # Thực hiện trừ số lượng
-                                    curr = int(v.get("stock", 0))
-                                    rem = max(0, curr - ordered_qty)
-                                    v["stock"] = rem
-                                    # Nếu hết hàng thì đổi trạng thái
-                                    if rem == 0: v["status"] = "out"
-                                    updated = True
-                                    break
-                            
-                            if updated:
-                                container.replace_item(item=p_id, body=product_doc)
-                    except Exception as ex:
-                        print(f"Lỗi trừ kho sản phẩm {p_id}: {str(ex)}")
+        if len(raw_body) > ORDER_MAX_BODY_BYTES:
+            return json_response({"error": "Dữ liệu đơn hàng quá lớn"}, 413)
 
-            # --- TẠO BẢN GHI ĐƠN HÀNG ---
-            now = datetime.utcnow().isoformat() + "Z"
-            customer_info = normalize_customer_info_for_order(body)
+        try:
+            body = json.loads(raw_body.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError):
+            return json_response({"error": "JSON không hợp lệ"}, 400)
 
-            order_data = {
-                "id": str(uuid.uuid4()),
-                "brand": "ORDER", # Gom tất cả đơn hàng vào 1 Partition Key để dễ truy vấn
-                "type": "order",
-                "order_id": body.get("order_id"),
-                "customer_info": customer_info,
-                "customer_address": customer_info.get("address", ""),
-                "items": items_list,
-                "total_amount": body.get("total_amount", 0),
-                "payment_method": body.get("payment_method", "cod"),
-                "status": body.get("status", "Chờ xác nhận"),
-                "spx_tracking_code": "",
-                "created_at": now,
-                "updated_at": now
-            }
+        if not isinstance(body, dict):
+            return json_response({"error": "Dữ liệu đơn hàng không hợp lệ"}, 400)
+
+        customer_info = validate_new_order_customer(body)
+
+        requested_order_code = clean_customer_text(
+            body.get("order_id")
+        ).upper()
+
+        if requested_order_code:
+            if not re.fullmatch(r"MO[A-Z0-9]{6,20}", requested_order_code):
+                return json_response(
+                    {"error": "Mã đơn hàng không hợp lệ"},
+                    400
+                )
+
+            existing_order = find_order_by_code(
+                container,
+                requested_order_code
+            )
+
+            # Chống gửi trùng: cùng mã đơn và cùng SĐT thì trả lại đơn cũ,
+            # không trừ kho và không tạo thêm bản ghi.
+            if existing_order:
+                if (
+                    get_order_phone_for_lookup(existing_order)
+                    == customer_info["phone"]
+                ):
+                    return json_response({
+                        "message": "Đơn hàng đã được ghi nhận trước đó",
+                        "order": existing_order,
+                        "duplicate": True
+                    }, 200)
+
+                return json_response(
+                    {"error": "Mã đơn hàng đã tồn tại"},
+                    409
+                )
+
+        enforce_phone_order_limit(container, customer_info["phone"])
+
+        payment_method = clean_customer_text(
+            body.get("payment_method")
+        ).lower()
+        if payment_method not in {"cod", "bank"}:
+            return json_response(
+                {"error": "Phương thức thanh toán không hợp lệ"},
+                400
+            )
+
+        safe_items, product_originals, product_updates = (
+            validate_and_build_order_items(
+                container,
+                body.get("items")
+            )
+        )
+
+        subtotal = sum(
+            int(item["line_total"])
+            for item in safe_items
+        )
+        total_amount = subtotal + ORDER_SHIPPING_FEE
+
+        if subtotal <= 0 or total_amount <= ORDER_SHIPPING_FEE:
+            return json_response(
+                {"error": "Tổng tiền đơn hàng không hợp lệ"},
+                400
+            )
+
+        # Giữ mã MO... hợp lệ do giao diện tạo để khớp nội dung VietQR.
+        # Khi frontend không gửi mã, backend tự tạo; không thể xuất hiện N/A.
+        order_code = requested_order_code or generate_order_code()
+        while order_code_exists(container, order_code):
+            order_code = generate_order_code()
+
+        status = (
+            "Chờ xác nhận đã chuyển khoản"
+            if payment_method == "bank"
+            else "Xác nhận đặt đơn Shipcod thành công"
+        )
+        payment_label = (
+            "Chuyển khoản VietQR"
+            if payment_method == "bank"
+            else "Ship COD"
+        )
+        payment_status = (
+            "Cần kiểm tra sao kê"
+            if payment_method == "bank"
+            else "Thu tiền khi giao hàng"
+        )
+
+        now = datetime.utcnow().isoformat() + "Z"
+        order_data = {
+            "id": str(uuid.uuid4()),
+            "brand": "ORDER",
+            "type": "order",
+            "order_id": order_code,
+            "customer_info": customer_info,
+            "customer_name": customer_info["name"],
+            "customer_phone": customer_info["phone"],
+            "customer_address": customer_info["address"],
+            "items": safe_items,
+            "products": safe_items,
+            "subtotal": subtotal,
+            "shipping_fee": ORDER_SHIPPING_FEE,
+            "total_amount": total_amount,
+            "total": total_amount,
+            "payment_method": payment_method,
+            "payment_label": payment_label,
+            "payment_status": payment_status,
+            "status": status,
+            "spx_tracking_code": "",
+            "security_validation": "server_v2",
+            "created_at": now,
+            "updated_at": now
+        }
+
+        # Chỉ cập nhật kho sau khi toàn bộ dữ liệu đã hợp lệ.
+        updated_product_ids = []
+        try:
+            for product_id, product_doc in product_updates.items():
+                # Chỉ replace khi dữ liệu sản phẩm thực sự có thể đã đổi stock.
+                container.replace_item(
+                    item=product_id,
+                    body=product_doc
+                )
+                updated_product_ids.append(product_id)
+
             container.create_item(body=order_data)
-            return json_response({"message": "Đặt hàng thành công", "order": order_data}, 201)
 
-    except Exception as e:
-        return json_response({"error": str(e)}, 500)
+        except Exception:
+            rollback_product_updates(
+                container,
+                product_originals,
+                updated_product_ids
+            )
+            raise
+
+        return json_response({
+            "message": "Đặt hàng thành công",
+            "order": order_data
+        }, 201)
+
+    except PermissionError as error:
+        return json_response({"error": str(error)}, 429)
+    except ValueError as error:
+        return json_response({"error": str(error)}, 400)
+    except Exception as error:
+        print(f"Lỗi tạo đơn hàng: {error}")
+        return json_response(
+            {"error": "Không thể tạo đơn hàng. Vui lòng thử lại sau."},
+            500
+        )
 
 
 # =========================================================

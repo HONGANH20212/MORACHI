@@ -1315,63 +1315,101 @@ async function executeOrderSubmit(btn, name, phone, address) {
     const provEl = document.getElementById('chk-province');
     const distEl = document.getElementById('chk-district');
     const wardEl = document.getElementById('chk-ward');
-    
-    const prov = provEl.options[provEl.selectedIndex] ? provEl.options[provEl.selectedIndex].text : '';
-    const dist = distEl.options[distEl.selectedIndex] ? distEl.options[distEl.selectedIndex].text : '';
-    const ward = wardEl.options[wardEl.selectedIndex] ? wardEl.options[wardEl.selectedIndex].text : '';
 
-    const orderId = currentCheckoutOrderId;
-    const checkedPayment = document.querySelector('input[name="chk-payment"]:checked');
+    const prov = provEl.options[provEl.selectedIndex]
+        ? provEl.options[provEl.selectedIndex].text
+        : '';
+    const dist = distEl.options[distEl.selectedIndex]
+        ? distEl.options[distEl.selectedIndex].text
+        : '';
+    const ward = wardEl.options[wardEl.selectedIndex]
+        ? wardEl.options[wardEl.selectedIndex].text
+        : '';
+
+    const checkedPayment =
+        document.querySelector('input[name="chk-payment"]:checked');
     const method = checkedPayment ? checkedPayment.value : 'cod';
-    const paymentLabel = method === 'bank' ? 'Chuyển khoản VietQR' : 'Ship COD';
-    const paymentStatus = method === 'bank' ? 'Cần kiểm tra sao kê' : 'Thu tiền khi giao hàng';
     const orderItems = cloneCheckoutItems(checkoutItems);
-    const totalAmount = orderItems.reduce((sum, item) => sum + (toPriceNumber(item.price) * Number(item.quantity || 1)), 0) + 15000;
-    
-    const orderData = {
-        order_id: orderId,
-        customer_info: { name, phone, address, prov, dist, ward },
-        customer_name: name,
-        customer_phone: phone,
-        customer_address: `${address}, ${ward}, ${dist}, ${prov}`.replace(/^,\s*|,\s*$/g, ''),
-        items: orderItems,
-        products: orderItems,
-        total_amount: totalAmount,
-        total: totalAmount,
-        payment_method: method,
-        payment_label: paymentLabel,
-        payment_status: paymentStatus,
-        status: method === 'bank' ? 'Chờ xác nhận đã chuyển khoản' : 'Xác nhận đặt đơn Shipcod thành công'
-    };
 
-    let allOrders = [];
-    try {
-        allOrders = JSON.parse(localStorage.getItem('morachi_orders') || '[]');
-        if (!Array.isArray(allOrders)) allOrders = [];
-    } catch (e) {
-        console.error('Dữ liệu morachi_orders bị lỗi, đã reset:', e);
-        allOrders = [];
-    }
-    allOrders.unshift(orderData);
-    localStorage.setItem('morachi_orders', JSON.stringify(allOrders));
+    // Frontend chỉ gửi id/phân loại/số lượng.
+    // Backend sẽ tự đọc tên, giá và tồn kho thật từ Cosmos DB.
+    const safeRequestItems = orderItems.map(item => ({
+        id: item.id,
+        variant: item.variant || 'Mặc định',
+        quantity: Number(item.quantity || 1)
+    }));
+
+    const orderData = {
+        order_id: currentCheckoutOrderId,
+        customer_info: {
+            name,
+            phone,
+            address,
+            prov,
+            dist,
+            ward
+        },
+        items: safeRequestItems,
+        payment_method: method
+    };
 
     try {
         const response = await fetch('/api/orders', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify(orderData)
         });
 
-        if (!response.ok) throw new Error("API lỗi");
+        let responseData = {};
+        try {
+            responseData = await response.json();
+        } catch (parseError) {}
 
-    } catch (error) {
-        console.error("Lỗi:", error);
-    } finally {
-        let orderCount = parseInt(localStorage.getItem('morachi_order_count') || '0');
+        if (!response.ok) {
+            throw new Error(
+                responseData.error ||
+                `Không thể tạo đơn hàng (HTTP ${response.status})`
+            );
+        }
+
+        const savedOrder = responseData.order || {};
+        const serverOrderId = savedOrder.order_id;
+
+        if (!serverOrderId) {
+            throw new Error(
+                'Máy chủ không trả về mã đơn hàng hợp lệ.'
+            );
+        }
+
+        // Chỉ lưu local và báo thành công sau khi backend đã tạo đơn thật.
+        let allOrders = [];
+        try {
+            allOrders = JSON.parse(
+                localStorage.getItem('morachi_orders') || '[]'
+            );
+            if (!Array.isArray(allOrders)) allOrders = [];
+        } catch (error) {
+            allOrders = [];
+        }
+
+        allOrders.unshift(savedOrder);
+        localStorage.setItem(
+            'morachi_orders',
+            JSON.stringify(allOrders)
+        );
+
+        let orderCount = parseInt(
+            localStorage.getItem('morachi_order_count') || '0'
+        );
         orderCount++;
-        localStorage.setItem('morachi_order_count', orderCount);
+        localStorage.setItem(
+            'morachi_order_count',
+            orderCount
+        );
 
-        showSuccessModal(name, orderId, method);
+        showSuccessModal(name, serverOrderId, method);
 
         if (!isBuyNowMode) {
             cart = [];
@@ -1381,10 +1419,99 @@ async function executeOrderSubmit(btn, name, phone, address) {
         checkoutItems = [];
         isBuyNowMode = false;
         closeCheckoutModal();
-        
-        if(textNode) textNode.innerText = "Đặt hàng";
+
+    } catch (error) {
+        console.error('Lỗi tạo đơn:', error);
+        showOrderSubmitErrorModal(
+            error.message ||
+            'Không thể tạo đơn hàng. Vui lòng thử lại.'
+        );
+
+    } finally {
+        if (textNode) textNode.innerText = 'Đặt hàng';
         btn.disabled = false;
     }
+}
+
+function showOrderSubmitErrorModal(message) {
+    const oldModal = document.getElementById(
+        'custom-order-error-modal'
+    );
+    if (oldModal) oldModal.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'custom-order-error-modal';
+    modal.style.cssText = [
+        'position:fixed',
+        'inset:0',
+        'z-index:999999',
+        'display:flex',
+        'align-items:center',
+        'justify-content:center',
+        'padding:18px',
+        'background:rgba(0,0,0,.58)'
+    ].join(';');
+
+    modal.innerHTML = `
+        <div style="
+            width:min(100%,420px);
+            overflow:hidden;
+            border-radius:16px;
+            background:#fff;
+            box-shadow:0 20px 60px rgba(0,0,0,.25);
+            font-family:Inter,Arial,sans-serif;
+        ">
+            <div style="
+                padding:24px 22px 16px;
+                text-align:center;
+                background:#fff3f4;
+            ">
+                <div style="
+                    width:58px;
+                    height:58px;
+                    margin:0 auto 12px;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    border-radius:50%;
+                    background:#d90c1c;
+                    color:#fff;
+                    font-size:25px;
+                ">
+                    <i class="fas fa-triangle-exclamation"></i>
+                </div>
+                <h3 style="
+                    margin:0;
+                    color:#b70d18;
+                    font-size:19px;
+                ">CHƯA TẠO ĐƯỢC ĐƠN</h3>
+            </div>
+            <div style="padding:20px 22px 22px;text-align:center;">
+                <p style="
+                    margin:0 0 18px;
+                    color:#555;
+                    font-size:14px;
+                    line-height:1.65;
+                ">${String(message || '').replace(/[<>&"']/g, '')}</p>
+                <button
+                    type="button"
+                    onclick="document.getElementById('custom-order-error-modal')?.remove()"
+                    style="
+                        width:100%;
+                        padding:13px;
+                        border:0;
+                        border-radius:10px;
+                        background:#c90d1b;
+                        color:#fff;
+                        font-weight:700;
+                        cursor:pointer;
+                    "
+                >Đóng</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
 }
 
 // ==============================================================
