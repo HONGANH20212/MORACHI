@@ -958,9 +958,21 @@
         }
 
         function isOrderEditable(order) {
-            // Tạm khóa toàn bộ chức năng khách tự chỉnh sửa/hủy đơn.
-            // Việc cập nhật đơn hàng chỉ thực hiện trong trang admin đã đăng nhập Entra ID.
-            return false;
+            const status = normalizeText(order && order.status);
+
+            // Khách chỉ được chỉnh sửa/hủy đúng 3 nhóm trạng thái dưới đây.
+            const editableStatuses = new Set([
+                "xac nhan dat don shipcod thanh cong",
+                "dang cho hang ve viet nam",
+                "cho xac nhan da chuyen khoan",
+                "cho xac nhan chuyen khoan"
+            ]);
+
+            // Khi đã có mã vận đơn SPX thì khóa thao tác để tránh đổi thông tin
+            // sau khi đơn đã được chuyển cho đơn vị vận chuyển.
+            if (order && order.spx_tracking_code) return false;
+
+            return editableStatuses.has(status);
         }
 
         function getOrderById(orderId) {
@@ -1003,41 +1015,6 @@
             return normalizeTrackPhone(
                 info.phone || c.phone || c.customer_phone || order.customer_phone || order.phone || order.receiver_phone || ""
             );
-        }
-
-        async function findOrderInAdminList(order) {
-            // Một số API /api/track chỉ trả order_id (MO...), trong khi /api/orders/:id cần id số trong admin.
-            // Vì vậy cần lấy danh sách admin để map lại id thật trước khi PUT.
-            try {
-                const response = await fetch(`/api/orders?t=${Date.now()}&resolve=1`, { cache: "no-store" });
-                if (!response.ok) return null;
-                const orders = await response.json();
-                if (!Array.isArray(orders)) return null;
-
-                const orderCode = String(order && order.order_id || "").trim();
-                const currentId = String(getOrderDbId(order) || "").trim();
-                const phone = getTrackOrderCustomerPhone(order);
-
-                return orders.find(item => {
-                    const itemCode = String(item.order_id || "").trim();
-                    const itemId = String(item.id || item._id || "").trim();
-                    const itemPhone = getTrackOrderCustomerPhone(item);
-                    return (orderCode && itemCode === orderCode)
-                        || (currentId && itemId === currentId)
-                        || (orderCode && itemCode === currentId)
-                        || (phone && itemPhone === phone && itemCode === orderCode);
-                }) || null;
-            } catch (e) {
-                console.warn("Không lấy được danh sách đơn admin để xác định id:", e);
-                return null;
-            }
-        }
-
-        async function resolveOrderForUpdate(order) {
-            const adminOrder = await findOrderInAdminList(order);
-            const sourceOrder = adminOrder || order || {};
-            const apiId = sourceOrder.id || sourceOrder._id || order.id || order._id || order.order_id;
-            return { apiId, sourceOrder };
         }
 
         function mergeOrderUpdatePayload(sourceOrder, changes) {
@@ -1091,42 +1068,99 @@
         }
 
         async function putOrderUpdate(order, changes) {
-            const resolved = await resolveOrderForUpdate(order);
-            if (!resolved.apiId) throw new Error("Không xác định được id đơn hàng để cập nhật.");
+            const orderIdentifier = String(
+                (order && order.order_id) ||
+                (order && order.id) ||
+                (order && order._id) ||
+                ""
+            ).trim();
 
-            const payload = mergeOrderUpdatePayload(resolved.sourceOrder, changes);
-            const idsToTry = [...new Set([
-                String(resolved.apiId),
-                String(order && order.id || ""),
-                String(order && order._id || ""),
-                String(order && order.order_id || "")
-            ].filter(Boolean))];
-
-            let lastError = null;
-            for (const id of idsToTry) {
-                try {
-                    const response = await fetch(`/api/orders/${encodeURIComponent(id)}`, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (response.ok) {
-                        try { return await response.json(); } catch (e) { return payload; }
-                    }
-                    lastError = new Error(`API trả lỗi ${response.status} khi cập nhật id ${id}`);
-                } catch (e) {
-                    lastError = e;
-                }
+            if (!orderIdentifier) {
+                throw new Error("Không xác định được mã đơn hàng.");
             }
-            throw lastError || new Error("Cập nhật thất bại.");
+
+            const lookupPhone = getTrackOrderCustomerPhone(order);
+            if (!lookupPhone) {
+                throw new Error("Không xác định được số điện thoại xác minh.");
+            }
+
+            const isCancelAction =
+                normalizeText(changes && changes.status) === "da huy";
+
+            let payload;
+
+            if (isCancelAction) {
+                payload = {
+                    action: "cancel",
+                    lookup_phone: lookupPhone,
+                    reason:
+                        (changes && changes.cancel_reason) ||
+                        "Khách hàng tự hủy trên trang tra cứu"
+                };
+            } else {
+                const info = (changes && changes.customer_info) || {};
+                payload = {
+                    action: "update_info",
+                    lookup_phone: lookupPhone,
+                    name: firstTrackValue(
+                        changes && changes.customer_name,
+                        changes && changes.name,
+                        info.name,
+                        info.customer_name
+                    ),
+                    phone: firstTrackValue(
+                        changes && changes.customer_phone,
+                        changes && changes.phone,
+                        info.phone,
+                        info.customer_phone
+                    ),
+                    address: firstTrackValue(
+                        changes && changes.customer_address,
+                        changes && changes.full_address,
+                        changes && changes.shipping_address,
+                        changes && changes.address,
+                        info.address,
+                        info.customer_address,
+                        info.full_address,
+                        info.shipping_address
+                    )
+                };
+            }
+
+            const response = await fetch(
+                `/api/customer-orders/${encodeURIComponent(orderIdentifier)}`,
+                {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                }
+            );
+
+            let responseData = {};
+            try {
+                responseData = await response.json();
+            } catch (e) {}
+
+            if (!response.ok) {
+                throw new Error(
+                    responseData.error ||
+                    `API trả lỗi ${response.status}`
+                );
+            }
+
+            return responseData;
         }
 
 
-        async function getLatestOrderFromServer(order) {
+        async function getLatestOrderFromServer(order, lookupPhone) {
             try {
-                const response = await fetch(`/api/orders?t=${Date.now()}&verify_customer_update=1`, { cache: "no-store" });
+                const response = await fetch(
+                    `/api/track?phone=${encodeURIComponent(lookupPhone)}&t=${Date.now()}`,
+                    { cache: "no-store" }
+                );
+
                 if (!response.ok) return null;
+
                 const orders = await response.json();
                 if (!Array.isArray(orders)) return null;
 
@@ -1136,7 +1170,8 @@
                 return orders.find(item => {
                     const itemCode = String(item.order_id || "").trim();
                     const itemId = String(item.id || item._id || "").trim();
-                    return (orderId && itemId === orderId) || (orderCode && itemCode === orderCode);
+                    return (orderId && itemId === orderId) ||
+                           (orderCode && itemCode === orderCode);
                 }) || null;
             } catch (e) {
                 console.warn("Không verify được dữ liệu đơn hàng sau khi lưu:", e);
@@ -1145,20 +1180,40 @@
         }
 
         async function verifyCustomerUpdateSaved(order, expected) {
-            const latest = await getLatestOrderFromServer(order);
+            const latest = await getLatestOrderFromServer(order, expected.phone);
             if (!latest) return false;
 
             const c = getCustomerInfo(latest);
             const expectedPhone = normalizeTrackPhone(expected.phone);
-            const savedPhone = normalizeTrackPhone(c.phone || latest.customer_phone || latest.phone || latest.receiver_phone || "");
-            const savedName = normalizeText(c.name || latest.customer_name || latest.name || latest.receiver_name || "");
+            const savedPhone = normalizeTrackPhone(
+                c.phone ||
+                latest.customer_phone ||
+                latest.phone ||
+                latest.receiver_phone ||
+                ""
+            );
+            const savedName = normalizeText(
+                c.name ||
+                latest.customer_name ||
+                latest.name ||
+                latest.receiver_name ||
+                ""
+            );
             const expectedName = normalizeText(expected.name || "");
-            const savedAddress = normalizeText(buildFullAddress(c) || latest.customer_address || latest.address || "");
+            const savedAddress = normalizeText(
+                buildFullAddress(c) ||
+                latest.customer_address ||
+                latest.address ||
+                ""
+            );
             const expectedAddress = normalizeText(expected.address || "");
 
             return savedPhone === expectedPhone
                 && savedName.includes(expectedName)
-                && (savedAddress.includes(expectedAddress) || expectedAddress.includes(savedAddress));
+                && (
+                    savedAddress.includes(expectedAddress) ||
+                    expectedAddress.includes(savedAddress)
+                );
         }
 
         function mergeOrderIntoCurrentList(orderId, changes) {
@@ -1254,7 +1309,7 @@
                 </div>
             ` : (cancelled ? "" : `
                 <div class="order-locked-note">
-                    <i class="fas fa-lock"></i> Chức năng chỉnh sửa và hủy đơn trực tuyến đang tạm khóa để bảo vệ đơn hàng. Vui lòng liên hệ Shop khi cần hỗ trợ.
+                    <i class="fas fa-lock"></i> Chỉ được chỉnh sửa hoặc hủy khi đơn ở trạng thái: Xác nhận đặt đơn Shipcod thành công, Đang chờ hàng về Việt Nam hoặc Chờ xác nhận đã chuyển khoản.
                 </div>
             `);
 
@@ -1293,7 +1348,7 @@
             `;
         }
 
-        // Bảo mật: chỉ tra cứu qua /api/track; không tải toàn bộ /api/orders về trình duyệt.
+        // Bảo mật: chỉ tra cứu qua /api/track; không tải toàn bộ /api/orders.
 
         async function fetchOrders() {
             const keyword = document.getElementById('search-phone').value.trim();
@@ -1325,7 +1380,8 @@
 
                 const finalOrders = response.ok && Array.isArray(orders)
                     ? [...orders].sort((a, b) =>
-                        new Date(b.created_at || b.date || 0) - new Date(a.created_at || a.date || 0)
+                        new Date(b.created_at || b.date || 0) -
+                        new Date(a.created_at || a.date || 0)
                     )
                     : [];
                 loadingDiv.style.display = "none";
@@ -1457,7 +1513,7 @@
                 // Verify lại từ server để tránh trường hợp API trả 200 nhưng backend chỉ lưu status/spx_tracking_code.
                 const verified = await verifyCustomerUpdateSaved(order, { name, phone, address });
                 if (!verified) {
-                    throw new Error("Backend chưa lưu customer_info/customer_phone/customer_address. Cần cập nhật api/function_app.py route /api/orders/{id}.");
+                    throw new Error("Máy chủ chưa lưu được thông tin khách hàng qua API customer-orders.");
                 }
 
                 closeEditOrderModal();
@@ -1469,7 +1525,7 @@
                 alert("✅ Đã cập nhật thông tin đơn hàng. Admin tải lại mục Đơn hàng sẽ thấy thông tin mới.");
             } catch (err) {
                 console.error("Lỗi cập nhật thông tin đơn hàng:", err);
-                alert("❌ Chưa lưu được vào máy chủ. Nguyên nhân thường là backend /api/orders/:id hiện chỉ lưu status/spx_tracking_code, chưa lưu customer_info/customer_phone/customer_address.");
+                alert("❌ Chưa lưu được vào máy chủ. Vui lòng thử lại hoặc liên hệ Shop.");
                 btn.disabled = false;
                 btn.innerHTML = `<i class="fas fa-save"></i> Lưu thay đổi`;
             }
@@ -1500,7 +1556,7 @@
                 await fetchOrders();
             } catch (err) {
                 console.error("Lỗi hủy đơn:", err);
-                alert("❌ Không hủy được đơn hàng. Vui lòng thử lại hoặc kiểm tra backend /api/orders/:id.");
+                alert("❌ Không hủy được đơn hàng. Vui lòng thử lại hoặc liên hệ Shop.");
             }
         }
 

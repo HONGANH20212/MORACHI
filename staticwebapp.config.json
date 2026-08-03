@@ -1,38 +1,86 @@
 {
   "routes": [
     {
+      "route": "/api/track",
+      "methods": [
+        "GET"
+      ],
+      "allowedRoles": [
+        "anonymous",
+        "authenticated"
+      ]
+    },
+    {
+      "route": "/api/customer-orders/*",
+      "methods": [
+        "PUT"
+      ],
+      "allowedRoles": [
+        "anonymous",
+        "authenticated"
+      ]
+    },
+    {
       "route": "/api/upload-image",
-      "methods": ["POST"],
-      "allowedRoles": ["morachiadmin"]
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "morachiadmin"
+      ]
     },
     {
       "route": "/api/products",
-      "methods": ["POST"],
-      "allowedRoles": ["morachiadmin"]
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "morachiadmin"
+      ]
     },
     {
       "route": "/api/products/reorder",
-      "methods": ["PUT"],
-      "allowedRoles": ["morachiadmin"]
+      "methods": [
+        "PUT"
+      ],
+      "allowedRoles": [
+        "morachiadmin"
+      ]
     },
     {
       "route": "/api/products/*",
-      "methods": ["PUT", "DELETE"],
-      "allowedRoles": ["morachiadmin"]
+      "methods": [
+        "PUT",
+        "DELETE"
+      ],
+      "allowedRoles": [
+        "morachiadmin"
+      ]
     },
     {
       "route": "/api/orders",
-      "methods": ["GET"],
-      "allowedRoles": ["morachiadmin"]
+      "methods": [
+        "GET"
+      ],
+      "allowedRoles": [
+        "morachiadmin"
+      ]
     },
     {
       "route": "/api/orders/*",
-      "methods": ["PUT", "DELETE"],
-      "allowedRoles": ["morachiadmin"]
+      "methods": [
+        "PUT",
+        "DELETE"
+      ],
+      "allowedRoles": [
+        "morachiadmin"
+      ]
     },
     {
       "route": "/admin*",
-      "allowedRoles": ["morachiadmin"],
+      "allowedRoles": [
+        "morachiadmin"
+      ],
       "headers": {
         "Cache-Control": "no-store"
       }

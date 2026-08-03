@@ -561,6 +561,198 @@ def orders_api(req: func.HttpRequest) -> func.HttpResponse:
     except Exception as e:
         return json_response({"error": str(e)}, 500)
 
+
+# =========================================================
+# API CÔNG KHAI RIÊNG CHO KHÁCH CHỈNH SỬA / HỦY ĐƠN
+# - Không dùng chung API quản trị /api/orders/{id}
+# - Chỉ cho phép khi đơn ở đúng trạng thái được cấu hình
+# - Khách phải gửi đúng số điện thoại hiện đang lưu trên đơn
+# - Không cho khách sửa giá, sản phẩm, thanh toán, mã vận đơn
+# =========================================================
+
+CUSTOMER_EDITABLE_STATUSES = {
+    "xac nhan dat don shipcod thanh cong",
+    "dang cho hang ve viet nam",
+    "cho xac nhan da chuyen khoan",
+    "cho xac nhan chuyen khoan"
+}
+
+
+def normalize_order_status_for_customer(value):
+    """Chuẩn hóa trạng thái tiếng Việt để so sánh ổn định."""
+    import unicodedata
+
+    text = str(value or "").strip().lower().replace("đ", "d")
+    text = unicodedata.normalize("NFD", text)
+    text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
+    return " ".join(text.split())
+
+
+def is_customer_order_editable(order):
+    """Khách chỉ được chỉnh sửa/hủy ở các trạng thái cho phép."""
+    if not isinstance(order, dict):
+        return False
+
+    status = normalize_order_status_for_customer(order.get("status"))
+
+    # Khi đã có mã vận đơn, không cho khách thay đổi thông tin giao hàng.
+    if clean_customer_text(order.get("spx_tracking_code")):
+        return False
+
+    return status in CUSTOMER_EDITABLE_STATUSES
+
+
+def find_order_for_customer_action(container, identifier):
+    """Tìm đơn bằng Cosmos id hoặc mã đơn hàng MO..."""
+    identifier = clean_customer_text(identifier)
+    if not identifier:
+        return None
+
+    try:
+        return container.read_item(item=identifier, partition_key="ORDER")
+    except Exception:
+        query = """
+            SELECT * FROM c
+            WHERE c.type = 'order'
+              AND c.order_id = @order_id
+        """
+        found = list(container.query_items(
+            query=query,
+            parameters=[{"name": "@order_id", "value": identifier}],
+            enable_cross_partition_query=True
+        ))
+        return found[0] if found else None
+
+
+@app.route(route="customer-orders/{id}", methods=["PUT", "OPTIONS"])
+def customer_order_action(req: func.HttpRequest) -> func.HttpResponse:
+    """
+    Endpoint công khai giới hạn cho trang tracking.html.
+
+    action=update_info:
+      - Chỉ sửa họ tên, số điện thoại và địa chỉ.
+
+    action=cancel:
+      - Chỉ đổi trạng thái sang Đã hủy và ghi lý do.
+    """
+    if req.method == "OPTIONS":
+        return options_response()
+
+    container = get_cosmos_container()
+    order_identifier = req.route_params.get("id")
+
+    try:
+        body = req.get_json()
+        if not isinstance(body, dict):
+            return json_response({"error": "Payload không hợp lệ"}, 400)
+
+        item = find_order_for_customer_action(container, order_identifier)
+        if not item:
+            return json_response({"error": "Không tìm thấy đơn hàng"}, 404)
+
+        lookup_phone = normalize_order_phone_for_lookup(body.get("lookup_phone"))
+        saved_phone = get_order_phone_for_lookup(item)
+
+        if not lookup_phone or lookup_phone != saved_phone:
+            return json_response(
+                {"error": "Số điện thoại xác minh không khớp với đơn hàng"},
+                403
+            )
+
+        if not is_customer_order_editable(item):
+            return json_response(
+                {
+                    "error": (
+                        "Đơn hàng không còn được phép chỉnh sửa hoặc hủy. "
+                        "Chỉ áp dụng khi trạng thái là: "
+                        "Xác nhận đặt đơn Shipcod thành công, "
+                        "Đang chờ hàng về Việt Nam hoặc "
+                        "Chờ xác nhận đã chuyển khoản."
+                    )
+                },
+                409
+            )
+
+        action = clean_customer_text(body.get("action")).lower()
+        now = datetime.utcnow().isoformat() + "Z"
+
+        if action == "update_info":
+            name = clean_customer_text(body.get("name"))
+            new_phone = normalize_order_phone_for_lookup(body.get("phone"))
+            address = clean_customer_text(body.get("address"))
+
+            if len(name) < 2 or len(name) > 100:
+                return json_response({"error": "Họ tên không hợp lệ"}, 400)
+
+            if len(new_phone) != 10 or not new_phone.startswith("0"):
+                return json_response({"error": "Số điện thoại không hợp lệ"}, 400)
+
+            if len(address) < 10 or len(address) > 500:
+                return json_response({"error": "Địa chỉ không hợp lệ"}, 400)
+
+            customer_info = item.get("customer_info", {})
+            if not isinstance(customer_info, dict):
+                customer_info = {}
+
+            customer_info.update({
+                "name": name,
+                "customer_name": name,
+                "phone": new_phone,
+                "customer_phone": new_phone,
+                "address": address,
+                "customer_address": address,
+                "full_address": address,
+                "shipping_address": address,
+                "updated_by_customer": True,
+                "customer_updated_at": now
+            })
+
+            item["customer_info"] = customer_info
+            item["customer_name"] = name
+            item["name"] = name
+            item["receiver_name"] = name
+            item["customer_phone"] = new_phone
+            item["phone"] = new_phone
+            item["receiver_phone"] = new_phone
+            item["customer_address"] = address
+            item["full_address"] = address
+            item["shipping_address"] = address
+            item["address"] = address
+            item["updated_by_customer"] = True
+            item["customer_updated_at"] = now
+            item["updated_at"] = now
+
+            container.replace_item(item=item["id"], body=item)
+            return json_response({
+                "message": "Đã cập nhật thông tin nhận hàng",
+                "item": item
+            })
+
+        if action == "cancel":
+            reason = clean_customer_text(body.get("reason"))
+            if len(reason) > 500:
+                return json_response({"error": "Lý do hủy quá dài"}, 400)
+
+            item["status"] = "Đã hủy"
+            item["cancel_reason"] = reason or "Khách hàng tự hủy trên trang tra cứu"
+            item["cancelled_by_customer"] = True
+            item["cancelled_at"] = now
+            item["updated_at"] = now
+
+            container.replace_item(item=item["id"], body=item)
+            return json_response({
+                "message": "Đã hủy đơn hàng",
+                "item": item
+            })
+
+        return json_response({"error": "Hành động không hợp lệ"}, 400)
+
+    except ValueError:
+        return json_response({"error": "Dữ liệu JSON không hợp lệ"}, 400)
+    except Exception as e:
+        return json_response({"error": str(e)}, 500)
+
+
 @app.route(route="orders/{id}", methods=["PUT", "DELETE", "OPTIONS"])
 def order_by_id(req: func.HttpRequest) -> func.HttpResponse:
     if req.method == "OPTIONS": return options_response()
