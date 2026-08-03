@@ -436,23 +436,40 @@ window.openCheckoutAddressEditor = async function(id = '') {
     body.innerHTML = `
         <form class="checkout-address-form" autocomplete="off" onsubmit="event.preventDefault(); saveCheckoutAddress();">
             <label>Họ và tên</label>
-            <input type="text" id="addr-name" placeholder="Nhập họ và tên" autocomplete="name" required>
+            <input
+                type="text"
+                id="addr-name"
+                placeholder="Nhập họ và tên"
+                autocomplete="name"
+                oninput="clearCheckoutAddressFieldError(this)"
+                required
+            >
 
             <label>Số điện thoại</label>
-            <input type="tel" id="addr-phone" placeholder="Nhập số điện thoại" autocomplete="tel" required>
+            <input
+                type="tel"
+                id="addr-phone"
+                placeholder="Nhập đủ 10 số, ví dụ 0912345678"
+                autocomplete="tel"
+                inputmode="numeric"
+                maxlength="10"
+                pattern="0[0-9]{9}"
+                oninput="this.value=this.value.replace(/\D/g,'').slice(0,10); clearCheckoutAddressFieldError(this)"
+                required
+            >
 
             <label>Tỉnh / Thành phố</label>
-            <select id="addr-province" onchange="checkoutAddressProvinceChanged()" required>
+            <select id="addr-province" onchange="clearCheckoutAddressFieldError(this); checkoutAddressProvinceChanged()" required>
                 <option value="">Tỉnh / Thành phố</option>
             </select>
 
             <label>Quận / Huyện</label>
-            <select id="addr-district" onchange="checkoutAddressDistrictChanged()" required>
+            <select id="addr-district" onchange="clearCheckoutAddressFieldError(this); checkoutAddressDistrictChanged()" required>
                 <option value="">Quận / Huyện</option>
             </select>
 
             <label>Phường / Xã</label>
-            <select id="addr-ward" required>
+            <select id="addr-ward" onchange="clearCheckoutAddressFieldError(this)" required>
                 <option value="">Phường / Xã</option>
             </select>
 
@@ -466,9 +483,17 @@ window.openCheckoutAddressEditor = async function(id = '') {
                     autocorrect="off"
                     autocapitalize="sentences"
                     spellcheck="false"
+                    oninput="clearCheckoutAddressFieldError(this)"
                     required
                 >
             </div>
+
+            <div
+                id="addr-form-error"
+                class="checkout-address-form-error"
+                role="alert"
+                aria-live="polite"
+            ></div>
 
             <label class="checkout-save-address-toggle">
                 <span>Lưu địa chỉ này</span>
@@ -528,36 +553,154 @@ window.checkoutAddressDistrictChanged = function() {
     (district?.wards || []).forEach(item => wardSelect.add(new Option(item.name, item.code)));
 };
 
+
+window.clearCheckoutAddressFieldError = function(element) {
+    if (!element) return;
+
+    element.classList.remove('checkout-field-invalid');
+    element.removeAttribute('aria-invalid');
+
+    const formError = document.getElementById('addr-form-error');
+    if (formError) {
+        formError.textContent = '';
+        formError.classList.remove('show');
+    }
+};
+
+function clearCheckoutAddressErrors() {
+    document.querySelectorAll('.checkout-address-form .checkout-field-invalid')
+        .forEach(element => {
+            element.classList.remove('checkout-field-invalid');
+            element.removeAttribute('aria-invalid');
+        });
+
+    const formError = document.getElementById('addr-form-error');
+    if (formError) {
+        formError.textContent = '';
+        formError.classList.remove('show');
+    }
+}
+
+function showCheckoutAddressError(message, element) {
+    clearCheckoutAddressErrors();
+
+    const formError = document.getElementById('addr-form-error');
+    if (formError) {
+        formError.innerHTML = `<i class="fas fa-circle-exclamation"></i><span>${checkoutEscapeHtml(message)}</span>`;
+        formError.classList.add('show');
+    }
+
+    if (element) {
+        element.classList.add('checkout-field-invalid');
+        element.setAttribute('aria-invalid', 'true');
+
+        try {
+            element.focus({ preventScroll: true });
+        } catch (error) {
+            element.focus();
+        }
+
+        element.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+    }
+}
+
+async function reopenCheckoutAddressEditorWithError(address, message, fieldId) {
+    await window.openCheckoutAddressEditor(address?.id || '');
+
+    window.setTimeout(() => {
+        showCheckoutAddressError(
+            message,
+            document.getElementById(fieldId)
+        );
+    }, 80);
+}
+
 window.saveCheckoutAddress = function() {
-    const name = document.getElementById('addr-name')?.value.trim() || '';
-    const phone = document.getElementById('addr-phone')?.value.trim() || '';
+    const nameInput = document.getElementById('addr-name');
+    const phoneInput = document.getElementById('addr-phone');
     const provinceSelect = document.getElementById('addr-province');
     const districtSelect = document.getElementById('addr-district');
     const wardSelect = document.getElementById('addr-ward');
-    const detail = document.getElementById('addr-address')?.value.trim() || '';
-    const saveOnDevice = document.getElementById('addr-save-address')?.checked !== false;
+    const detailInput = document.getElementById('addr-address');
+    const saveOnDevice =
+        document.getElementById('addr-save-address')?.checked !== false;
 
-    if (!name || !phone || !provinceSelect?.value || !districtSelect?.value || !wardSelect?.value || !detail) {
-        alert('Vui lòng nhập đầy đủ thông tin địa chỉ nhận hàng.');
+    const name = nameInput?.value.trim() || '';
+    const phone = String(phoneInput?.value || '')
+        .replace(/\D/g, '')
+        .slice(0, 10);
+    const detail = detailInput?.value.trim() || '';
+
+    if (phoneInput) phoneInput.value = phone;
+
+    if (!name) {
+        showCheckoutAddressError(
+            'Vui lòng nhập họ và tên người nhận.',
+            nameInput
+        );
         return;
     }
 
-    const phonePattern = /^(0|\+84)[0-9\s.-]{8,13}$/;
-    if (!phonePattern.test(phone)) {
-        alert('Số điện thoại chưa đúng định dạng.');
+    if (!/^0\d{9}$/.test(phone)) {
+        showCheckoutAddressError(
+            'Số điện thoại phải có đúng 10 số và bắt đầu bằng số 0. Ví dụ: 0912345678.',
+            phoneInput
+        );
         return;
     }
+
+    if (!provinceSelect?.value) {
+        showCheckoutAddressError(
+            'Vui lòng chọn Tỉnh / Thành phố.',
+            provinceSelect
+        );
+        return;
+    }
+
+    if (!districtSelect?.value) {
+        showCheckoutAddressError(
+            'Vui lòng chọn Quận / Huyện.',
+            districtSelect
+        );
+        return;
+    }
+
+    if (!wardSelect?.value) {
+        showCheckoutAddressError(
+            'Vui lòng chọn Phường / Xã.',
+            wardSelect
+        );
+        return;
+    }
+
+    if (!detail) {
+        showCheckoutAddressError(
+            'Vui lòng nhập địa chỉ cụ thể: số nhà, tên đường, thôn/xóm hoặc tòa nhà.',
+            detailInput
+        );
+        return;
+    }
+
+    clearCheckoutAddressErrors();
 
     const address = {
-        id: checkoutEditingAddressId || `addr_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        id:
+            checkoutEditingAddressId ||
+            `addr_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
         name,
         phone,
         provinceCode: provinceSelect.value,
-        provinceName: provinceSelect.options[provinceSelect.selectedIndex]?.text || '',
+        provinceName:
+            provinceSelect.options[provinceSelect.selectedIndex]?.text || '',
         districtCode: districtSelect.value,
-        districtName: districtSelect.options[districtSelect.selectedIndex]?.text || '',
+        districtName:
+            districtSelect.options[districtSelect.selectedIndex]?.text || '',
         wardCode: wardSelect.value,
-        wardName: wardSelect.options[wardSelect.selectedIndex]?.text || '',
+        wardName:
+            wardSelect.options[wardSelect.selectedIndex]?.text || '',
         address: detail,
         updatedAt: new Date().toISOString()
     };
@@ -566,9 +709,13 @@ window.saveCheckoutAddress = function() {
 
     if (saveOnDevice) {
         const addresses = getCheckoutSavedAddresses();
-        const index = addresses.findIndex(item => String(item.id) === String(address.id));
+        const index = addresses.findIndex(
+            item => String(item.id) === String(address.id)
+        );
+
         if (index >= 0) addresses[index] = address;
         else addresses.unshift(address);
+
         persistCheckoutSavedAddresses(addresses);
         setCheckoutSelectedAddressId(address.id);
         checkoutTemporaryAddress = null;
@@ -1050,15 +1197,72 @@ window.submitOrder = async function() {
     if(textNode) textNode.innerText = "Đang xử lý...";
 
     const name = document.getElementById('chk-name').value.trim();
-    const phone = document.getElementById('chk-phone').value.trim();
+    const phone = String(
+        document.getElementById('chk-phone').value || ''
+    ).replace(/\D/g, '').slice(0, 10);
     const address = document.getElementById('chk-address').value.trim();
-    
-    if (!name || !phone || !address || !document.getElementById('chk-province').value) {
-        alert("Vui lòng điền đầy đủ Thông tin giao hàng!");
-        if(textNode) textNode.innerText = "Đặt hàng";
+    const selectedAddress = getCheckoutSelectedAddress();
+
+    const resetSubmitButton = () => {
+        if (textNode) textNode.innerText = "Đặt hàng";
         btn.disabled = false;
+    };
+
+    if (!name) {
+        resetSubmitButton();
+        await reopenCheckoutAddressEditorWithError(
+            selectedAddress,
+            'Vui lòng nhập họ và tên người nhận.',
+            'addr-name'
+        );
         return;
     }
+
+    if (!/^0\d{9}$/.test(phone)) {
+        resetSubmitButton();
+        await reopenCheckoutAddressEditorWithError(
+            selectedAddress,
+            'Số điện thoại phải có đúng 10 số và bắt đầu bằng số 0. Ví dụ: 0912345678.',
+            'addr-phone'
+        );
+        return;
+    }
+
+    if (
+        !selectedAddress ||
+        !selectedAddress.provinceCode ||
+        !selectedAddress.districtCode ||
+        !selectedAddress.wardCode
+    ) {
+        resetSubmitButton();
+
+        const missingFieldId = !selectedAddress?.provinceCode
+            ? 'addr-province'
+            : (
+                !selectedAddress?.districtCode
+                    ? 'addr-district'
+                    : 'addr-ward'
+            );
+
+        await reopenCheckoutAddressEditorWithError(
+            selectedAddress,
+            'Vui lòng chọn đầy đủ Tỉnh / Thành phố, Quận / Huyện và Phường / Xã.',
+            missingFieldId
+        );
+        return;
+    }
+
+    if (!address) {
+        resetSubmitButton();
+        await reopenCheckoutAddressEditorWithError(
+            selectedAddress,
+            'Vui lòng nhập địa chỉ cụ thể: số nhà, tên đường, thôn/xóm hoặc tòa nhà.',
+            'addr-address'
+        );
+        return;
+    }
+
+    document.getElementById('chk-phone').value = phone;
 
     // Phòng trường hợp trình duyệt bị cache hoặc popup bị mở lại, không để đơn hàng gửi lên bị rỗng sản phẩm.
     if ((!checkoutItems || checkoutItems.length === 0) && Array.isArray(cart) && cart.length > 0) {
@@ -2015,6 +2219,36 @@ checkoutStyle.innerHTML = `
     }
     .checkout-address-form input:focus,
     .checkout-address-form select:focus { border-color: #d20e1d; box-shadow: 0 0 0 3px rgba(210,14,29,.07); }
+
+    .checkout-address-form .checkout-field-invalid {
+        border-color: #e30613 !important;
+        background: #fff8f8 !important;
+        box-shadow: 0 0 0 3px rgba(227, 6, 19, .08) !important;
+    }
+
+    .checkout-address-form-error {
+        display: none;
+        align-items: flex-start;
+        gap: 8px;
+        margin-top: 12px;
+        padding: 10px 12px;
+        border: 1px solid #fecaca;
+        border-radius: 9px;
+        background: #fff5f5;
+        color: #b91c1c;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.5;
+    }
+
+    .checkout-address-form-error.show {
+        display: flex;
+    }
+
+    .checkout-address-form-error i {
+        margin-top: 2px;
+        flex: 0 0 auto;
+    }
     .checkout-address-detail-wrap { position: relative; }
     .checkout-address-suggestions {
         position: absolute;
