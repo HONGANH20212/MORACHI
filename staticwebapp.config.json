@@ -1,12 +1,37 @@
 {
   "routes": [
     {
+      "route": "/admin*",
+      "allowedRoles": [
+        "morachi-admin"
+      ],
+      "headers": {
+        "Cache-Control": "no-store"
+      }
+    },
+    {
+      "route": "/login",
+      "redirect": "/.auth/login/aad?post_login_redirect_uri=/admin",
+      "statusCode": 302
+    },
+    {
+      "route": "/logout",
+      "redirect": "/.auth/logout?post_logout_redirect_uri=/",
+      "statusCode": 302
+    },
+    {
       "route": "/san-pham/*",
       "rewrite": "/product-detail.html"
     }
   ],
   "navigationFallback": {
     "rewrite": "/index.html"
+  },
+  "responseOverrides": {
+    "401": {
+      "redirect": "/.auth/login/aad?post_login_redirect_uri=.referrer",
+      "statusCode": 302
+    }
   },
   "globalHeaders": {
     "content-security-policy": "default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval';"
