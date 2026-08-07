@@ -4,23 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tra Cứu Đơn Hàng | MORACHI</title>
-    <link rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="/images/icon-logo.png?v=1">
-
-    <link rel="icon"
-        type="image/png"
-        sizes="192x192"
-        href="/images/icon-logo.png?v=1">
-
-    <link rel="apple-touch-icon"
-        href="/images/icon-logo.png?v=1">
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/icon-logo.png?v=1">
+    <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-logo.png?v=1">
+    <link rel="apple-touch-icon" href="/images/icon-logo.png?v=1">
 
     <meta name="theme-color" content="#b3131b">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="[https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap](https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap)" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css)">
     
     <style>
         :root {
@@ -46,7 +37,6 @@
         }
 
         * { box-sizing: border-box; }
-
         html { scroll-behavior: smooth; }
 
         body {
@@ -62,12 +52,8 @@
             overflow-x: hidden;
         }
 
-        button,
-        input,
-        textarea { font: inherit; }
-
-        button,
-        a { -webkit-tap-highlight-color: transparent; }
+        button, input, textarea { font: inherit; }
+        button, a { -webkit-tap-highlight-color: transparent; }
 
         .track-header {
             position: sticky;
@@ -193,8 +179,7 @@
             text-align: center;
         }
 
-        .lookup-card::before,
-        .lookup-card::after {
+        .lookup-card::before, .lookup-card::after {
             content: '';
             position: absolute;
             border-radius: 50%;
@@ -202,30 +187,23 @@
         }
 
         .lookup-card::before {
-            width: 240px;
-            height: 240px;
-            right: -110px;
-            top: -70px;
+            width: 240px; height: 240px;
+            right: -110px; top: -70px;
             background: radial-gradient(circle, rgba(206, 15, 29, 0.07), transparent 68%);
         }
 
         .lookup-card::after {
-            width: 160px;
-            height: 160px;
-            left: -86px;
-            bottom: -70px;
+            width: 160px; height: 160px;
+            left: -86px; bottom: -70px;
             background: radial-gradient(circle, rgba(242, 164, 173, 0.11), transparent 68%);
         }
 
         .lookup-content { position: relative; z-index: 1; }
 
         .icon-circle-lg {
-            width: 72px;
-            height: 72px;
+            width: 72px; height: 72px;
             margin: 0 auto 17px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             border-radius: 50%;
             background: linear-gradient(145deg, #fff3f4, #ffe5e8);
             color: var(--primary-red);
@@ -245,10 +223,7 @@
 
         .title-divider {
             margin: 17px 0 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
+            display: flex; align-items: center; justify-content: center; gap: 12px;
         }
 
         .title-divider span { width: 34px; height: 1px; background: #ef8b93; }
@@ -270,8 +245,7 @@
 
         .input-wrapper > i {
             position: absolute;
-            top: 50%;
-            left: 22px;
+            top: 50%; left: 22px;
             z-index: 2;
             transform: translateY(-50%);
             color: #a4a8b0;
@@ -302,21 +276,16 @@
 
         .clear-search-btn {
             position: absolute;
-            top: 50%;
-            right: 18px;
+            top: 50%; right: 18px;
             z-index: 3;
-            width: 30px;
-            height: 30px;
+            width: 30px; height: 30px;
             padding: 0;
             transform: translateY(-50%);
-            border: none;
-            border-radius: 50%;
+            border: none; border-radius: 50%;
             background: #b6bac2;
             color: #fff;
             cursor: pointer;
-            display: none;
-            align-items: center;
-            justify-content: center;
+            display: none; align-items: center; justify-content: center;
             font-size: 14px;
         }
 
@@ -331,12 +300,8 @@
             background: linear-gradient(90deg, #d90c1c 0%, #bf0d1a 100%);
             color: #fff;
             cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 13px;
-            font-size: 18px;
-            font-weight: 700;
+            display: inline-flex; align-items: center; justify-content: center; gap: 13px;
+            font-size: 18px; font-weight: 700;
             letter-spacing: .3px;
             box-shadow: 0 10px 24px rgba(206, 15, 29, 0.18);
             transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
@@ -349,13 +314,8 @@
 
         .security-note {
             margin: 20px 0 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 9px;
-            color: #80838b;
-            font-size: 13px;
-            line-height: 1.5;
+            display: flex; align-items: center; justify-content: center; gap: 9px;
+            color: #80838b; font-size: 13px; line-height: 1.5;
         }
 
         .security-note i { color: var(--success); font-size: 19px; }
@@ -370,13 +330,11 @@
 
         #results-container { width: 100%; margin-top: 18px; text-align: left; }
 
-        .empty-result,
-        .error-result {
+        .empty-result, .error-result {
             padding: 22px 18px;
             border-radius: var(--radius-md);
             text-align: center;
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 14px; font-weight: 600;
         }
 
         .empty-result { background: var(--primary-red-soft); color: var(--primary-red); border: 1px solid #ffd6da; }
@@ -393,10 +351,7 @@
         }
 
         .order-meta {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
+            display: flex; align-items: center; justify-content: space-between; gap: 16px;
             margin-bottom: 18px;
         }
 
@@ -405,18 +360,11 @@
         .order-date { color: #6f737d; font-size: 13px; white-space: nowrap; }
 
         .status-banner {
-            width: 100%;
-            min-height: 58px;
-            margin-bottom: 20px;
-            padding: 13px 17px;
-            border: 1px solid;
-            border-radius: 13px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 14px;
-            font-weight: 700;
-            line-height: 1.45;
+            width: 100%; min-height: 58px;
+            margin-bottom: 20px; padding: 13px 17px;
+            border: 1px solid; border-radius: 13px;
+            display: flex; align-items: center; gap: 12px;
+            font-size: 14px; font-weight: 700; line-height: 1.45;
         }
 
         .status-banner i { font-size: 21px; flex: 0 0 auto; }
@@ -426,61 +374,35 @@
         .status-cancelled { color: #a72430; background: var(--primary-red-soft); border-color: #f4c3c8; }
 
         .spx-box {
-            margin: -4px 0 20px;
-            padding: 14px 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 14px;
-            border: 1px dashed #efb6bb;
-            border-radius: 13px;
+            margin: -4px 0 20px; padding: 14px 16px;
+            display: flex; align-items: center; justify-content: space-between; gap: 14px;
+            border: 1px dashed #efb6bb; border-radius: 13px;
             background: #fffafa;
         }
 
         .spx-caption { color: #777b84; font-size: 12px; }
         .spx-code { margin-top: 4px; color: #22242a; font-size: 16px; font-weight: 700; word-break: break-all; }
         .spx-link {
-            flex: 0 0 auto;
-            padding: 9px 13px;
-            border-radius: 10px;
-            background: var(--primary-red);
-            color: #fff;
-            text-decoration: none;
-            font-size: 12px;
-            font-weight: 700;
+            flex: 0 0 auto; padding: 9px 13px; border-radius: 10px;
+            background: var(--primary-red); color: #fff; text-decoration: none;
+            font-size: 12px; font-weight: 700;
         }
 
         .customer-info-box {
             position: relative;
-            margin: 0 0 23px;
-            padding: 18px 18px 18px 88px;
-            min-height: 112px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 5px;
-            border: 1px solid #f3c8cc;
-            border-radius: 14px;
+            margin: 0 0 23px; padding: 18px 18px 18px 88px; min-height: 112px;
+            display: flex; flex-direction: column; justify-content: center; gap: 5px;
+            border: 1px solid #f3c8cc; border-radius: 14px;
             background: linear-gradient(110deg, #fff7f7 0%, #ffffff 72%);
-            color: #555962;
-            font-size: 14px;
-            line-height: 1.55;
+            color: #555962; font-size: 14px; line-height: 1.55;
         }
 
         .customer-avatar {
-            position: absolute;
-            left: 20px;
-            top: 50%;
-            width: 52px;
-            height: 52px;
-            transform: translateY(-50%);
+            position: absolute; left: 20px; top: 50%;
+            width: 52px; height: 52px; transform: translateY(-50%);
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #ffe6e8;
-            color: var(--primary-red);
-            font-size: 23px;
+            display: flex; align-items: center; justify-content: center;
+            background: #ffe6e8; color: var(--primary-red); font-size: 23px;
         }
 
         .customer-info-line { overflow-wrap: anywhere; }
@@ -490,88 +412,51 @@
 
         .order-section-title {
             margin: 0 0 13px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #24252a;
-            font-size: 16px;
-            font-weight: 700;
+            display: flex; align-items: center; gap: 10px;
+            color: #24252a; font-size: 16px; font-weight: 700;
         }
 
         .order-section-title i { color: var(--primary-red); font-size: 19px; }
 
         .order-product-list {
-            overflow: hidden;
-            border: 1px solid #e8e8ec;
-            border-radius: 14px;
+            overflow: hidden; border: 1px solid #e8e8ec; border-radius: 14px;
             background: #fff;
         }
 
         .order-product-row {
-            display: grid;
-            grid-template-columns: 58px minmax(0, 1fr) 44px 105px;
-            align-items: center;
-            gap: 13px;
-            min-height: 82px;
-            padding: 10px 12px;
+            display: grid; grid-template-columns: 58px minmax(0, 1fr) 44px 105px;
+            align-items: center; gap: 13px; min-height: 82px; padding: 10px 12px;
         }
 
         .order-product-row + .order-product-row { border-top: 1px solid #eeeeF1; }
 
         .order-product-image {
-            width: 58px;
-            height: 58px;
-            padding: 3px;
-            border: 1px solid #ececef;
-            border-radius: 10px;
-            background: #fff;
-            object-fit: contain;
+            width: 58px; height: 58px; padding: 3px;
+            border: 1px solid #ececef; border-radius: 10px;
+            background: #fff; object-fit: contain;
         }
 
-        .order-product-name {
-            color: #303239;
-            font-size: 13px;
-            line-height: 1.48;
-            overflow-wrap: anywhere;
-        }
-
+        .order-product-name { color: #303239; font-size: 13px; line-height: 1.48; overflow-wrap: anywhere; }
         .order-product-qty { color: #24262c; font-size: 13px; font-weight: 700; text-align: center; }
         .order-product-price { color: var(--primary-red); font-size: 13px; font-weight: 700; text-align: right; white-space: nowrap; }
 
         .order-total {
-            margin-top: 20px;
-            padding: 16px 20px;
-            border: 1px solid #f5c8cc;
-            border-radius: 14px;
+            margin-top: 20px; padding: 16px 20px;
+            border: 1px solid #f5c8cc; border-radius: 14px;
             background: linear-gradient(90deg, #fffafa, #fff5f6);
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 28px;
+            display: flex; align-items: center; justify-content: flex-end; gap: 28px;
         }
 
         .order-total-label { color: #202126; font-size: 16px; font-weight: 700; }
         .order-total-value { padding-left: 28px; border-left: 1px solid #efc5c9; color: var(--primary-red); font-size: 30px; font-weight: 800; line-height: 1.1; white-space: nowrap; }
 
-        .order-action-row {
-            margin-top: 16px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
+        .order-action-row { margin-top: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
         .order-action-btn {
-            min-height: 54px;
-            border: 1px solid;
-            border-radius: 13px;
-            background: #fff;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            font-size: 14px;
-            font-weight: 700;
+            min-height: 54px; border: 1px solid; border-radius: 13px;
+            background: #fff; cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+            font-size: 14px; font-weight: 700;
             transition: transform .2s ease, background .2s ease;
         }
 
@@ -582,48 +467,27 @@
         .btn-cancel-order:hover { background: #fff5f6; }
 
         .order-locked-note {
-            margin-top: 16px;
-            padding: 12px 14px;
-            border-radius: 12px;
-            background: #f6f7f9;
-            color: #767a83;
-            font-size: 12px;
-            line-height: 1.55;
+            margin-top: 16px; padding: 12px 14px; border-radius: 12px;
+            background: #f6f7f9; color: #767a83; font-size: 12px; line-height: 1.55;
         }
 
         .track-modal-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 9999;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(17, 18, 22, 0.54);
-            backdrop-filter: blur(4px);
+            position: fixed; inset: 0; z-index: 9999; padding: 16px;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(17, 18, 22, 0.54); backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
         }
 
         .track-modal-box {
-            width: min(100%, 520px);
-            max-height: calc(100dvh - 32px);
-            overflow-y: auto;
-            background: #fff;
-            border-radius: 20px;
+            width: min(100%, 520px); max-height: calc(100dvh - 32px);
+            overflow-y: auto; background: #fff; border-radius: 20px;
             box-shadow: 0 24px 70px rgba(0, 0, 0, .22);
         }
 
         .track-modal-head {
-            position: sticky;
-            top: 0;
-            z-index: 2;
-            padding: 18px 20px;
-            background: #fff7f7;
-            border-bottom: 1px solid #f2dfe1;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
+            position: sticky; top: 0; z-index: 2; padding: 18px 20px;
+            background: #fff7f7; border-bottom: 1px solid #f2dfe1;
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
         }
 
         .track-modal-head h3 { margin: 0; color: #202126; font-size: 16px; }
@@ -631,141 +495,31 @@
         .track-modal-body { padding: 20px; }
         .track-modal-field { margin-bottom: 14px; }
 
-        .track-modal-field label {
-            display: block;
-            margin-bottom: 7px;
-            color: #373940;
-            font-size: 12px;
-            font-weight: 700;
-        }
+        .track-modal-field label { display: block; margin-bottom: 7px; color: #373940; font-size: 12px; font-weight: 700; }
 
-        .track-modal-field input,
-        .track-modal-field textarea {
-            width: 100%;
-            padding: 12px 13px;
-            border: 1px solid #dedfe4;
-            border-radius: 11px;
-            outline: none;
-            color: #2c2e34;
-            font-size: 14px;
+        .track-modal-field input, .track-modal-field textarea {
+            width: 100%; padding: 12px 13px; border: 1px solid #dedfe4; border-radius: 11px;
+            outline: none; color: #2c2e34; font-size: 14px;
         }
 
         .track-modal-field textarea { min-height: 100px; resize: vertical; }
-        .track-modal-field input:focus,
-        .track-modal-field textarea:focus { border-color: #e4525e; box-shadow: 0 0 0 4px rgba(206, 15, 29, .07); }
+        .track-modal-field input:focus, .track-modal-field textarea:focus { border-color: #e4525e; box-shadow: 0 0 0 4px rgba(206, 15, 29, .07); }
 
         .track-modal-actions { margin-top: 18px; display: flex; justify-content: flex-end; gap: 10px; }
-        .modal-btn-secondary,
-        .modal-btn-primary { min-height: 44px; padding: 10px 16px; border: 0; border-radius: 10px; cursor: pointer; font-weight: 700; }
+        .modal-btn-secondary, .modal-btn-primary { min-height: 44px; padding: 10px 16px; border: 0; border-radius: 10px; cursor: pointer; font-weight: 700; }
         .modal-btn-secondary { background: #f1f2f4; color: #555962; }
         .modal-btn-primary { background: var(--primary-red); color: #fff; }
         .modal-btn-primary:disabled { opacity: .65; cursor: wait; }
 
-        .track-footer { display: none; }
-
-        @media (max-width: 680px) {
-            .track-header { padding: 8px; }
-            .track-header-shell { border-radius: 14px; }
-            .track-brand-row { min-height: 70px; padding: 10px 14px; }
-            .track-logo { gap: 9px; }
-            .track-logo img { width: 47px; height: 47px; }
-            .track-logo h1 { font-size: clamp(22px, 7vw, 30px); letter-spacing: .8px; }
-            .track-logo p { margin-top: 5px; font-size: 8px; letter-spacing: clamp(2.5px, 1.3vw, 5px); }
-            .messenger-top { min-width: auto; padding: 9px; gap: 7px; font-size: 13px; }
-            .messenger-top i { font-size: 22px; }
-            .track-nav a { min-height: 56px; gap: 10px; font-size: 15px; }
-            .track-nav a i { font-size: 20px; }
-
-            .track-wrapper { margin-top: 8px; padding: 0 8px; }
-            .lookup-card { padding: 25px 15px 22px; border-radius: 22px; }
-            .icon-circle-lg { width: 62px; height: 62px; margin-bottom: 14px; font-size: 27px; }
-            .track-title { font-size: clamp(29px, 9vw, 39px); }
-            .title-divider { margin: 13px 0 15px; }
-            .track-desc { margin-bottom: 20px; font-size: 14px; line-height: 1.62; }
-            .input-wrapper input { height: 58px; padding-left: 52px; padding-right: 50px; font-size: 16px; border-radius: 13px; }
-            .input-wrapper > i { left: 18px; font-size: 19px; }
-            .clear-search-btn { right: 14px; width: 28px; height: 28px; }
-            .btn-track { min-height: 58px; font-size: 16px; border-radius: 13px; }
-            .btn-track i { font-size: 19px; }
-            .security-note { margin-top: 17px; font-size: 12px; }
-
-            #results-container { margin-top: 14px; }
-            .order-card { padding: 20px 15px; border-radius: 22px; }
-            .order-meta { align-items: flex-start; gap: 8px; }
-            .order-id { font-size: 17px; }
-            .order-date { font-size: 11px; text-align: right; white-space: normal; }
-            .status-banner { min-height: 52px; padding: 11px 12px; font-size: 12.5px; }
-            .status-banner i { font-size: 18px; }
-            .customer-info-box { padding: 15px 12px 15px 68px; min-height: 105px; font-size: 12.5px; }
-            .customer-avatar { left: 13px; width: 44px; height: 44px; font-size: 20px; }
-            .order-section-title { font-size: 15px; }
-            .order-product-row { grid-template-columns: 48px minmax(0, 1fr) 30px; gap: 9px; min-height: 72px; padding: 9px; }
-            .order-product-image { width: 48px; height: 48px; border-radius: 8px; }
-            .order-product-name { font-size: 12px; line-height: 1.42; }
-            .order-product-qty { font-size: 12px; }
-            .order-product-price { grid-column: 2 / 4; margin-top: -2px; font-size: 12.5px; text-align: right; }
-            .order-total { padding: 14px 15px; gap: 16px; }
-            .order-total-label { font-size: 14px; }
-            .order-total-value { padding-left: 16px; font-size: clamp(23px, 7vw, 29px); }
-            .order-action-row { gap: 9px; }
-            .order-action-btn { min-height: 50px; padding: 9px; font-size: 12px; }
-            .order-locked-note { font-size: 11.5px; }
-
-            .track-modal-overlay { align-items: flex-end; padding: 0; }
-            .track-modal-box { max-height: 92dvh; border-radius: 22px 22px 0 0; }
-            .track-modal-body { padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); }
-        }
-
-        @media (max-width: 390px) {
-            .track-logo img { width: 42px; height: 42px; }
-            .track-logo h1 { font-size: 23px; }
-            .track-logo p { font-size: 7px; letter-spacing: 2.8px; }
-            .messenger-top span { display: none; }
-            .messenger-top i { font-size: 23px; }
-            .track-nav a { font-size: 14px; }
-            .lookup-card { padding-left: 12px; padding-right: 12px; }
-            .order-card { padding-left: 12px; padding-right: 12px; }
-            .order-total { justify-content: space-between; gap: 10px; }
-            .order-total-value { font-size: 23px; }
-            .order-action-btn { gap: 6px; font-size: 11.5px; }
-        }
-
-        @media (max-width: 340px) {
-            .track-logo h1 { font-size: 20px; }
-            .track-logo p { letter-spacing: 2px; }
-            .track-brand-row { padding-left: 10px; padding-right: 10px; }
-            .track-nav a { font-size: 13px; gap: 7px; }
-            .track-title { font-size: 28px; }
-            .order-action-row { grid-template-columns: 1fr; }
-            .order-total { align-items: flex-end; flex-direction: column; }
-            .order-total-value { width: 100%; padding: 10px 0 0; border-left: 0; border-top: 1px solid #efc5c9; text-align: right; }
-        }
-
-        @media (min-width: 900px) {
-            .track-wrapper { margin-top: 22px; }
-        }
-    
         .track-toast-container {
-            position: fixed;
-            top: 18px;
-            right: 16px;
-            z-index: 4000;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            width: min(92vw, 380px);
+            position: fixed; top: 18px; right: 16px; z-index: 4000;
+            display: flex; flex-direction: column; gap: 12px; width: min(92vw, 380px);
         }
 
         .track-toast {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 14px 16px;
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.98);
-            border: 1px solid #ececf0;
-            box-shadow: 0 18px 42px rgba(24, 25, 31, 0.16);
-            color: var(--text-dark);
+            display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px;
+            border-radius: 16px; background: rgba(255, 255, 255, 0.98); border: 1px solid #ececf0;
+            box-shadow: 0 18px 42px rgba(24, 25, 31, 0.16); color: var(--text-dark);
             animation: toastSlideIn .22s ease;
         }
 
@@ -775,222 +529,59 @@
         .track-toast.info { border-left: 5px solid var(--info); }
 
         .track-toast-icon {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex: 0 0 34px;
-            font-size: 15px;
-            margin-top: 1px;
+            width: 34px; height: 34px; border-radius: 50%;
+            display: inline-flex; align-items: center; justify-content: center;
+            flex: 0 0 34px; font-size: 15px; margin-top: 1px;
         }
 
-        .track-toast.success .track-toast-icon {
-            background: var(--success-soft);
-            color: var(--success);
-        }
+        .track-toast.success .track-toast-icon { background: var(--success-soft); color: var(--success); }
+        .track-toast.error .track-toast-icon { background: #fff1f3; color: var(--primary-red); }
+        .track-toast.warning .track-toast-icon { background: var(--warning-soft); color: var(--warning); }
+        .track-toast.info .track-toast-icon { background: var(--info-soft); color: var(--info); }
 
-        .track-toast.error .track-toast-icon {
-            background: #fff1f3;
-            color: var(--primary-red);
-        }
-
-        .track-toast.warning .track-toast-icon {
-            background: var(--warning-soft);
-            color: var(--warning);
-        }
-
-        .track-toast.info .track-toast-icon {
-            background: var(--info-soft);
-            color: var(--info);
-        }
-
-        .track-toast-content {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .track-toast-title {
-            margin: 0 0 3px;
-            font-size: 15px;
-            font-weight: 700;
-            color: #17181c;
-        }
-
-        .track-toast-message {
-            margin: 0;
-            font-size: 14px;
-            line-height: 1.6;
-            color: #535660;
-            white-space: pre-line;
-            word-break: break-word;
-        }
-
-        .track-toast-close {
-            border: none;
-            background: transparent;
-            color: #8d9199;
-            cursor: pointer;
-            font-size: 15px;
-            padding: 2px;
-            margin-left: 4px;
-        }
-
-        .track-ui-modal-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 3500;
-            background: rgba(17, 18, 23, 0.52);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 18px;
-            animation: fadeIn .2s ease;
-        }
-
-        .track-ui-modal-box {
-            width: min(100%, 520px);
-            background: rgba(255, 255, 255, 0.99);
-            border-radius: 22px;
-            box-shadow: 0 22px 60px rgba(15, 16, 20, 0.28);
-            overflow: hidden;
-            border: 1px solid rgba(236, 236, 240, 0.95);
-        }
-
-        .track-ui-modal-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 20px 22px 14px;
-            border-bottom: 1px solid #efeff3;
-        }
-
-        .track-ui-modal-head h3 {
-            margin: 0;
-            font-size: 20px;
-            line-height: 1.35;
-            color: #16171b;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .track-ui-modal-head h3 i {
-            color: var(--primary-red);
-            font-size: 17px;
-        }
-
-        .track-ui-modal-close {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            border: none;
-            background: #f4f5f7;
-            color: #5d6169;
-            cursor: pointer;
-            font-size: 14px;
-            flex: 0 0 34px;
-        }
-
-        .track-ui-modal-body {
-            padding: 18px 22px;
-        }
-
-        .track-ui-modal-body p {
-            margin: 0 0 14px;
-            color: #50535b;
-            line-height: 1.7;
-            font-size: 15px;
-            white-space: pre-line;
-        }
-
-        .track-ui-field {
-            margin-top: 10px;
-        }
-
-        .track-ui-field label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #24262d;
-        }
-
-        .track-ui-field textarea {
-            width: 100%;
-            min-height: 112px;
-            resize: vertical;
-            padding: 14px 15px;
-            border: 1px solid #d8dce3;
-            border-radius: 14px;
-            outline: none;
-            font: inherit;
-            color: #26282f;
-            background: #fff;
-        }
-
-        .track-ui-field textarea:focus {
-            border-color: #e4525e;
-            box-shadow: 0 0 0 4px rgba(206, 15, 29, 0.08);
-        }
-
-        .track-ui-modal-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            padding: 0 22px 22px;
-            flex-wrap: wrap;
-        }
-
-        .track-ui-btn {
-            min-width: 112px;
-            min-height: 46px;
-            padding: 11px 18px;
-            border-radius: 14px;
-            border: none;
-            cursor: pointer;
-            font: inherit;
-            font-weight: 700;
-            transition: transform .15s ease, filter .2s ease, box-shadow .2s ease;
-        }
-
-        .track-ui-btn:hover { filter: brightness(.98); }
-        .track-ui-btn:active { transform: translateY(1px); }
-        .track-ui-btn.secondary {
-            background: #f0f2f5;
-            color: #2a2d34;
-        }
-
-        .track-ui-btn.primary {
-            background: linear-gradient(90deg, #d90c1c 0%, #bf0d1a 100%);
-            color: #fff;
-            box-shadow: 0 10px 24px rgba(206, 15, 29, 0.18);
-        }
-
-        .track-ui-btn.danger {
-            background: linear-gradient(90deg, #e14b56 0%, #cc2430 100%);
-            color: #fff;
-            box-shadow: 0 10px 24px rgba(204, 36, 48, 0.16);
-        }
+        .track-toast-content { flex: 1; min-width: 0; }
+        .track-toast-title { margin: 0 0 3px; font-size: 15px; font-weight: 700; color: #17181c; }
+        .track-toast-message { margin: 0; font-size: 14px; line-height: 1.6; color: #535660; white-space: pre-line; word-break: break-word; }
+        .track-toast-close { border: none; background: transparent; color: #8d9199; cursor: pointer; font-size: 15px; padding: 2px; margin-left: 4px; }
 
         @keyframes toastSlideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-10px) translateX(6px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) translateX(0);
-            }
+            from { opacity: 0; transform: translateY(-10px) translateX(6px); }
+            to { opacity: 1; transform: translateY(0) translateX(0); }
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
+        @media (max-width: 680px) {
+            .track-header { padding: 8px; }
+            .track-header-shell { border-radius: 14px; }
+            .track-brand-row { min-height: 70px; padding: 10px 14px; }
+            .track-logo img { width: 47px; height: 47px; }
+            .track-logo h1 { font-size: clamp(22px, 7vw, 30px); letter-spacing: .8px; }
+            .track-logo p { margin-top: 5px; font-size: 8px; letter-spacing: clamp(2.5px, 1.3vw, 5px); }
+            .messenger-top { min-width: auto; padding: 9px; gap: 7px; font-size: 13px; }
+            .track-nav a { min-height: 56px; gap: 10px; font-size: 15px; }
 
+            .track-wrapper { margin-top: 8px; padding: 0 8px; }
+            .lookup-card { padding: 25px 15px 22px; border-radius: 22px; }
+            .icon-circle-lg { width: 62px; height: 62px; margin-bottom: 14px; font-size: 27px; }
+            .track-title { font-size: clamp(29px, 9vw, 39px); }
+            .input-wrapper input { height: 58px; padding-left: 52px; padding-right: 50px; font-size: 16px; border-radius: 13px; }
+            .input-wrapper > i { left: 18px; font-size: 19px; }
+            .clear-search-btn { right: 14px; width: 28px; height: 28px; }
+            .btn-track { min-height: 58px; font-size: 16px; border-radius: 13px; }
+
+            .order-card { padding: 20px 15px; border-radius: 22px; }
+            .order-meta { align-items: flex-start; gap: 8px; }
+            .order-id { font-size: 17px; }
+            .order-date { font-size: 11px; text-align: right; }
+            .customer-info-box { padding: 15px 12px 15px 68px; min-height: 105px; font-size: 12.5px; }
+            .customer-avatar { left: 13px; width: 44px; height: 44px; font-size: 20px; }
+            .order-product-row { grid-template-columns: 48px minmax(0, 1fr) 30px; gap: 9px; min-height: 72px; padding: 9px; }
+            .order-product-image { width: 48px; height: 48px; border-radius: 8px; }
+            .order-product-price { grid-column: 2 / 4; margin-top: -2px; font-size: 12.5px; text-align: right; }
+            .order-total { padding: 14px 15px; gap: 16px; }
+            .order-total-value { padding-left: 16px; font-size: clamp(23px, 7vw, 29px); }
+            .order-action-row { gap: 9px; }
+            .order-action-btn { min-height: 50px; padding: 9px; font-size: 12px; }
+        }
     </style>
 </head>
 <body>
@@ -1009,7 +600,7 @@
 
             <nav class="track-nav" aria-label="Điều hướng trang tra cứu">
                 <a href="/"><i class="fa-solid fa-house"></i><span>Trang chủ</span></a>
-                <a href="https://www.facebook.com/profile.php?id=61572066442519" target="_blank" rel="noopener noreferrer"><i class="fa-regular fa-comment-dots"></i><span>Mess</span></a>
+                <a href="[https://www.facebook.com/profile.php?id=61572066442519](https://www.facebook.com/profile.php?id=61572066442519)" target="_blank" rel="noopener noreferrer"><i class="fa-regular fa-comment-dots"></i><span>Mess</span></a>
             </nav>
         </div>
     </header>
@@ -1061,12 +652,9 @@
         <div id="results-container" aria-live="polite"></div>
     </main>
 
-    <footer class="track-footer" aria-hidden="true"></footer>
-
     <script>
         let currentTrackingPhone = "";
         let currentTrackingOrders = [];
-
 
         function toggleSearchClear() {
             const input = document.getElementById('search-phone');
@@ -1146,13 +734,8 @@
             const o = order || {};
             const c = o.customer_info || {};
             return Boolean(
-                o.updated_by_customer ||
-                o.customer_updated_at ||
-                o.customer_edit_at ||
-                o.cancelled_by_customer ||
-                c.updated_by_customer ||
-                c.customer_updated_at ||
-                c.customer_edit_at
+                o.updated_by_customer || o.customer_updated_at || o.customer_edit_at ||
+                o.cancelled_by_customer || c.updated_by_customer || c.customer_updated_at || c.customer_edit_at
             );
         }
 
@@ -1168,8 +751,6 @@
             const nestedEdited = Boolean(c.updated_by_customer || c.customer_updated_at || c.customer_edit_at);
             const topEdited = Boolean(o.updated_by_customer || o.customer_updated_at || o.customer_edit_at);
 
-            // Backend có thể lưu thông tin khách sửa ở top-level hoặc trong customer_info.
-            // Ưu tiên đúng nơi có dấu hiệu vừa được khách cập nhật để tránh hiển thị dữ liệu cũ.
             if (nestedEdited && !topEdited) return firstTrackValue(...nestedValues, ...topValues);
             if (topEdited && !nestedEdited) return firstTrackValue(...topValues, ...nestedValues);
             if (nestedEdited && topEdited) return firstTrackValue(...topValues, ...nestedValues);
@@ -1220,8 +801,6 @@
 
         function isOrderEditable(order) {
             const status = normalizeText(order && order.status);
-
-            // Khách chỉ được chỉnh sửa/hủy đúng 3 nhóm trạng thái dưới đây.
             const editableStatuses = new Set([
                 "xac nhan dat don shipcod thanh cong",
                 "dang cho hang ve viet nam",
@@ -1229,10 +808,7 @@
                 "cho xac nhan chuyen khoan"
             ]);
 
-            // Khi đã có mã vận đơn SPX thì khóa thao tác để tránh đổi thông tin
-            // sau khi đơn đã được chuyển cho đơn vị vận chuyển.
             if (order && order.spx_tracking_code) return false;
-
             return editableStatuses.has(status);
         }
 
@@ -1240,7 +816,6 @@
             const id = String(orderId || "");
             return currentTrackingOrders.find(o => String(getOrderDbId(o)) === id || String(o.order_id || "") === id);
         }
-
 
         function normalizeTrackPhone(value) {
             let digits = String(value ?? "").replace(/\D/g, "");
@@ -1253,23 +828,6 @@
             return String(value ?? "").toUpperCase().trim().replace(/[^A-Z0-9]/g, "");
         }
 
-        function orderMatchesTrackingQuery(order, keyword) {
-            const targetPhone = normalizeTrackPhone(keyword);
-            const targetCode = normalizeTrackCode(keyword);
-
-            if (targetPhone && getTrackOrderCustomerPhone(order) === targetPhone) return true;
-            if (!targetCode) return false;
-
-            return [
-                order && order.order_id,
-                order && order.spx_tracking_code,
-                order && order.tracking_code,
-                order && order.shipping_code,
-                order && order.id,
-                order && order._id
-            ].some(value => normalizeTrackCode(value) === targetCode);
-        }
-
         function getTrackOrderCustomerPhone(order) {
             const info = getCustomerInfo(order || {});
             const c = (order && order.customer_info) || {};
@@ -1278,224 +836,71 @@
             );
         }
 
-        function mergeOrderUpdatePayload(sourceOrder, changes) {
-            const source = sourceOrder || {};
-            const changesSafe = changes || {};
-            const oldInfo = source.customer_info || {};
-            const changesInfo = changesSafe.customer_info || {};
-            const nowIso = changesSafe.customer_updated_at || source.customer_updated_at || new Date().toISOString();
-
-            const nextInfo = {
-                ...oldInfo,
-                ...changesInfo
-            };
-
-            const customerName = firstTrackValue(changesSafe.customer_name, nextInfo.name, nextInfo.customer_name, source.customer_name, source.name, source.receiver_name);
-            const customerPhone = firstTrackValue(changesSafe.customer_phone, nextInfo.phone, nextInfo.customer_phone, source.customer_phone, source.phone, source.receiver_phone);
-            const customerAddress = firstTrackValue(changesSafe.customer_address, nextInfo.full_address, nextInfo.shipping_address, nextInfo.address, source.customer_address, source.shipping_address, source.full_address, source.address);
-
-            nextInfo.name = customerName;
-            nextInfo.customer_name = customerName;
-            nextInfo.phone = customerPhone;
-            nextInfo.customer_phone = customerPhone;
-            nextInfo.address = customerAddress;
-            nextInfo.full_address = customerAddress;
-            nextInfo.shipping_address = customerAddress;
-
-            if (changesInfo.updated_by_customer || changesSafe.updated_by_customer) {
-                nextInfo.updated_by_customer = true;
-                nextInfo.customer_updated_at = nowIso;
-            }
-
-            const merged = {
-                ...source,
-                ...changesSafe,
-                customer_info: nextInfo,
-                customer_name: customerName,
-                customer_phone: customerPhone,
-                customer_address: customerAddress,
-                full_address: customerAddress,
-                shipping_address: customerAddress
-            };
-
-            // Gửi thêm nhiều alias để backend cũ/mới đều nhận được.
-            merged.name = customerName;
-            merged.phone = customerPhone;
-            merged.address = customerAddress;
-            merged.receiver_name = customerName;
-            merged.receiver_phone = customerPhone;
-            merged.customer_updated_at = changesSafe.customer_updated_at || (changesSafe.updated_by_customer ? nowIso : source.customer_updated_at);
-            return merged;
-        }
-
-        async function putOrderUpdate(order, changes) {
-            const orderIdentifier = String(
-                (order && order.order_id) ||
-                (order && order.id) ||
-                (order && order._id) ||
-                ""
-            ).trim();
-
-            if (!orderIdentifier) {
-                throw new Error("Không xác định được mã đơn hàng.");
-            }
-
-            const lookupPhone = getTrackOrderCustomerPhone(order);
-            if (!lookupPhone) {
-                throw new Error("Không xác định được số điện thoại xác minh.");
-            }
-
-            const isCancelAction =
-                normalizeText(changes && changes.status) === "da huy";
-
-            let payload;
-
-            if (isCancelAction) {
-                payload = {
-                    action: "cancel",
-                    lookup_phone: lookupPhone,
-                    reason:
-                        (changes && changes.cancel_reason) ||
-                        "Khách hàng tự hủy trên trang tra cứu"
-                };
-            } else {
-                const info = (changes && changes.customer_info) || {};
-                payload = {
-                    action: "update_info",
-                    lookup_phone: lookupPhone,
-                    name: firstTrackValue(
-                        changes && changes.customer_name,
-                        changes && changes.name,
-                        info.name,
-                        info.customer_name
-                    ),
-                    phone: firstTrackValue(
-                        changes && changes.customer_phone,
-                        changes && changes.phone,
-                        info.phone,
-                        info.customer_phone
-                    ),
-                    address: firstTrackValue(
-                        changes && changes.customer_address,
-                        changes && changes.full_address,
-                        changes && changes.shipping_address,
-                        changes && changes.address,
-                        info.address,
-                        info.customer_address,
-                        info.full_address,
-                        info.shipping_address
-                    )
-                };
-            }
-
-            const response = await fetch(
-                `/api/customer-orders/${encodeURIComponent(orderIdentifier)}`,
-                {
-                    method: "PUT",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(payload)
-                }
-            );
-
-            let responseData = {};
-            try {
-                responseData = await response.json();
-            } catch (e) {}
-
-            if (!response.ok) {
-                throw new Error(
-                    responseData.error ||
-                    `API trả lỗi ${response.status}`
-                );
-            }
-
-            return responseData;
-        }
-
-
-        async function getLatestOrderFromServer(order, lookupPhone) {
-            try {
-                const response = await fetch(
-                    `/api/track?phone=${encodeURIComponent(lookupPhone)}&t=${Date.now()}`,
-                    { cache: "no-store" }
-                );
-
-                if (!response.ok) return null;
-
-                const orders = await response.json();
-                if (!Array.isArray(orders)) return null;
-
-                const orderCode = String(order && order.order_id || "").trim();
-                const orderId = String(order && (order.id || order._id) || "").trim();
-
-                return orders.find(item => {
-                    const itemCode = String(item.order_id || "").trim();
-                    const itemId = String(item.id || item._id || "").trim();
-                    return (orderId && itemId === orderId) ||
-                           (orderCode && itemCode === orderCode);
-                }) || null;
-            } catch (e) {
-                console.warn("Không verify được dữ liệu đơn hàng sau khi lưu:", e);
-                return null;
-            }
-        }
-
-        async function verifyCustomerUpdateSaved(order, expected) {
-            const latest = await getLatestOrderFromServer(order, expected.phone);
-            if (!latest) return false;
-
-            const c = getCustomerInfo(latest);
-            const expectedPhone = normalizeTrackPhone(expected.phone);
-            const savedPhone = normalizeTrackPhone(
-                c.phone ||
-                latest.customer_phone ||
-                latest.phone ||
-                latest.receiver_phone ||
-                ""
-            );
-            const savedName = normalizeText(
-                c.name ||
-                latest.customer_name ||
-                latest.name ||
-                latest.receiver_name ||
-                ""
-            );
-            const expectedName = normalizeText(expected.name || "");
-            const savedAddress = normalizeText(
-                buildFullAddress(c) ||
-                latest.customer_address ||
-                latest.address ||
-                ""
-            );
-            const expectedAddress = normalizeText(expected.address || "");
-
-            return savedPhone === expectedPhone
-                && savedName.includes(expectedName)
-                && (
-                    savedAddress.includes(expectedAddress) ||
-                    expectedAddress.includes(savedAddress)
-                );
-        }
-
-        function mergeOrderIntoCurrentList(orderId, changes) {
-            currentTrackingOrders = currentTrackingOrders.map(item => {
-                const same = String(getOrderDbId(item)) === String(orderId) || String(item.order_id || "") === String(orderId);
-                return same ? mergeOrderUpdatePayload(item, changes) : item;
-            });
+        // ==============================================================
+        // HÀM FETCHORDERS ĐÃ ĐƯỢC FIX SỬA LỖI TRA CỨU MÃ ĐƠN HÀNG MO...
+        // ==============================================================
+        async function fetchOrders() {
+            // Lấy trực tiếp chuỗi từ khóa nhập vào (giữ nguyên MÔ/MO638738/090...)
+            const keyword = document.getElementById('search-phone').value.trim();
             const resultsDiv = document.getElementById('results-container');
-            if (resultsDiv) resultsDiv.innerHTML = currentTrackingOrders.map(renderOrderCard).join('');
+            const loadingDiv = document.getElementById('loading');
+            
+            if (!keyword) {
+                showTrackToast("Vui lòng nhập số điện thoại, mã đơn hàng hoặc mã vận đơn để tra cứu!", "warning");
+                return;
+            }
+
+            currentTrackingPhone = keyword;
+            resultsDiv.innerHTML = "";
+            loadingDiv.style.display = "block";
+            toggleSearchClear();
+
+            const submitBtn = document.getElementById('track-submit-btn');
+            const oldSubmitHtml = submitBtn ? submitBtn.innerHTML : '';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>ĐANG TRA CỨU</span>';
+            }
+
+            try {
+                // Truyền trực tiếp từ khóa nguyên bản lên Server Backend
+                const response = await fetch(`/api/track?phone=${encodeURIComponent(keyword)}&t=${Date.now()}`, { cache: "no-store" });
+                let orders = [];
+                try { orders = await response.json(); } catch (e) { orders = []; }
+
+                const finalOrders = response.ok && Array.isArray(orders)
+                    ? [...orders].sort((a, b) =>
+                        new Date(b.created_at || b.date || 0) -
+                        new Date(a.created_at || a.date || 0)
+                    )
+                    : [];
+                loadingDiv.style.display = "none";
+
+                if (!finalOrders.length) {
+                    currentTrackingOrders = [];
+                    resultsDiv.innerHTML = `<div class="empty-result"><i class="fas fa-circle-exclamation"></i> Không tìm thấy đơn hàng phù hợp với thông tin tra cứu này.</div>`;
+                    return;
+                }
+
+                currentTrackingOrders = finalOrders;
+                resultsDiv.innerHTML = currentTrackingOrders.map(renderOrderCard).join('');
+            } catch (err) {
+                loadingDiv.style.display = "none";
+                resultsDiv.innerHTML = `<div class="error-result"><i class="fas fa-triangle-exclamation"></i> Lỗi kết nối máy chủ. Vui lòng thử lại sau.</div>`;
+            } finally {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = oldSubmitHtml || '<i class="fa-solid fa-magnifying-glass"></i><span>TRA CỨU</span>';
+                }
+            }
         }
 
         function formatDate(value) {
             const date = value ? new Date(value) : new Date();
             if (Number.isNaN(date.getTime())) return "";
             return date.toLocaleString('vi-VN', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
+                hour: '2-digit', minute: '2-digit', second: '2-digit',
+                day: '2-digit', month: '2-digit', year: 'numeric',
                 hour12: false
             });
         }
@@ -1553,7 +958,7 @@
                             <div class="spx-caption">Mã vận đơn Shopee Xpress (SPX)</div>
                             <div class="spx-code">${escapeTrackHtml(o.spx_tracking_code)}</div>
                         </div>
-                        <a class="spx-link" href="https://spx.vn" target="_blank" rel="noopener noreferrer"><i class="fas fa-location-arrow"></i> Theo dõi</a>
+                        <a class="spx-link" href="[https://spx.vn](https://spx.vn)" target="_blank" rel="noopener noreferrer"><i class="fas fa-location-arrow"></i> Theo dõi</a>
                     </div>
                 `;
             }
@@ -1609,64 +1014,6 @@
             `;
         }
 
-        // Bảo mật: chỉ tra cứu qua /api/track; không tải toàn bộ /api/orders.
-
-        async function fetchOrders() {
-            const keyword = document.getElementById('search-phone').value.trim();
-            const resultsDiv = document.getElementById('results-container');
-            const loadingDiv = document.getElementById('loading');
-            
-            if (!keyword) {
-                showTrackToast("Vui lòng nhập số điện thoại, mã đơn hàng hoặc mã vận đơn để tra cứu!", "warning");
-                return;
-            }
-
-            currentTrackingPhone = keyword;
-            resultsDiv.innerHTML = "";
-            loadingDiv.style.display = "block";
-            toggleSearchClear();
-
-            const submitBtn = document.getElementById('track-submit-btn');
-            const oldSubmitHtml = submitBtn ? submitBtn.innerHTML : '';
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>ĐANG TRA CỨU</span>';
-            }
-
-            try {
-                // Giữ tham số phone để tương thích backend cũ, backend mới sẽ hiểu là từ khóa tra cứu.
-                const response = await fetch(`/api/track?phone=${encodeURIComponent(keyword)}&t=${Date.now()}`, { cache: "no-store" });
-                let orders = [];
-                try { orders = await response.json(); } catch (e) { orders = []; }
-
-                const finalOrders = response.ok && Array.isArray(orders)
-                    ? [...orders].sort((a, b) =>
-                        new Date(b.created_at || b.date || 0) -
-                        new Date(a.created_at || a.date || 0)
-                    )
-                    : [];
-                loadingDiv.style.display = "none";
-
-                if (!finalOrders.length) {
-                    currentTrackingOrders = [];
-                    resultsDiv.innerHTML = `<div class="empty-result"><i class="fas fa-circle-exclamation"></i> Không tìm thấy đơn hàng phù hợp với thông tin tra cứu này.</div>`;
-                    return;
-                }
-
-                currentTrackingOrders = finalOrders;
-                resultsDiv.innerHTML = currentTrackingOrders.map(renderOrderCard).join('');
-            } catch (err) {
-                loadingDiv.style.display = "none";
-                resultsDiv.innerHTML = `<div class="error-result"><i class="fas fa-triangle-exclamation"></i> Lỗi kết nối máy chủ. Vui lòng thử lại sau.</div>`;
-            } finally {
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = oldSubmitHtml || '<i class="fa-solid fa-magnifying-glass"></i><span>TRA CỨU</span>';
-                }
-            }
-        }
-
-
         function ensureTrackToastContainer() {
             let container = document.getElementById("track-toast-container");
             if (!container) {
@@ -1679,349 +1026,29 @@
         }
 
         function showTrackToast(message, type = "info", title = "") {
-            const iconMap = {
-                success: "fa-circle-check",
-                error: "fa-circle-xmark",
-                warning: "fa-triangle-exclamation",
-                info: "fa-circle-info"
-            };
-
-            const titleMap = {
-                success: "Thành công",
-                error: "Có lỗi xảy ra",
-                warning: "Lưu ý",
-                info: "Thông báo"
-            };
+            const iconMap = { success: "fa-circle-check", error: "fa-circle-xmark", warning: "fa-triangle-exclamation", info: "fa-circle-info" };
+            const titleMap = { success: "Thành công", error: "Có lỗi xảy ra", warning: "Lưu ý", info: "Thông báo" };
 
             const container = ensureTrackToastContainer();
             const toast = document.createElement("div");
             toast.className = `track-toast ${type}`;
             toast.innerHTML = `
-                <div class="track-toast-icon">
-                    <i class="fas ${iconMap[type] || iconMap.info}"></i>
-                </div>
+                <div class="track-toast-icon"><i class="fas ${iconMap[type] || iconMap.info}"></i></div>
                 <div class="track-toast-content">
                     <h4 class="track-toast-title">${escapeTrackHtml(title || titleMap[type] || titleMap.info)}</h4>
                     <p class="track-toast-message">${escapeTrackHtml(String(message || ""))}</p>
                 </div>
-                <button type="button" class="track-toast-close" aria-label="Đóng">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button type="button" class="track-toast-close" aria-label="Đóng"><i class="fas fa-times"></i></button>
             `;
 
             const closeBtn = toast.querySelector(".track-toast-close");
-            const removeToast = () => {
-                if (toast && toast.parentNode) toast.remove();
-            };
-
+            const removeToast = () => { if (toast && toast.parentNode) toast.remove(); };
             closeBtn.addEventListener("click", removeToast);
             container.appendChild(toast);
             window.setTimeout(removeToast, 4200);
         }
 
-        function closeTrackUiModal() {
-            const modal = document.getElementById("track-ui-modal");
-            if (modal) modal.remove();
-        }
-
-        function showTrackUiModal(options = {}) {
-            closeTrackUiModal();
-
-            const modal = document.createElement("div");
-            modal.id = "track-ui-modal";
-            modal.className = "track-ui-modal-overlay";
-            modal.innerHTML = `
-                <div class="track-ui-modal-box">
-                    <div class="track-ui-modal-head">
-                        <h3><i class="fas ${escapeTrackHtml(options.icon || "fa-circle-info")}"></i>${escapeTrackHtml(options.title || "Thông báo")}</h3>
-                        <button type="button" class="track-ui-modal-close" aria-label="Đóng">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="track-ui-modal-body">
-                        ${options.message ? `<p>${escapeTrackHtml(options.message)}</p>` : ""}
-                        ${options.bodyHtml || ""}
-                    </div>
-                    <div class="track-ui-modal-actions">
-                        <button type="button" class="track-ui-btn secondary js-track-ui-cancel">${escapeTrackHtml(options.cancelText || "Đóng")}</button>
-                        <button type="button" class="track-ui-btn ${escapeTrackHtml(options.okVariant || "primary")} js-track-ui-ok">${escapeTrackHtml(options.okText || "Xác nhận")}</button>
-                    </div>
-                </div>
-            `;
-
-            document.body.appendChild(modal);
-
-            const closeBtn = modal.querySelector(".track-ui-modal-close");
-            const cancelBtn = modal.querySelector(".js-track-ui-cancel");
-            const okBtn = modal.querySelector(".js-track-ui-ok");
-
-            const cleanup = () => closeTrackUiModal();
-
-            closeBtn.addEventListener("click", cleanup);
-            cancelBtn.addEventListener("click", () => {
-                cleanup();
-                if (typeof options.onCancel === "function") options.onCancel();
-            });
-
-            okBtn.addEventListener("click", async () => {
-                if (typeof options.onOk === "function") {
-                    await options.onOk();
-                } else {
-                    cleanup();
-                }
-            });
-
-            return modal;
-        }
-
-        function openCancelOrderModal(orderId) {
-            const order = getOrderById(orderId);
-            if (!order) {
-                showTrackToast("Không tìm thấy đơn hàng cần hủy.", "warning");
-                return;
-            }
-
-            if (!isOrderEditable(order)) {
-                showTrackToast("Đơn hàng đã chuyển trạng thái xử lý nên không thể hủy.", "warning");
-                return;
-            }
-
-            const orderCode = order.order_id || order.id || "";
-            showTrackUiModal({
-                icon: "fa-ban",
-                title: `Hủy đơn ${orderCode}`,
-                message: "Bạn có thể nhập lý do hủy đơn để Shop dễ hỗ trợ hơn.",
-                bodyHtml: `
-                    <div class="track-ui-field">
-                        <label for="cancel-order-reason">Lý do hủy đơn</label>
-                        <textarea id="cancel-order-reason" placeholder="Ví dụ: Khách muốn đổi màu sản phẩm">${escapeTrackHtml("Đ")}</textarea>
-                    </div>
-                `,
-                cancelText: "Đóng",
-                okText: "Xác nhận hủy",
-                okVariant: "danger",
-                onOk: async () => {
-                    const modal = document.getElementById("track-ui-modal");
-                    const reasonEl = document.getElementById("cancel-order-reason");
-                    const okBtn = modal ? modal.querySelector(".js-track-ui-ok") : null;
-
-                    if (okBtn) {
-                        okBtn.disabled = true;
-                        okBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xử lý...';
-                    }
-
-                    const reason = reasonEl ? reasonEl.value.trim() : "";
-                    await submitCancelCustomerOrder(orderId, reason);
-                }
-            });
-        }
-
-        async function submitCancelCustomerOrder(orderId, reason) {
-            const order = getOrderById(orderId);
-            if (!order) {
-                showTrackToast("Không tìm thấy đơn hàng cần hủy.", "warning");
-                return;
-            }
-
-            const changes = {
-                status: "Đã hủy",
-                cancel_reason: reason || "Khách hàng tự hủy trên trang tra cứu",
-                cancelled_by_customer: true,
-                cancelled_at: new Date().toISOString()
-            };
-
-            try {
-                await putOrderUpdate(order, changes);
-                mergeOrderIntoCurrentList(orderId, changes);
-                closeTrackUiModal();
-                showTrackToast("Đã hủy đơn hàng thành công.", "success");
-                await fetchOrders();
-            } catch (err) {
-                console.error("Lỗi hủy đơn:", err);
-                const detail = err && err.message
-                    ? err.message
-                    : "Không xác định được nguyên nhân.";
-                showTrackToast("Không hủy được đơn hàng.\nChi tiết: " + detail, "error");
-                const modal = document.getElementById("track-ui-modal");
-                const okBtn = modal ? modal.querySelector(".js-track-ui-ok") : null;
-                if (okBtn) {
-                    okBtn.disabled = false;
-                    okBtn.textContent = "Xác nhận hủy";
-                }
-            }
-        }
-
-
-        function openEditOrderModal(orderId) {
-            const order = getOrderById(orderId);
-            if (!order) {
-                showTrackToast("Không tìm thấy đơn hàng cần chỉnh sửa.", "warning");
-                return;
-            }
-
-            if (!isOrderEditable(order)) {
-                showTrackToast("Đơn hàng đã chuyển trạng thái xử lý nên không thể chỉnh sửa thông tin.", "warning");
-                return;
-            }
-
-            const c = getCustomerInfo(order);
-            const modal = document.createElement("div");
-            modal.id = "edit-order-modal";
-            modal.className = "track-modal-overlay";
-            modal.innerHTML = `
-                <div class="track-modal-box">
-                    <div class="track-modal-head">
-                        <h3><i class="fas fa-pen"></i> Chỉnh sửa thông tin nhận hàng</h3>
-                        <button class="track-modal-close" onclick="closeEditOrderModal()"><i class="fas fa-times"></i></button>
-                    </div>
-                    <div class="track-modal-body">
-                        <div class="track-modal-field">
-                            <label>Họ và tên</label>
-                            <input id="edit-customer-name" type="text" value="${escapeTrackHtml(c.name)}" placeholder="Nhập họ tên người nhận">
-                        </div>
-                        <div class="track-modal-field">
-                            <label>Số điện thoại</label>
-                            <input id="edit-customer-phone" type="tel" value="${escapeTrackHtml(c.phone)}" placeholder="Nhập số điện thoại">
-                        </div>
-                        <div class="track-modal-field">
-                            <label>Địa chỉ nhận hàng</label>
-                            <textarea id="edit-customer-address" placeholder="Nhập địa chỉ đầy đủ">${escapeTrackHtml(buildFullAddress(c))}</textarea>
-                        </div>
-                        <div class="track-modal-actions">
-                            <button class="modal-btn-secondary" onclick="closeEditOrderModal()">Đóng</button>
-                            <button id="save-edit-order-btn" class="modal-btn-primary" onclick="saveCustomerOrderEdit('${escapeTrackHtml(orderId)}')">
-                                <i class="fas fa-save"></i> Lưu thay đổi
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-        }
-
-        function closeEditOrderModal() {
-            const modal = document.getElementById("edit-order-modal");
-            if (modal) modal.remove();
-        }
-
-        async function saveCustomerOrderEdit(orderId) {
-            const order = getOrderById(orderId);
-            if (!order) return showTrackToast("Không tìm thấy đơn hàng cần cập nhật.", "warning");
-            if (!isOrderEditable(order)) return showTrackToast("Đơn hàng đã chuyển trạng thái xử lý nên không thể chỉnh sửa thông tin.", "warning");
-
-            const name = document.getElementById("edit-customer-name").value.trim();
-            const phone = document.getElementById("edit-customer-phone").value.trim();
-            const address = document.getElementById("edit-customer-address").value.trim();
-            const btn = document.getElementById("save-edit-order-btn");
-
-            if (!name || !phone || !address) {
-                showTrackToast("Vui lòng nhập đầy đủ Họ tên, SĐT và Địa chỉ.", "warning");
-                return;
-            }
-
-            const normalizedNewPhone = normalizeTrackPhone(phone);
-            if (!/^0\d{9}$/.test(normalizedNewPhone)) {
-                showTrackToast(
-                    "Số điện thoại mới phải gồm 10 số và bắt đầu bằng 0.\nVí dụ: 0912345678",
-                    "warning"
-                );
-                return;
-            }
-
-            if (address.length < 10) {
-                showTrackToast("Địa chỉ nhận hàng phải có ít nhất 10 ký tự.", "warning");
-                return;
-            }
-
-            const updatedAt = new Date().toISOString();
-            const changes = {
-                customer_info: {
-                    name,
-                    customer_name: name,
-                    phone: normalizedNewPhone,
-                    customer_phone: normalizedNewPhone,
-                    address,
-                    customer_address: address,
-                    prov: "",
-                    dist: "",
-                    ward: "",
-                    full_address: address,
-                    shipping_address: address,
-                    updated_by_customer: true,
-                    customer_updated_at: updatedAt
-                },
-                customer_name: name,
-                customer_phone: normalizedNewPhone,
-                customer_address: address,
-                full_address: address,
-                shipping_address: address,
-                name,
-                phone: normalizedNewPhone,
-                address,
-                receiver_name: name,
-                receiver_phone: normalizedNewPhone,
-                updated_by_customer: true,
-                customer_updated_at: updatedAt
-            };
-
-            try {
-                btn.disabled = true;
-                btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Đang lưu...`;
-
-                const updatedOrderResponse = await putOrderUpdate(order, changes);
-                mergeOrderIntoCurrentList(orderId, changes);
-
-                // Verify lại từ server để tránh trường hợp API trả 200 nhưng backend chỉ lưu status/spx_tracking_code.
-                const verified = await verifyCustomerUpdateSaved(
-                    order,
-                    { name, phone: normalizedNewPhone, address }
-                );
-                if (!verified) {
-                    throw new Error("Máy chủ chưa lưu được thông tin khách hàng qua API customer-orders.");
-                }
-
-                closeEditOrderModal();
-
-                // Nếu khách đổi SĐT thì tự tra cứu lại bằng SĐT mới để kiểm tra dữ liệu đã lưu từ server.
-                document.getElementById('search-phone').value = normalizedNewPhone;
-                currentTrackingPhone = normalizedNewPhone;
-                await fetchOrders();
-                showTrackToast("Đã cập nhật thông tin đơn hàng thành công.", "success");
-            } catch (err) {
-                console.error("Lỗi cập nhật thông tin đơn hàng:", err);
-                const detail = err && err.message
-                    ? err.message
-                    : "Không xác định được nguyên nhân.";
-                showTrackToast(
-                    "Chưa lưu được vào máy chủ.\nChi tiết: " + detail,
-                    "error"
-                );
-                btn.disabled = false;
-                btn.innerHTML = `<i class="fas fa-save"></i> Lưu thay đổi`;
-            }
-        }
-
-
-        async function cancelCustomerOrder(orderId) {
-            openCancelOrderModal(orderId);
-        }
-
-
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'Escape') { closeEditOrderModal(); closeTrackUiModal(); }
-        });
-
-        document.addEventListener('click', function(event) {
-            if (event.target && event.target.classList.contains('track-modal-overlay')) {
-                closeEditOrderModal();
-            }
-            if (event.target && event.target.classList.contains('track-ui-modal-overlay')) {
-                closeTrackUiModal();
-            }
-        });
-
         toggleSearchClear();
-
     </script>
 </body>
 </html>
