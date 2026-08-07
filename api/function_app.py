@@ -407,6 +407,40 @@ def normalize_customer_info_for_order(body):
 
 
 
+ORDER_CODE_LOOKUP_FIELDS = (
+    "order_id",
+    "orderId",
+    "order_code",
+    "orderCode",
+    "order_number",
+    "orderNumber",
+    "code",
+)
+
+TRACKING_CODE_LOOKUP_FIELDS = (
+    "spx_tracking_code",
+    "tracking_code",
+    "trackingCode",
+    "shipping_code",
+    "shippingCode",
+    "waybill",
+    "waybill_code",
+)
+
+
+def normalize_order_code_for_lookup(value):
+    """Chuẩn hóa mã đơn/mã vận đơn để so khớp ổn định khi tra cứu.
+
+    NFKC giúp xử lý cả ký tự full-width khi khách copy/paste; sau đó loại
+    khoảng trắng, dấu gạch và ký tự ẩn, chỉ giữ A-Z/0-9 để so sánh.
+    """
+    text = clean_customer_text(value)
+    if not text:
+        return ""
+    text = unicodedata.normalize("NFKC", text)
+    return re.sub(r"[^A-Za-z0-9]", "", text).upper()
+
+
 def normalize_order_phone_for_lookup(value):
     """Chuẩn hóa SĐT để tra cứu/so sánh ổn định hơn."""
     digits = "".join(ch for ch in str(value or "") if ch.isdigit())
@@ -429,6 +463,81 @@ def get_order_phone_for_lookup(order):
         or order.get("phone")
         or order.get("receiver_phone")
     )
+
+
+def get_order_lookup_identifiers(order):
+    """Trả về toàn bộ mã đơn có thể tồn tại ở dữ liệu cũ/mới."""
+    if not isinstance(order, dict):
+        return []
+
+    values = [order.get(field) for field in ORDER_CODE_LOOKUP_FIELDS]
+
+    # Một số bản ghi cũ có thể bọc mã trong metadata/order_info.
+    for nested_key in ("metadata", "order_info", "orderInfo"):
+        nested = order.get(nested_key)
+        if isinstance(nested, dict):
+            values.extend(nested.get(field) for field in ORDER_CODE_LOOKUP_FIELDS)
+
+    # Cosmos id chỉ dùng như fallback cuối; không thay thế order_id hiển thị.
+    values.append(order.get("id"))
+    return [value for value in values if clean_customer_text(value)]
+
+
+def get_tracking_lookup_identifiers(order):
+    """Trả về các alias mã vận đơn/SPX ở dữ liệu cũ/mới."""
+    if not isinstance(order, dict):
+        return []
+
+    values = [order.get(field) for field in TRACKING_CODE_LOOKUP_FIELDS]
+    shipping = order.get("shipping")
+    if isinstance(shipping, dict):
+        values.extend(shipping.get(field) for field in TRACKING_CODE_LOOKUP_FIELDS)
+
+    return [value for value in values if clean_customer_text(value)]
+
+
+def is_order_document_for_lookup(order):
+    """Lọc document đơn hàng, tránh trả nhầm document sản phẩm từ Cosmos."""
+    if not isinstance(order, dict):
+        return False
+
+    if clean_customer_text(order.get("type")).lower() == "order":
+        return True
+    if clean_customer_text(order.get("brand")).upper() == "ORDER":
+        return True
+
+    # Dữ liệu đơn cũ có thể thiếu type/brand nhưng vẫn có mã đơn + thông tin khách/items.
+    has_order_code = any(clean_customer_text(order.get(field)) for field in ORDER_CODE_LOOKUP_FIELDS)
+    has_order_payload = (
+        isinstance(order.get("customer_info"), dict)
+        or bool(clean_customer_text(order.get("customer_phone")))
+        or isinstance(order.get("items"), list)
+        or isinstance(order.get("products"), list)
+    )
+    return has_order_code and has_order_payload
+
+
+def order_matches_lookup(order, keyword):
+    """So khớp một đơn với SĐT, mã đơn hoặc mã vận đơn."""
+    if not is_order_document_for_lookup(order):
+        return False
+
+    keyword_code = normalize_order_code_for_lookup(keyword)
+    target_phone = normalize_order_phone_for_lookup(keyword)
+
+    # Chỉ coi từ khóa là SĐT khi đủ 9 số trở lên; MO638738 không bị hiểu nhầm là phone.
+    if len(target_phone) >= 9 and get_order_phone_for_lookup(order) == target_phone:
+        return True
+
+    if keyword_code:
+        for value in get_order_lookup_identifiers(order):
+            if normalize_order_code_for_lookup(value) == keyword_code:
+                return True
+        for value in get_tracking_lookup_identifiers(order):
+            if normalize_order_code_for_lookup(value) == keyword_code:
+                return True
+
+    return False
 
 
 def merge_order_customer_update(existing_item, body):
@@ -1333,21 +1442,62 @@ def order_by_id(req: func.HttpRequest) -> func.HttpResponse:
 
 @app.route(route="track", methods=["GET", "OPTIONS"])
 def track_order(req: func.HttpRequest) -> func.HttpResponse:
-    if req.method == "OPTIONS": return options_response()
-    phone = req.params.get("phone")
-    if not phone: return json_response({"error": "Thiếu số điện thoại"}, 400)
-    
+    if req.method == "OPTIONS":
+        return options_response()
+
+    # q là tham số chuẩn mới. Vẫn nhận phone/keyword để không làm hỏng frontend cũ.
+    keyword = clean_customer_text(
+        req.params.get("q")
+        or req.params.get("phone")
+        or req.params.get("keyword")
+    )
+    if not keyword:
+        return json_response({"error": "Thiếu thông tin tra cứu"}, 400)
+
+    # Chặn input bất thường nhưng vẫn đủ rộng cho mã vận đơn.
+    if len(keyword) > 100:
+        return json_response({"error": "Thông tin tra cứu không hợp lệ"}, 400)
+
     try:
         container = get_cosmos_container()
-        target_phone = normalize_order_phone_for_lookup(phone)
 
-        # Tìm theo nhiều field SĐT để sau khi khách đổi 1212 -> 1213 vẫn tra cứu được bằng SĐT mới.
-        # Cách này giữ tương thích với đơn cũ có customer_info.phone và đơn mới có customer_phone/phone.
-        query = "SELECT * FROM c WHERE c.type = 'order'"
-        all_orders = list(container.query_items(query=query, enable_cross_partition_query=True))
-        items = [order for order in all_orders if get_order_phone_for_lookup(order) == target_phone]
+        # Lấy candidate đơn hàng từ cả cấu trúc mới và dữ liệu cũ.
+        # Sau đó so khớp bằng Python đã normalize để xử lý hoa/thường, dấu gạch,
+        # khoảng trắng, NBSP/zero-width và ký tự full-width một cách nhất quán.
+        query = """
+            SELECT * FROM c
+            WHERE c.type = 'order'
+               OR c.brand = 'ORDER'
+               OR IS_DEFINED(c.order_id)
+               OR IS_DEFINED(c.orderId)
+               OR IS_DEFINED(c.order_code)
+               OR IS_DEFINED(c.orderCode)
+               OR IS_DEFINED(c.order_number)
+               OR IS_DEFINED(c.orderNumber)
+        """
+        candidates = list(container.query_items(
+            query=query,
+            enable_cross_partition_query=True
+        ))
 
+        items = [
+            order for order in candidates
+            if order_matches_lookup(order, keyword)
+        ]
         items.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+
+        # Debug có chủ đích để xác nhận đúng backend đã deploy.
+        if req.params.get("debug") == "1":
+            return json_response({
+                "track_version": "v3-unified-order-lookup",
+                "keyword": keyword,
+                "normalized_code": normalize_order_code_for_lookup(keyword),
+                "normalized_phone": normalize_order_phone_for_lookup(keyword),
+                "candidate_count": len(candidates),
+                "matched": len(items),
+                "items": items
+            })
+
         return json_response(items)
     except Exception as e:
         return json_response({"error": str(e)}, 500)
