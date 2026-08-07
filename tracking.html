@@ -1609,25 +1609,10 @@
             `;
         }
 
-        function normalizeTrackingKeyword(value) {
-            let text = String(value || '').trim();
-            try { text = text.normalize('NFKC'); } catch (e) {}
-
-            // Với mã đơn/mã vận đơn: bỏ khoảng trắng/dấu gạch/ký tự lạ và chuẩn hóa uppercase.
-            // Với SĐT: chỉ giữ số để tránh khoảng trắng khi copy/paste.
-            const digitsOnly = text.replace(/\D/g, '');
-            if (digitsOnly.length >= 9 && /^[+\d\s().-]+$/.test(text)) {
-                return digitsOnly;
-            }
-
-            return text.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-        }
-
         // Bảo mật: chỉ tra cứu qua /api/track; không tải toàn bộ /api/orders.
 
         async function fetchOrders() {
-            const rawKeyword = document.getElementById('search-phone').value;
-            const keyword = normalizeTrackingKeyword(rawKeyword);
+            const keyword = document.getElementById('search-phone').value.trim();
             const resultsDiv = document.getElementById('results-container');
             const loadingDiv = document.getElementById('loading');
             
@@ -1649,24 +1634,17 @@
             }
 
             try {
-                // q là tham số tra cứu chung mới: SĐT / mã đơn / mã vận đơn.
-                const response = await fetch(`/api/track?q=${encodeURIComponent(keyword)}&t=${Date.now()}`, { cache: "no-store" });
-                let payload = [];
-                try { payload = await response.json(); } catch (e) { payload = []; }
+                // Giữ tham số phone để tương thích backend cũ, backend mới sẽ hiểu là từ khóa tra cứu.
+                const response = await fetch(`/api/track?phone=${encodeURIComponent(keyword)}&t=${Date.now()}`, { cache: "no-store" });
+                let orders = [];
+                try { orders = await response.json(); } catch (e) { orders = []; }
 
-                if (!response.ok) {
-                    const message = payload && payload.error
-                        ? payload.error
-                        : `Tra cứu thất bại (HTTP ${response.status})`;
-                    throw new Error(message);
-                }
-
-                const orders = Array.isArray(payload) ? payload : [];
-                const finalOrders = [...orders]
-                    .sort((a, b) =>
+                const finalOrders = response.ok && Array.isArray(orders)
+                    ? [...orders].sort((a, b) =>
                         new Date(b.created_at || b.date || 0) -
                         new Date(a.created_at || a.date || 0)
-                    );
+                    )
+                    : [];
                 loadingDiv.style.display = "none";
 
                 if (!finalOrders.length) {
@@ -1678,12 +1656,8 @@
                 currentTrackingOrders = finalOrders;
                 resultsDiv.innerHTML = currentTrackingOrders.map(renderOrderCard).join('');
             } catch (err) {
-                console.error('Lỗi tra cứu đơn hàng:', err);
                 loadingDiv.style.display = "none";
-                const message = err && err.message
-                    ? err.message
-                    : 'Lỗi kết nối máy chủ. Vui lòng thử lại sau.';
-                resultsDiv.innerHTML = `<div class="error-result"><i class="fas fa-triangle-exclamation"></i> ${escapeTrackHtml(message)}</div>`;
+                resultsDiv.innerHTML = `<div class="error-result"><i class="fas fa-triangle-exclamation"></i> Lỗi kết nối máy chủ. Vui lòng thử lại sau.</div>`;
             } finally {
                 if (submitBtn) {
                     submitBtn.disabled = false;
