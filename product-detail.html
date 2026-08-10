@@ -1220,7 +1220,157 @@
             .pd-selector-product-image { width: 72px; height: 72px; }
         }
 
-    </style>
+    
+
+        /* =============================================================
+           MORACHI - MOBILE PRODUCT DETAIL REFRESH
+           Ưu tiên hiển thị ẢNH + GIÁ trong phần đầu trang trên điện thoại
+           ============================================================= */
+        .pd-save-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 30px;
+            padding: 6px 10px;
+            border-radius: 10px;
+            background: #fff1f1;
+            color: var(--primary-red);
+            font-size: 14px;
+            font-weight: 800;
+            line-height: 1;
+        }
+        .pd-service-card {
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .pd-wrapper.pd-hero-card {
+                display: block !important;
+                padding: 12px !important;
+                gap: 0 !important;
+                margin-bottom: 0 !important;
+                background: #fff !important;
+                border-radius: 0 !important;
+            }
+            .pd-gallery {
+                width: 100% !important;
+                margin-bottom: 8px !important;
+            }
+            .pd-main-img {
+                aspect-ratio: 1 / 1;
+                height: auto !important;
+                padding: 8px;
+                border-radius: 16px;
+                margin-bottom: 8px;
+            }
+            .pd-thumbs {
+                gap: 8px;
+                margin-bottom: 4px;
+            }
+            .pd-thumb {
+                width: 46px;
+                height: 46px;
+                padding: 3px;
+            }
+            .pd-info {
+                min-width: 0;
+                padding-top: 0 !important;
+            }
+            .pd-brand {
+                font-size: 10px;
+                margin-bottom: 4px;
+                letter-spacing: .4px;
+            }
+            .pd-title {
+                font-size: 18px !important;
+                line-height: 1.32;
+                margin: 0 0 6px;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+            .pd-meta-line {
+                margin-bottom: 8px;
+                gap: 8px;
+                font-size: 11px;
+            }
+            .pd-price-box {
+                margin-bottom: 4px;
+                gap: 8px;
+                flex-wrap: wrap;
+            }
+            .pd-price-now {
+                font-size: 23px !important;
+                line-height: 1.2;
+            }
+            .pd-price-old {
+                font-size: 13px;
+            }
+            .pd-save-badge {
+                font-size: 12px;
+                min-height: 26px;
+                padding: 5px 9px;
+                border-radius: 8px;
+            }
+            .pd-save-text {
+                font-size: 12px;
+                margin: 0;
+            }
+            .pd-service-card {
+                padding: 0 12px;
+            }
+            .pd-mobile-service-strip {
+                margin-top: 0;
+                gap: 8px;
+            }
+            .pd-mobile-service-strip div {
+                padding: 12px 8px;
+                gap: 8px;
+                border-radius: 14px;
+                font-size: 11px;
+            }
+            .pd-mobile-service-strip i {
+                font-size: 16px;
+            }
+            .pd-mobile-service-strip strong {
+                font-size: 12px;
+                margin-bottom: 2px;
+            }
+            .pd-purchase-hint {
+                margin: 10px 12px 0;
+            }
+            .pd-desc-container {
+                margin-top: 12px !important;
+                padding: 0 12px;
+            }
+        }
+
+        @media (min-width: 390px) and (max-width: 768px) {
+            .pd-wrapper.pd-hero-card {
+                display: grid !important;
+                grid-template-columns: minmax(0, 48%) minmax(0, 1fr);
+                gap: 12px !important;
+                align-items: start;
+            }
+            .pd-gallery {
+                margin-bottom: 0 !important;
+            }
+            .pd-title {
+                font-size: 16px !important;
+            }
+            .pd-price-now {
+                font-size: 21px !important;
+            }
+        }
+
+        @media (max-width: 389px) {
+            .pd-mobile-service-strip {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+
+</style>
 </head>
 
 <body>
@@ -1617,7 +1767,7 @@
                     </div>
 
                     <div class="pd-info">
-                        <div class="pd-brand">${p.brand || ''}</div>
+                        ${p.brand ? `<div class="pd-brand">${p.brand}</div>` : ''}
                         <h1 class="pd-title">${p.title || ''}</h1>
 
                         <div class="pd-meta-line">
@@ -1628,33 +1778,33 @@
                         <div class="pd-price-box">
                             <span class="pd-price-now" id="pd-price-view">${formatVND(p.current_price)}</span>
                             ${p.old_price ? `<span class="pd-price-old">${formatVND(p.old_price)}</span>` : ''}
+                            ${savePercent ? `<span class="pd-save-badge">-${savePercent}%</span>` : ''}
                         </div>
                         ${savePercent ? `<div class="pd-save-text">Tiết kiệm ${formatVND(oldPriceNumber - currentPriceNumber)} (${savePercent}%)</div>` : ''}
+                    </div>
+                </div>
 
-                        <div class="pd-purchase-hint">
-                            <i class="fa-solid fa-circle-info"></i>
-                            <span>Nhấn <strong>Thêm giỏ hàng</strong> hoặc <strong>Mua ngay</strong> để chọn phân loại, xem số lượng còn lại và trạng thái hàng.</span>
+                <div class="pd-service-card">
+                    <div class="pd-mobile-service-strip">
+                        <div>
+                            <i class="fa-solid fa-truck-fast"></i>
+                            <span><strong>Giao hàng</strong>10-15 ngày</span>
                         </div>
-
-                        <div class="pd-mobile-guarantee-card">
-                            <div class="guarantee-grid">
-                                <div class="guarantee-box">
-                                    <i class="fa-solid fa-truck-fast"></i>
-                                    <span><strong>Giao hàng</strong><br>10-15 ngày</span>
-                                </div>
-                                <div class="guarantee-box">
-                                    <i class="fa-solid fa-ticket"></i>
-                                    <span><strong>Phí ship</strong><br>15.000đ</span>
-                                </div>
-                                <div class="guarantee-box">
-                                    <i class="fa-solid fa-shield-halved"></i>
-                                    <span><strong>Chính hãng</strong><br>Nhật Bản 100%</span>
-                                </div>
-                            </div>
+                        <div>
+                            <i class="fa-solid fa-ticket"></i>
+                            <span><strong>Phí ship</strong>15.000đ</span>
+                        </div>
+                        <div>
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <span><strong>Chính hãng</strong>Nhật Bản 100%</span>
                         </div>
                     </div>
                 </div>
 
+                <div class="pd-purchase-hint">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>Nhấn <strong>Thêm giỏ hàng</strong> hoặc <strong>Mua ngay</strong> để chọn phân loại, xem số lượng còn lại và trạng thái hàng.</span>
+                </div>
 
                 <div class="pd-desc-container pd-accordion-list">
                     <details id="sec-desc" class="pd-accordion-item" open>
