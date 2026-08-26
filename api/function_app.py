@@ -95,11 +95,14 @@ def normalize_product(data, existing=None):
     existing = existing or {}
     
     def get_field(key, default_val=""):
+        # Nếu Admin có gửi lên (ngay cả khi gửi lên chuỗi rỗng ""), thì lấy giá trị đó
         if key in data:
             val = data[key]
             return str(val).strip() if val is not None else ""
+        # Nếu không gửi lên, thì mới lấy lại đồ cũ trong database
         return str(existing.get(key, default_val)).strip()
 
+    # Các trường bắt buộc (Không cho phép lưu rỗng)
     title = str(data.get("title", "")).strip() or existing.get("title", "")
     brand = str(data.get("brand", "")).strip() or existing.get("brand", "")
     current_price = str(data.get("current_price", "")).strip() or existing.get("current_price", "")
@@ -110,7 +113,7 @@ def normalize_product(data, existing=None):
         "current_price": current_price.strip() if current_price else "",
         "thumbnail": get_field("thumbnail"),
         "old_price": get_field("old_price"),
-        "discount": get_field("discount"),
+        "discount": get_field("discount"), # Giờ đây nếu admin xóa trắng, nó sẽ lưu rỗng thay vì giữ data cũ
         "rating": get_field("rating", "4.9"),
         "sold_text": get_field("sold_text", "1k/tháng"),
         "description": get_field("description"),
@@ -119,6 +122,7 @@ def normalize_product(data, existing=None):
         "usage_manual": get_field("usage_manual"),
         "status": get_field("status", "active"),
         "variants": data.get("variants") if "variants" in data else existing.get("variants", []),
+        # Trường này dùng để đồng bộ thứ tự kéo thả từ admin ra trang chủ trên mọi thiết bị.
         "display_order": to_display_order(
             data.get("display_order") if "display_order" in data else existing.get("display_order"),
             to_display_order(existing.get("display_order"), 999999)
@@ -156,6 +160,7 @@ def upload_image(req: func.HttpRequest) -> func.HttpResponse:
         
         container_client = get_blob_container_client()
         ext = os.path.splitext(filename)[1].lower() or ".jpg"
+        # Tạo đường dẫn lưu ảnh theo Tháng/Năm để dễ quản lý
         blob_name = f"products/{datetime.utcnow().strftime('%Y/%m')}/{uuid.uuid4().hex}{ext}"
         blob_client = container_client.get_blob_client(blob_name)
         
@@ -170,8 +175,10 @@ def products(req: func.HttpRequest) -> func.HttpResponse:
     container = get_cosmos_container()
     try:
         if req.method == "GET":
+            # Lấy danh sách sản phẩm (Bỏ qua các bản ghi đơn hàng)
             query = "SELECT * FROM c WHERE c.status = 'active' AND NOT IS_DEFINED(c.type)"
             items = list(container.query_items(query=query, enable_cross_partition_query=True))
+            # Ưu tiên thứ tự admin đã kéo thả. Sản phẩm chưa có display_order sẽ nằm sau, mới hơn lên trước.
             items.sort(key=lambda x: (
                 to_display_order(x.get("display_order"), 999999),
                 -to_sort_timestamp(x.get("created_at"))
@@ -267,6 +274,7 @@ def product_by_id(req: func.HttpRequest) -> func.HttpResponse:
             updated["created_at"] = existing.get("created_at")
             updated["updated_at"] = datetime.utcnow().isoformat() + "Z"
             
+            # Logic quan trọng: Nếu đổi Brand (Partition Key), phải xóa cũ tạo mới
             if updated["brand"] != old_brand:
                 container.delete_item(item=p_id, partition_key=old_brand)
                 container.create_item(body=updated)
@@ -398,6 +406,7 @@ def normalize_customer_info_for_order(body):
     return normalized
 
 
+
 def normalize_order_phone_for_lookup(value):
     """Chuẩn hóa SĐT để tra cứu/so sánh ổn định hơn."""
     digits = "".join(ch for ch in str(value or "") if ch.isdigit())
@@ -423,6 +432,12 @@ def get_order_phone_for_lookup(order):
 
 
 def merge_order_customer_update(existing_item, body):
+    """Merge thông tin khách hàng khi khách chỉnh trên tracking.html.
+
+    Chỉ bổ sung/ghi đè các field thông tin khách hàng khi payload có gửi lên.
+    Các field đơn hàng khác như items, total_amount, payment_method, created_at... được giữ nguyên.
+    Lưu cả customer_info và top-level alias để admin/tracking cũ mới đều đọc được.
+    """
     existing_item = existing_item or {}
     body = body or {}
 
@@ -490,11 +505,30 @@ def merge_order_customer_update(existing_item, body):
     return merged_info, name, phone, address, updated_at
 
 
+# =========================================================
+# BẢO VỆ TẠO ĐƠN HÀNG
+# - Không tin giá, tổng tiền, tên sản phẩm hoặc trạng thái từ frontend
+# - Đọc sản phẩm/giá thật từ Cosmos DB
+# - Bắt buộc đủ thông tin khách hàng
+# - Chặn đơn rỗng, 0đ, trạng thái tự đặt và spam cùng SĐT
+# =========================================================
+
 BLOCKED_ORDER_TEXTS = {
-    "n/a", "na", "none", "null", "undefined", "test", "test user", "test address", "khong co", "không có"
+    "n/a",
+    "na",
+    "none",
+    "null",
+    "undefined",
+    "test",
+    "test user",
+    "test address",
+    "khong co",
+    "không có"
 }
 
+
 def parse_money_to_int(value):
+    """Chuyển 199000, '199.000đ' hoặc '199,000' thành số nguyên."""
     if isinstance(value, bool):
         return 0
     if isinstance(value, (int, float)):
@@ -506,6 +540,7 @@ def parse_money_to_int(value):
     digits = "".join(ch for ch in str(value or "") if ch.isdigit())
     return int(digits) if digits else 0
 
+
 def parse_positive_int(value, default=0):
     try:
         number = int(value)
@@ -513,33 +548,60 @@ def parse_positive_int(value, default=0):
     except (TypeError, ValueError):
         return default
 
+
 def is_blocked_order_text(value):
     return clean_customer_text(value).lower() in BLOCKED_ORDER_TEXTS
 
+
 def validate_new_order_customer(body):
+    """Kiểm tra và trả về customer_info đã chuẩn hóa."""
     info = body.get("customer_info", {})
     if not isinstance(info, dict):
         raise ValueError("Thông tin khách hàng không hợp lệ")
 
     name = first_customer_value(
-        info.get("name"), info.get("customer_name"), body.get("customer_name"), body.get("name")
+        info.get("name"),
+        info.get("customer_name"),
+        body.get("customer_name"),
+        body.get("name")
     )
     phone = normalize_order_phone_for_lookup(
         first_customer_value(
-            info.get("phone"), info.get("customer_phone"), body.get("customer_phone"), body.get("phone")
+            info.get("phone"),
+            info.get("customer_phone"),
+            body.get("customer_phone"),
+            body.get("phone")
         )
     )
     detail = first_customer_value(
-        info.get("address"), info.get("address_detail"), body.get("address"), body.get("address_detail")
+        info.get("address"),
+        info.get("address_detail"),
+        body.get("address"),
+        body.get("address_detail")
     )
     ward = first_customer_value(
-        info.get("ward"), info.get("ward_name"), body.get("ward"), body.get("ward_name")
+        info.get("ward"),
+        info.get("ward_name"),
+        body.get("ward"),
+        body.get("ward_name")
     )
     district = first_customer_value(
-        info.get("dist"), info.get("district"), info.get("district_name"), body.get("dist"), body.get("district"), body.get("district_name")
+        info.get("dist"),
+        info.get("district"),
+        info.get("district_name"),
+        body.get("dist"),
+        body.get("district"),
+        body.get("district_name")
     )
     province = first_customer_value(
-        info.get("prov"), info.get("province"), info.get("city"), info.get("province_name"), body.get("prov"), body.get("province"), body.get("city"), body.get("province_name")
+        info.get("prov"),
+        info.get("province"),
+        info.get("city"),
+        info.get("province_name"),
+        body.get("prov"),
+        body.get("province"),
+        body.get("city"),
+        body.get("province_name")
     )
 
     if len(name) < 2 or len(name) > 100 or is_blocked_order_text(name):
@@ -548,12 +610,22 @@ def validate_new_order_customer(body):
     if not re.fullmatch(r"0\d{9}", phone):
         raise ValueError("Số điện thoại phải có đúng 10 số và bắt đầu bằng 0")
 
-    if not detail or not ward or not district or not province or is_blocked_order_text(detail):
-        raise ValueError("Vui lòng nhập đầy đủ địa chỉ cụ thể, Phường/Xã, Quận/Huyện và Tỉnh/Thành phố")
+    if (
+        not detail
+        or not ward
+        or not province
+        or is_blocked_order_text(detail)
+    ):
+        raise ValueError(
+            "Vui lòng nhập đầy đủ địa chỉ cụ thể, Phường/Xã "
+            "và Tỉnh/Thành phố"
+        )
 
     if len(detail) < 3 or len(detail) > 300:
         raise ValueError("Địa chỉ cụ thể không hợp lệ")
 
+    # Đơn mới dùng địa chỉ hành chính 2 cấp. District vẫn được giữ lại
+    # nếu request cũ có gửi lên để không làm thay đổi dữ liệu/khả năng tương thích cũ.
     full_address = join_address_parts(detail, ward, district, province)
     if len(full_address) < 10 or len(full_address) > 500:
         raise ValueError("Địa chỉ nhận hàng không hợp lệ")
@@ -570,8 +642,14 @@ def validate_new_order_customer(body):
         "province": province
     }
 
+
 def get_product_for_order(container, product_id):
-    query = "SELECT * FROM c WHERE c.id = @id AND NOT IS_DEFINED(c.type)"
+    """Không tin brand do frontend gửi; tìm sản phẩm bằng id trong database."""
+    query = """
+        SELECT * FROM c
+        WHERE c.id = @id
+          AND NOT IS_DEFINED(c.type)
+    """
     items = list(container.query_items(
         query=query,
         parameters=[{"name": "@id", "value": product_id}],
@@ -579,10 +657,12 @@ def get_product_for_order(container, product_id):
     ))
     return items[0] if items else None
 
+
 def find_product_variant(product, requested_name):
     variants = product.get("variants", [])
     if not isinstance(variants, list):
         variants = []
+
     if not variants:
         return None
 
@@ -598,13 +678,16 @@ def find_product_variant(product, requested_name):
 
     return None
 
+
 def validate_and_build_order_items(container, raw_items):
+    """Tự lấy tên, ảnh, giá và trạng thái sản phẩm từ Cosmos DB."""
     if not isinstance(raw_items, list) or not raw_items:
         raise ValueError("Đơn hàng phải có ít nhất một sản phẩm")
 
     if len(raw_items) > ORDER_MAX_ITEMS:
         raise ValueError("Đơn hàng có quá nhiều dòng sản phẩm")
 
+    # Gộp dòng trùng sản phẩm/phân loại để không thể lách giới hạn số lượng.
     aggregated = {}
     for raw in raw_items:
         if not isinstance(raw, dict):
@@ -630,7 +713,10 @@ def validate_and_build_order_items(container, raw_items):
         aggregated[key]["quantity"] += quantity
 
         if aggregated[key]["quantity"] > ORDER_MAX_QTY_PER_ITEM:
-            raise ValueError(f"Số lượng tối đa cho một phân loại là {ORDER_MAX_QTY_PER_ITEM}")
+            raise ValueError(
+                f"Số lượng tối đa cho một phân loại là "
+                f"{ORDER_MAX_QTY_PER_ITEM}"
+            )
 
     safe_items = []
     product_originals = {}
@@ -647,8 +733,12 @@ def validate_and_build_order_items(container, raw_items):
                 raise ValueError("Có sản phẩm không tồn tại hoặc đã bị xóa")
 
             if clean_customer_text(product.get("status")).lower() != "active":
-                raise ValueError(f"Sản phẩm {clean_customer_text(product.get('title'))} đang ngừng bán")
+                raise ValueError(
+                    f"Sản phẩm {clean_customer_text(product.get('title'))} "
+                    f"đang ngừng bán"
+                )
 
+            # Giữ bản gốc để rollback nếu cập nhật kho/tạo đơn lỗi.
             product_originals[product_id] = json.loads(json.dumps(product))
             product_updates[product_id] = product
 
@@ -659,19 +749,36 @@ def validate_and_build_order_items(container, raw_items):
 
         variant = find_product_variant(product, requested_variant_name)
         if variants and not variant:
-            raise ValueError(f"Phân loại '{requested_variant_name}' không tồn tại")
+            raise ValueError(
+                f"Phân loại '{requested_variant_name}' không tồn tại"
+            )
 
         if variant:
             variant_name = clean_customer_text(variant.get("name"))
-            unit_price = parse_money_to_int(variant.get("price")) or parse_money_to_int(product.get("current_price"))
-            variant_status = clean_customer_text(variant.get("status")).lower() or "instock"
-            image = clean_customer_text(variant.get("image")) or clean_customer_text(product.get("thumbnail"))
-            expected_date = first_customer_value(variant.get("date"), variant.get("expected_date"))
+            unit_price = (
+                parse_money_to_int(variant.get("price"))
+                or parse_money_to_int(product.get("current_price"))
+            )
+            variant_status = (
+                clean_customer_text(variant.get("status")).lower()
+                or "instock"
+            )
+            image = (
+                clean_customer_text(variant.get("image"))
+                or clean_customer_text(product.get("thumbnail"))
+            )
+            expected_date = first_customer_value(
+                variant.get("date"),
+                variant.get("expected_date")
+            )
 
+            # Chỉ trừ kho với hàng có sẵn. Hàng order/out vẫn cho đặt trước.
             if variant_status == "instock":
                 stock = parse_positive_int(variant.get("stock"), 0)
                 if stock < quantity:
-                    raise ValueError(f"Phân loại '{variant_name}' chỉ còn {stock} sản phẩm")
+                    raise ValueError(
+                        f"Phân loại '{variant_name}' chỉ còn {stock} sản phẩm"
+                    )
                 variant["stock"] = stock - quantity
                 if variant["stock"] == 0:
                     variant["status"] = "out"
@@ -683,7 +790,10 @@ def validate_and_build_order_items(container, raw_items):
             expected_date = ""
 
         if unit_price <= 0:
-            raise ValueError(f"Giá sản phẩm '{clean_customer_text(product.get('title'))}' không hợp lệ")
+            raise ValueError(
+                f"Giá sản phẩm '{clean_customer_text(product.get('title'))}' "
+                f"không hợp lệ"
+            )
 
         line_total = unit_price * quantity
         safe_items.append({
@@ -701,11 +811,18 @@ def validate_and_build_order_items(container, raw_items):
 
     return safe_items, product_originals, product_updates
 
+
 def generate_order_code():
+    """Mã đơn do server tạo, không thể thành N/A."""
     return "MO" + datetime.utcnow().strftime("%m%d%H%M%S") + uuid.uuid4().hex[:4].upper()
 
+
 def find_order_by_code(container, order_code):
-    query = "SELECT TOP 1 * FROM c WHERE c.type = 'order' AND c.order_id = @order_id"
+    query = """
+        SELECT TOP 1 * FROM c
+        WHERE c.type = 'order'
+          AND c.order_id = @order_id
+    """
     found = list(container.query_items(
         query=query,
         parameters=[{"name": "@order_id", "value": order_code}],
@@ -713,21 +830,38 @@ def find_order_by_code(container, order_code):
     ))
     return found[0] if found else None
 
+
 def order_code_exists(container, order_code):
     return find_order_by_code(container, order_code) is not None
 
+
 def enforce_phone_order_limit(container, phone):
+    """Giới hạn cơ bản để giảm spam cùng một SĐT."""
     cutoff = (datetime.utcnow() - timedelta(minutes=30)).isoformat() + "Z"
-    query = "SELECT TOP 10 c.id FROM c WHERE c.type = 'order' AND c.customer_info.phone = @phone AND c.created_at >= @cutoff AND c.status != 'Đã hủy'"
+    query = """
+        SELECT TOP 10 c.id FROM c
+        WHERE c.type = 'order'
+          AND c.customer_info.phone = @phone
+          AND c.created_at >= @cutoff
+          AND c.status != 'Đã hủy'
+    """
     items = list(container.query_items(
         query=query,
-        parameters=[{"name": "@phone", "value": phone}, {"name": "@cutoff", "value": cutoff}],
+        parameters=[
+            {"name": "@phone", "value": phone},
+            {"name": "@cutoff", "value": cutoff}
+        ],
         enable_cross_partition_query=True
     ))
     if len(items) >= ORDER_MAX_PER_PHONE_30M:
-        raise PermissionError("Số điện thoại này đã tạo quá nhiều đơn trong 30 phút. Vui lòng liên hệ Shop nếu cần hỗ trợ.")
+        raise PermissionError(
+            "Số điện thoại này đã tạo quá nhiều đơn trong 30 phút. "
+            "Vui lòng liên hệ Shop nếu cần hỗ trợ."
+        )
+
 
 def rollback_product_updates(container, originals, updated_ids):
+    """Cố gắng hoàn nguyên kho nếu tạo đơn bị lỗi giữa chừng."""
     for product_id in reversed(updated_ids):
         original = originals.get(product_id)
         if not original:
@@ -735,7 +869,12 @@ def rollback_product_updates(container, originals, updated_ids):
         try:
             container.replace_item(item=product_id, body=original)
         except Exception as rollback_error:
-            print(f"Không rollback được tồn kho sản phẩm {product_id}: {rollback_error}")
+            print(
+                f"Không rollback được tồn kho sản phẩm "
+                f"{product_id}: {rollback_error}"
+            )
+
+
 
 # --- ROUTES ĐƠN HÀNG & TRỪ KHO ---
 
@@ -749,10 +888,17 @@ def orders_api(req: func.HttpRequest) -> func.HttpResponse:
     try:
         if req.method == "GET":
             query = "SELECT * FROM c WHERE c.type = 'order'"
-            items = list(container.query_items(query=query, enable_cross_partition_query=True))
-            items.sort(key=lambda item: item.get("created_at", ""), reverse=True)
+            items = list(container.query_items(
+                query=query,
+                enable_cross_partition_query=True
+            ))
+            items.sort(
+                key=lambda item: item.get("created_at", ""),
+                reverse=True
+            )
             return json_response(items)
 
+        # Chặn payload quá lớn trước khi parse JSON.
         raw_body = req.get_body()
         if not raw_body:
             return json_response({"error": "Thiếu dữ liệu đơn hàng"}, 400)
@@ -769,42 +915,92 @@ def orders_api(req: func.HttpRequest) -> func.HttpResponse:
             return json_response({"error": "Dữ liệu đơn hàng không hợp lệ"}, 400)
 
         customer_info = validate_new_order_customer(body)
-        requested_order_code = clean_customer_text(body.get("order_id")).upper()
+
+        requested_order_code = clean_customer_text(
+            body.get("order_id")
+        ).upper()
 
         if requested_order_code:
             if not re.fullmatch(r"MO[A-Z0-9]{6,20}", requested_order_code):
-                return json_response({"error": "Mã đơn hàng không hợp lệ"}, 400)
+                return json_response(
+                    {"error": "Mã đơn hàng không hợp lệ"},
+                    400
+                )
 
-            existing_order = find_order_by_code(container, requested_order_code)
+            existing_order = find_order_by_code(
+                container,
+                requested_order_code
+            )
+
+            # Chống gửi trùng: cùng mã đơn và cùng SĐT thì trả lại đơn cũ,
+            # không trừ kho và không tạo thêm bản ghi.
             if existing_order:
-                if get_order_phone_for_lookup(existing_order) == customer_info["phone"]:
+                if (
+                    get_order_phone_for_lookup(existing_order)
+                    == customer_info["phone"]
+                ):
                     return json_response({
                         "message": "Đơn hàng đã được ghi nhận trước đó",
                         "order": existing_order,
                         "duplicate": True
                     }, 200)
-                return json_response({"error": "Mã đơn hàng đã tồn tại"}, 409)
+
+                return json_response(
+                    {"error": "Mã đơn hàng đã tồn tại"},
+                    409
+                )
 
         enforce_phone_order_limit(container, customer_info["phone"])
 
-        payment_method = clean_customer_text(body.get("payment_method")).lower()
+        payment_method = clean_customer_text(
+            body.get("payment_method")
+        ).lower()
         if payment_method not in {"cod", "bank"}:
-            return json_response({"error": "Phương thức thanh toán không hợp lệ"}, 400)
+            return json_response(
+                {"error": "Phương thức thanh toán không hợp lệ"},
+                400
+            )
 
-        safe_items, product_originals, product_updates = validate_and_build_order_items(container, body.get("items"))
-        subtotal = sum(int(item["line_total"]) for item in safe_items)
+        safe_items, product_originals, product_updates = (
+            validate_and_build_order_items(
+                container,
+                body.get("items")
+            )
+        )
+
+        subtotal = sum(
+            int(item["line_total"])
+            for item in safe_items
+        )
         total_amount = subtotal + ORDER_SHIPPING_FEE
 
         if subtotal <= 0 or total_amount <= ORDER_SHIPPING_FEE:
-            return json_response({"error": "Tổng tiền đơn hàng không hợp lệ"}, 400)
+            return json_response(
+                {"error": "Tổng tiền đơn hàng không hợp lệ"},
+                400
+            )
 
+        # Giữ mã MO... hợp lệ do giao diện tạo để khớp nội dung VietQR.
+        # Khi frontend không gửi mã, backend tự tạo; không thể xuất hiện N/A.
         order_code = requested_order_code or generate_order_code()
         while order_code_exists(container, order_code):
             order_code = generate_order_code()
 
-        status = "Chờ xác nhận đã chuyển khoản" if payment_method == "bank" else "Xác nhận đặt đơn Shipcod thành công"
-        payment_label = "Chuyển khoản VietQR" if payment_method == "bank" else "Ship COD"
-        payment_status = "Cần kiểm tra sao kê" if payment_method == "bank" else "Thu tiền khi giao hàng"
+        status = (
+            "Chờ xác nhận đã chuyển khoản"
+            if payment_method == "bank"
+            else "Xác nhận đặt đơn Shipcod thành công"
+        )
+        payment_label = (
+            "Chuyển khoản VietQR"
+            if payment_method == "bank"
+            else "Ship COD"
+        )
+        payment_status = (
+            "Cần kiểm tra sao kê"
+            if payment_method == "bank"
+            else "Thu tiền khi giao hàng"
+        )
 
         now = datetime.utcnow().isoformat() + "Z"
         order_data = {
@@ -832,15 +1028,25 @@ def orders_api(req: func.HttpRequest) -> func.HttpResponse:
             "updated_at": now
         }
 
+        # Chỉ cập nhật kho sau khi toàn bộ dữ liệu đã hợp lệ.
         updated_product_ids = []
         try:
             for product_id, product_doc in product_updates.items():
-                container.replace_item(item=product_id, body=product_doc)
+                # Chỉ replace khi dữ liệu sản phẩm thực sự có thể đã đổi stock.
+                container.replace_item(
+                    item=product_id,
+                    body=product_doc
+                )
                 updated_product_ids.append(product_id)
 
             container.create_item(body=order_data)
+
         except Exception:
-            rollback_product_updates(container, product_originals, updated_product_ids)
+            rollback_product_updates(
+                container,
+                product_originals,
+                updated_product_ids
+            )
             raise
 
         return json_response({
@@ -854,8 +1060,19 @@ def orders_api(req: func.HttpRequest) -> func.HttpResponse:
         return json_response({"error": str(error)}, 400)
     except Exception as error:
         print(f"Lỗi tạo đơn hàng: {error}")
-        return json_response({"error": "Không thể tạo đơn hàng. Vui lòng thử lại sau."}, 500)
+        return json_response(
+            {"error": "Không thể tạo đơn hàng. Vui lòng thử lại sau."},
+            500
+        )
 
+
+# =========================================================
+# API CÔNG KHAI RIÊNG CHO KHÁCH CHỈNH SỬA / HỦY ĐƠN
+# - Không dùng chung API quản trị /api/orders/{id}
+# - Chỉ cho phép khi đơn ở đúng trạng thái được cấu hình
+# - Khách phải gửi đúng số điện thoại hiện đang lưu trên đơn
+# - Không cho khách sửa giá, sản phẩm, thanh toán, mã vận đơn
+# =========================================================
 
 CUSTOMER_EDITABLE_STATUSES = {
     "xac nhan dat don shipcod thanh cong",
@@ -864,22 +1081,33 @@ CUSTOMER_EDITABLE_STATUSES = {
     "cho xac nhan chuyen khoan"
 }
 
+
 def normalize_order_status_for_customer(value):
+    """Chuẩn hóa trạng thái tiếng Việt để so sánh ổn định."""
     import unicodedata
+
     text = str(value or "").strip().lower().replace("đ", "d")
     text = unicodedata.normalize("NFD", text)
     text = "".join(ch for ch in text if unicodedata.category(ch) != "Mn")
     return " ".join(text.split())
 
+
 def is_customer_order_editable(order):
+    """Khách chỉ được chỉnh sửa/hủy ở các trạng thái cho phép."""
     if not isinstance(order, dict):
         return False
+
     status = normalize_order_status_for_customer(order.get("status"))
+
+    # Khi đã có mã vận đơn, không cho khách thay đổi thông tin giao hàng.
     if clean_customer_text(order.get("spx_tracking_code")):
         return False
+
     return status in CUSTOMER_EDITABLE_STATUSES
 
+
 def find_order_for_customer_action(container, identifier):
+    """Tìm đơn bằng Cosmos id hoặc mã đơn hàng MO..."""
     identifier = clean_customer_text(identifier)
     if not identifier:
         return None
@@ -887,7 +1115,11 @@ def find_order_for_customer_action(container, identifier):
     try:
         return container.read_item(item=identifier, partition_key="ORDER")
     except Exception:
-        query = "SELECT * FROM c WHERE c.type = 'order' AND c.order_id = @order_id"
+        query = """
+            SELECT * FROM c
+            WHERE c.type = 'order'
+              AND c.order_id = @order_id
+        """
         found = list(container.query_items(
             query=query,
             parameters=[{"name": "@order_id", "value": identifier}],
@@ -895,8 +1127,18 @@ def find_order_for_customer_action(container, identifier):
         ))
         return found[0] if found else None
 
+
 @app.route(route="customer-orders/{id}", methods=["PUT", "OPTIONS"])
 def customer_order_action(req: func.HttpRequest) -> func.HttpResponse:
+    """
+    Endpoint công khai giới hạn cho trang tracking.html.
+
+    action=update_info:
+      - Chỉ sửa họ tên, số điện thoại và địa chỉ.
+
+    action=cancel:
+      - Chỉ đổi trạng thái sang Đã hủy và ghi lý do.
+    """
     if req.method == "OPTIONS":
         return options_response()
 
@@ -916,12 +1158,24 @@ def customer_order_action(req: func.HttpRequest) -> func.HttpResponse:
         saved_phone = get_order_phone_for_lookup(item)
 
         if not lookup_phone or lookup_phone != saved_phone:
-            return json_response({"error": "Số điện thoại xác minh không khớp với đơn hàng"}, 403)
+            return json_response(
+                {"error": "Số điện thoại xác minh không khớp với đơn hàng"},
+                403
+            )
 
         if not is_customer_order_editable(item):
-            return json_response({
-                "error": "Đơn hàng không còn được phép chỉnh sửa hoặc hủy. Chỉ áp dụng khi trạng thái là: Xác nhận đặt đơn Shipcod thành công, Đang chờ hàng về Việt Nam hoặc Chờ xác nhận đã chuyển khoản."
-            }, 409)
+            return json_response(
+                {
+                    "error": (
+                        "Đơn hàng không còn được phép chỉnh sửa hoặc hủy. "
+                        "Chỉ áp dụng khi trạng thái là: "
+                        "Xác nhận đặt đơn Shipcod thành công, "
+                        "Đang chờ hàng về Việt Nam hoặc "
+                        "Chờ xác nhận đã chuyển khoản."
+                    )
+                },
+                409
+            )
 
         action = clean_customer_text(body.get("action")).lower()
         now = datetime.utcnow().isoformat() + "Z"
@@ -973,7 +1227,10 @@ def customer_order_action(req: func.HttpRequest) -> func.HttpResponse:
             item["updated_at"] = now
 
             container.replace_item(item=item["id"], body=item)
-            return json_response({"message": "Đã cập nhật thông tin nhận hàng", "item": item})
+            return json_response({
+                "message": "Đã cập nhật thông tin nhận hàng",
+                "item": item
+            })
 
         if action == "cancel":
             reason = clean_customer_text(body.get("reason"))
@@ -987,7 +1244,10 @@ def customer_order_action(req: func.HttpRequest) -> func.HttpResponse:
             item["updated_at"] = now
 
             container.replace_item(item=item["id"], body=item)
-            return json_response({"message": "Đã hủy đơn hàng", "item": item})
+            return json_response({
+                "message": "Đã hủy đơn hàng",
+                "item": item
+            })
 
         return json_response({"error": "Hành động không hợp lệ"}, 400)
 
@@ -1003,6 +1263,7 @@ def order_by_id(req: func.HttpRequest) -> func.HttpResponse:
     container = get_cosmos_container()
     o_id = req.route_params.get("id")
     try:
+        # Ưu tiên đọc theo id Cosmos. Nếu frontend gửi mã MO..., fallback tìm theo order_id.
         try:
             item = container.read_item(item=o_id, partition_key="ORDER")
         except Exception:
@@ -1021,15 +1282,18 @@ def order_by_id(req: func.HttpRequest) -> func.HttpResponse:
             body = req.get_json()
             now = datetime.utcnow().isoformat() + "Z"
 
+            # Giữ nguyên chức năng cũ: admin cập nhật trạng thái và mã vận đơn SPX.
             if "status" in body:
                 item["status"] = body.get("status")
             if "spx_tracking_code" in body:
                 item["spx_tracking_code"] = body.get("spx_tracking_code") or ""
 
+            # Bổ sung chức năng hủy đơn từ trang tra cứu, không ảnh hưởng cập nhật trạng thái admin.
             for field in ["cancel_reason", "cancelled_by_customer", "cancelled_at"]:
                 if field in body:
                     item[field] = body.get(field)
 
+            # Bổ sung lưu thông tin khách hàng sau khi chỉnh sửa trên tracking.html.
             has_customer_update = any(key in body for key in [
                 "customer_info", "customer_name", "customer_phone", "customer_address",
                 "full_address", "shipping_address", "name", "phone", "address",
@@ -1070,42 +1334,126 @@ def order_by_id(req: func.HttpRequest) -> func.HttpResponse:
 
 @app.route(route="track", methods=["GET", "OPTIONS"])
 def track_order(req: func.HttpRequest) -> func.HttpResponse:
-    """API Tra cứu đơn hàng linh hoạt: hỗ trợ SĐT, Mã đơn hàng (MO...), Mã SPX hoặc ID đơn hàng."""
+    """Tra cứu công khai theo SĐT, mã đơn hàng hoặc mã vận đơn.
+
+    Endpoint này KHÔNG gọi /api/orders (API quản trị). Nó đọc Cosmos DB trực tiếp
+    và chỉ trả những đơn khớp từ khóa tra cứu.
+    """
     if req.method == "OPTIONS":
         return options_response()
 
-    query_param = req.params.get("phone") or req.params.get("q") or req.params.get("code")
-    if not query_param:
+    keyword = clean_customer_text(
+        req.params.get("q")
+        or req.params.get("order_id")
+        or req.params.get("phone")
+        or req.params.get("keyword")
+    )
+    if not keyword:
         return json_response({"error": "Thiếu thông tin tra cứu"}, 400)
 
-    raw_query = str(query_param).strip()
+    def normalize_code(value):
+        # Cho phép khách nhập: MO638738, mo638738, MO-638738, #MO638738...
+        return re.sub(r"[^A-Z0-9]", "", clean_customer_text(value).upper())
+
+    def phone_candidates(order):
+        info = order.get("customer_info", {}) if isinstance(order, dict) else {}
+        if not isinstance(info, dict):
+            info = {}
+        values = [
+            info.get("phone"),
+            info.get("customer_phone"),
+            info.get("receiver_phone"),
+            order.get("customer_phone"),
+            order.get("phone"),
+            order.get("receiver_phone"),
+            order.get("shipping_phone"),
+        ]
+        return {
+            normalize_order_phone_for_lookup(v)
+            for v in values
+            if clean_customer_text(v)
+        }
 
     try:
         container = get_cosmos_container()
+        keyword_code = normalize_code(keyword)
+        target_phone = normalize_order_phone_for_lookup(keyword)
+        is_phone_lookup = bool(re.fullmatch(r"0\d{9}", target_phone))
 
-        target_phone = normalize_order_phone_for_lookup(raw_query)
-        clean_code = "".join(ch for ch in raw_query if ch.isalnum()).upper()
+        # ---------------------------------------------------------
+        # 1. MÃ ĐƠN HÀNG
+        # Ưu tiên query trực tiếp field order_id, không phụ thuộc c.type.
+        # ---------------------------------------------------------
+        if keyword_code.startswith("MO"):
+            direct = list(container.query_items(
+                query=(
+                    "SELECT * FROM c "
+                    "WHERE IS_DEFINED(c.order_id) AND c.order_id = @order_id"
+                ),
+                parameters=[{"name": "@order_id", "value": keyword_code}],
+                enable_cross_partition_query=True,
+            ))
+            if direct:
+                direct.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+                return json_response(direct)
 
-        query = "SELECT * FROM c WHERE c.type = 'order'"
-        all_orders = list(container.query_items(query=query, enable_cross_partition_query=True))
+        # Chỉ lấy document có dấu hiệu là đơn hàng. Không dùng API /api/orders.
+        query = """
+            SELECT * FROM c
+            WHERE c.type = 'order'
+               OR IS_DEFINED(c.order_id)
+               OR IS_DEFINED(c.orderId)
+               OR IS_DEFINED(c.order_code)
+               OR IS_DEFINED(c.code)
+        """
+        all_orders = list(container.query_items(
+            query=query,
+            enable_cross_partition_query=True,
+        ))
 
         items = []
         for order in all_orders:
-            saved_phone = get_order_phone_for_lookup(order)
-            order_id = str(order.get("order_id", "")).upper()
-            doc_id = str(order.get("id", "")).upper()
-            spx_code = str(order.get("spx_tracking_code", "")).upper()
+            if not isinstance(order, dict):
+                continue
 
-            match_phone = bool(target_phone and saved_phone == target_phone)
-            match_code = bool(
-                clean_code and (
-                    clean_code in order_id or
-                    clean_code in doc_id or
-                    (spx_code and clean_code in spx_code)
-                )
+            order_codes = [
+                order.get("order_id"),
+                order.get("orderId"),
+                order.get("order_code"),
+                order.get("orderCode"),
+                order.get("code"),
+            ]
+            order_code_match = any(
+                normalize_code(value) == keyword_code
+                for value in order_codes
+                if clean_customer_text(value)
             )
 
-            if match_phone or match_code:
+            # Cosmos id chỉ được phép khớp đúng nguyên văn, tránh normalize UUID.
+            cosmos_id_match = (
+                clean_customer_text(order.get("id")).upper()
+                == clean_customer_text(keyword).upper()
+            )
+
+            tracking_codes = [
+                order.get("spx_tracking_code"),
+                order.get("tracking_code"),
+                order.get("trackingCode"),
+                order.get("shipping_code"),
+            ]
+            tracking_match = any(
+                normalize_code(value) == keyword_code
+                for value in tracking_codes
+                if clean_customer_text(value)
+            )
+
+            # Chỉ chạy nhánh SĐT khi input thực sự là SĐT VN 10 số.
+            phone_match = (
+                is_phone_lookup
+                and target_phone in phone_candidates(order)
+            )
+
+            if order_code_match or cosmos_id_match or tracking_match or phone_match:
                 items.append(order)
 
         items.sort(key=lambda x: x.get("created_at", ""), reverse=True)
