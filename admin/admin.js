@@ -1622,13 +1622,27 @@ window.exportSPX = function() {
     }
 
     let csvContent = "\uFEFF";
-    csvContent += "Mã Đơn,Tên Khách Hàng,Số Điện Thoại,Địa Chỉ Giao Hàng,Sản Phẩm Chi Tiết,Tổng Tiền,Phương Thức Thanh Toán,Tình Trạng Thanh Toán,Trạng Thái,Mã Vận Đơn,Ngày Đặt\n";
+    csvContent += "Mã Đơn,Tên Khách Hàng,Số Điện Thoại,Địa Chỉ Chi Tiết,Tỉnh / Thành Phố,Phường / Xã,Sản Phẩm Chi Tiết,Tổng Tiền,Phương Thức Thanh Toán,Tình Trạng Thanh Toán,Trạng Thái,Mã Vận Đơn,Ngày Đặt\n";
 
     orders.forEach(o => {
         let orderId = o.order_id || "";
         let customerName = window.getOrderCustomerName ? window.getOrderCustomerName(o) : (o.customer_name || (o.customer_info ? (o.customer_info.name || "") : ""));
         let phone = window.getOrderCustomerPhone ? window.getOrderCustomerPhone(o) : (o.customer_phone || (o.customer_info ? (o.customer_info.phone || "") : ""));
-        let address = window.buildOrderAddress(o);
+        let addressDetail = window.pickOrderCustomerValue(
+            o,
+            ["address", "customer_address", "shipping_address", "full_address"],
+            ["address", "customer_address", "shipping_address", "full_address"]
+        );
+        let province = window.pickOrderCustomerValue(
+            o,
+            ["province", "prov", "city", "province_name", "customer_province"],
+            ["province", "prov", "city", "province_name", "customer_province"]
+        );
+        let ward = window.pickOrderCustomerValue(
+            o,
+            ["ward", "ward_name", "customer_ward"],
+            ["ward", "ward_name", "customer_ward"]
+        );
         
         let productsStr = "";
         if (o.items && o.items.length > 0) {
@@ -1655,7 +1669,9 @@ window.exportSPX = function() {
             escapeCSV(orderId),
             escapeCSV(customerName),
             escapeCSV(phone),
-            escapeCSV(address),
+            escapeCSV(addressDetail),
+            escapeCSV(province),
+            escapeCSV(ward),
             escapeCSV(productsStr),
             total,
             escapeCSV(paymentInfo.exportLabel),
