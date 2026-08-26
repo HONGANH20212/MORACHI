@@ -418,6 +418,64 @@ async function fillCheckoutAddressEditor(address) {
         districtSelect.innerHTML = '<option value=""></option>';
         wardSelect.innerHTML = '<option value="">Phường / Xã</option>';
     }
+
+    applyCheckoutAddressEditorSelect2();
+}
+
+// Bật ô tìm kiếm cho Tỉnh/Thành phố và Phường/Xã trong form địa chỉ mới.
+// Khách có thể gõ trực tiếp tên địa phương thay vì kéo danh sách dài.
+function applyCheckoutAddressEditorSelect2(retryCount = 0) {
+    if (typeof jQuery === 'undefined' || typeof jQuery.fn.select2 === 'undefined') {
+        if (retryCount < 20) {
+            window.setTimeout(() => applyCheckoutAddressEditorSelect2(retryCount + 1), 150);
+        }
+        return;
+    }
+
+    const $province = $('#addr-province');
+    const $ward = $('#addr-ward');
+    const $dropdownParent = $('#checkout-address-sheet-body');
+
+    if (!$province.length || !$ward.length || !$dropdownParent.length) return;
+
+    [$province, $ward].forEach($select => {
+        if ($select.data('select2')) $select.select2('destroy');
+    });
+
+    const commonOptions = {
+        width: '100%',
+        dropdownParent: $dropdownParent,
+        minimumResultsForSearch: 0,
+        allowClear: false,
+        language: {
+            noResults: () => 'Không tìm thấy kết quả',
+            searching: () => 'Đang tìm...'
+        }
+    };
+
+    $province.select2({
+        ...commonOptions,
+        placeholder: 'Nhập hoặc chọn Tỉnh / Thành phố'
+    });
+
+    $ward.select2({
+        ...commonOptions,
+        placeholder: 'Nhập hoặc chọn Phường / Xã'
+    });
+
+    $province.off('select2:open.morachiAddress').on('select2:open.morachiAddress', () => {
+        window.setTimeout(() => document.querySelector('.select2-container--open .select2-search__field')?.focus(), 0);
+    });
+
+    $ward.off('select2:open.morachiAddress').on('select2:open.morachiAddress', () => {
+        window.setTimeout(() => document.querySelector('.select2-container--open .select2-search__field')?.focus(), 0);
+    });
+}
+
+function refreshCheckoutWardSelect2() {
+    if (typeof jQuery === 'undefined' || typeof jQuery.fn.select2 === 'undefined') return;
+    const $ward = $('#addr-ward');
+    if ($ward.data('select2')) $ward.trigger('change.select2');
 }
 
 window.openCheckoutAddressEditor = async function(id = '') {
@@ -531,6 +589,7 @@ window.checkoutAddressProvinceChanged = async function() {
 
     const province = await ensureProvinceDetail(provinceCode);
     (province?.wards || []).forEach(item => wardSelect.add(new Option(item.name, item.code)));
+    refreshCheckoutWardSelect2();
 };
 
 window.checkoutAddressDistrictChanged = function() {
