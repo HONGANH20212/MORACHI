@@ -4,19 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MORACHI - Tiệm Đồ Nhật Nội Địa Chính Hãng</title>
-    <link rel="icon"
-      type="image/png"
-      sizes="32x32"
-      href="/images/icon-logo.png?v=1">
-
-    <link rel="icon"
-        type="image/png"
-        sizes="192x192"
-        href="/images/icon-logo.png?v=1">
-
-    <link rel="apple-touch-icon"
-        href="/images/icon-logo.png?v=1">
-
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/icon-logo.png?v=1">
+    <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-logo.png?v=1">
+    <link rel="apple-touch-icon" href="/images/icon-logo.png?v=1">
     <meta name="theme-color" content="#b3131b">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -25,22 +15,17 @@
 
 <body>
     <header class="modern-header">
-        
         <div class="top-header">
             <div class="container top-header-inner">
-                
                 <div class="top-header-item">
                     <i class="fa-solid fa-shield-heart"></i> 100% Hàng chính hãng Nhật Bản
                 </div>
-                
                 <div class="top-header-item">
                     <i class="fa-solid fa-truck-fast"></i> Order nhanh 10 - 15 ngày
                 </div>
-                
                 <div class="top-header-item">
                     <i class="fa-solid fa-location-dot"></i> Quận 7 - Hồ Chí Minh
                 </div>
-                
                 <div class="top-header-item top-header-contact">
                     <div class="phone-icon-circle"><i class="fa-solid fa-phone"></i></div>
                     <div class="phone-text">
@@ -48,13 +33,11 @@
                         <span>18:00 - 00:00 (T2 - CN)</span>
                     </div>
                 </div>
-
             </div>
         </div>
 
         <div class="main-header">
             <div class="container main-header-inner">
-                
                 <div class="logo-area">
                     <a href="/">
                         <img src="images/morachi_logo.png" alt="MORACHI Logo" class="logo-icon">
@@ -66,8 +49,8 @@
                 </div>
 
                 <div class="search-bar">
-                    <input type="text" placeholder="Tìm sản phẩm, thương hiệu bạn mong muốn...">
-                    <button><i class="fa-solid fa-magnifying-glass"></i></button>
+                    <input type="text" placeholder="Tìm sản phẩm, thương hiệu bạn mong muốn..." aria-label="Tìm sản phẩm">
+                    <button type="button" aria-label="Tìm kiếm"><i class="fa-solid fa-magnifying-glass"></i></button>
                 </div>
 
                 <div class="header-actions">
@@ -78,7 +61,7 @@
                             <span>Kiểm tra đơn hàng</span>
                         </div>
                     </a>
-                    
+
                     <div class="action-item" onclick="toggleCart()">
                         <div class="action-icon">
                             <i class="fa-solid fa-cart-shopping"></i>
@@ -90,7 +73,6 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
 
@@ -99,68 +81,80 @@
                 <i class="fa-solid fa-truck-fast"></i> CHUYÊN BÁN MỸ PHẨM NHẬT BẢN CHÍNH HÃNG & NHẬN ORDER HÀNG NHẬT BẢN 10-15 DAY
             </div>
         </div>
-
     </header>
 
-    <div class="breadcrumb container">
-        <a href="/">Trang chủ</a> <i class="fa-solid fa-chevron-right" style="font-size: 9px; margin: 0 5px;"></i> <span>Sản Phẩm Bán Chạy</span>
-    </div>
+    <!-- DANH MỤC CHÍNH: thay cho breadcrumb/sidebar/sort cũ -->
+    <section class="home-category-area container" aria-label="Danh mục sản phẩm">
+        <nav class="home-main-categories" aria-label="Danh mục chính">
+            <button type="button" class="home-main-category active" data-category="makeup" aria-selected="true">
+                <span class="home-main-category-icon"><i class="fa-solid fa-palette"></i></span>
+                <span class="home-main-category-label">Trang Điểm</span>
+            </button>
+            <button type="button" class="home-main-category" data-category="skincare" aria-selected="false">
+                <span class="home-main-category-icon"><i class="fa-solid fa-pump-soap"></i></span>
+                <span class="home-main-category-label">Chăm sóc da</span>
+            </button>
+            <button type="button" class="home-main-category" data-category="supplement" aria-selected="false">
+                <span class="home-main-category-icon"><i class="fa-solid fa-capsules"></i></span>
+                <span class="home-main-category-label">Thực phẩm<br>chức năng</span>
+            </button>
+            <button type="button" class="home-main-category" data-category="highend" aria-selected="false">
+                <span class="home-main-category-icon"><i class="fa-solid fa-bag-shopping"></i></span>
+                <span class="home-main-category-label">2highend</span>
+            </button>
+        </nav>
 
-    <div class="main-layout container">
-        
-        <aside class="sidebar">
-            <div class="sidebar-wrapper">
-                
-                <div class="filter-section">
-                    <h3>KHOẢNG GIÁ</h3>
-                    
-                    <div class="price-inputs">
-                        <div class="input-wrap">
-                            <i class="fa-regular fa-calendar"></i>
-                            <input type="text" placeholder="TỪ">
-                        </div>
-                        <span class="price-divider">-</span>
-                        <div class="input-wrap">
-                            <i class="fa-regular fa-calendar"></i>
-                            <input type="text" placeholder="ĐẾN">
-                        </div>
-                    </div>
+        <div class="home-makeup-subcategories" id="home-makeup-subcategories" aria-label="Danh mục trang điểm">
+            <button type="button" class="home-subcategory active" data-subcategory="face" aria-selected="true">
+                <span class="home-subcategory-icon"><i class="fa-regular fa-face-smile"></i></span>
+                <span>Mặt</span>
+            </button>
+            <button type="button" class="home-subcategory" data-subcategory="eyes" aria-selected="false">
+                <span class="home-subcategory-icon"><i class="fa-regular fa-eye"></i></span>
+                <span>Mắt</span>
+            </button>
+            <button type="button" class="home-subcategory" data-subcategory="lips" aria-selected="false">
+                <span class="home-subcategory-icon"><i class="fa-regular fa-heart"></i></span>
+                <span>Môi</span>
+            </button>
+            <button type="button" class="home-subcategory" data-subcategory="cheeks" aria-selected="false">
+                <span class="home-subcategory-icon"><i class="fa-regular fa-face-smile-beam"></i></span>
+                <span>Má</span>
+            </button>
+            <button type="button" class="home-subcategory" data-subcategory="brows" aria-selected="false">
+                <span class="home-subcategory-icon"><i class="fa-solid fa-pen-nib"></i></span>
+                <span>Mày</span>
+            </button>
+        </div>
 
-                    <button class="btn-apply">
-                        <i class="fa-solid fa-filter"></i> ÁP DỤNG
-                    </button>
-                </div>
-
-                <div class="filter-divider"></div>
-                
-                <div class="filter-section">
-                    <h3>THƯƠNG HIỆU</h3>
-                    </div>
-
+        <section class="home-featured-brands" aria-label="Thương hiệu nổi bật">
+            <div class="home-featured-heading">
+                <h2>THƯƠNG HIỆU NỔI BẬT</h2>
+                <button type="button" id="home-clear-brand" class="home-link-button">Xem tất cả <i class="fa-solid fa-chevron-right"></i></button>
             </div>
-        </aside>
-
-        <main class="content">
-            <div class="content-header">
-                <h2>Sản Phẩm Bán Chạy</h2>
-                
-                <div class="sort-tabs">
-                    <span>Mới nhất</span>
-                    <span class="active">Bán chạy</span>
-                    <span>Giá thấp đến cao</span>
-                    <span>Giá cao đến thấp</span>
-                </div>
+            <div id="home-brand-list" class="home-brand-list" aria-live="polite">
+                <span class="home-brand-placeholder">Đang tải thương hiệu...</span>
             </div>
+        </section>
+    </section>
 
-            <div id="product-list" class="product-grid">
-                <div class="skel-card"><div class="skel-img-home"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-price-home"></div></div>
-                <div class="skel-card"><div class="skel-img-home"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-price-home"></div></div>
-                <div class="skel-card"><div class="skel-img-home"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-price-home"></div></div>
-                <div class="skel-card"><div class="skel-img-home"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-price-home"></div></div>
+    <main class="home-catalog container">
+        <div class="home-section-heading">
+            <div class="home-section-title-wrap">
+                <span class="home-section-mark"><i class="fa-solid fa-spa"></i></span>
+                <h2 id="home-section-title">TRANG ĐIỂM CHO MẶT</h2>
+                <span id="home-product-count" class="home-product-count"></span>
             </div>
-        </main>
+            <button type="button" id="home-show-all" class="home-link-button">Xem tất cả <i class="fa-solid fa-chevron-right"></i></button>
+        </div>
 
-    </div>
+        <div id="product-list" class="product-grid">
+            <div class="skel-card"><div class="skel-img-home"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-price-home"></div></div>
+            <div class="skel-card"><div class="skel-img-home"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-price-home"></div></div>
+            <div class="skel-card"><div class="skel-img-home"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-price-home"></div></div>
+            <div class="skel-card"><div class="skel-img-home"></div><div class="skel-line"></div><div class="skel-line short"></div><div class="skel-price-home"></div></div>
+        </div>
+    </main>
 
     <div class="cart-overlay" id="cart-overlay" onclick="toggleCart()"></div>
     <div class="cart-drawer" id="cart-drawer">
@@ -168,8 +162,7 @@
             <h2>Giỏ hàng</h2>
             <button onclick="toggleCart()"><i class="fa-solid fa-xmark"></i></button>
         </div>
-        <div class="cart-items" id="cart-items">
-            </div>
+        <div class="cart-items" id="cart-items"></div>
         <div class="cart-footer">
             <div class="cart-total"><span>Tổng cộng:</span> <span id="cart-total-price">0 đ</span></div>
             <button class="btn-checkout" onclick="openCheckoutModal()">TIẾN HÀNH THANH TOÁN</button>

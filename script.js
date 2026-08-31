@@ -4,10 +4,12 @@ const state = {
     allProducts: [],
     filteredProducts: [],
     selectedBrands: new Set(),
-    sort: "bestseller", // Mặc định hiển thị tab Bán chạy
+    sort: "bestseller", // Giữ nguyên thuật toán sắp xếp mặc định hiện có
     search: "",
     minPrice: null,
-    maxPrice: null
+    maxPrice: null,
+    homeCategory: "makeup",
+    homeSubcategory: "face"
 };
 // Trang chủ chỉ lấy thứ tự sản phẩm từ API/backend.
 // Không dùng localStorage ở trang khách để điện thoại/máy tính luôn đồng bộ cùng một thứ tự admin đã lưu.
@@ -98,13 +100,17 @@ function getSortValueFromText(text) {
 }
 
 function setProductCount(count) {
+    const homeCount = document.getElementById("home-product-count");
+    if (homeCount) {
+        homeCount.textContent = `(${count} sản phẩm)`;
+        return;
+    }
+
+    // Giữ tương thích với giao diện cũ nếu file JS được dùng lại ở nơi khác.
     const title = document.querySelector(".content-header h2");
     if (!title) return;
-
     const span = title.querySelector("span");
-    if (span) {
-        span.textContent = `(${count} sản phẩm)`;
-    }
+    if (span) span.textContent = `(${count} sản phẩm)`;
 }
 
 // --- HÀM HIỂN THỊ SẢN PHẨM TRANG CHỦ (ĐÃ CHỈNH SỬA THEO MẪU MỚI) ---
@@ -192,17 +198,242 @@ function getDisplayOrder(item) {
     return 999999 + (Number.isFinite(apiIndex) ? apiIndex : 0);
 }
 
+// =========================================================
+// DANH MỤC TRANG CHỦ MỚI
+// - Không thay đổi API, giỏ hàng, tìm kiếm hay đường dẫn chi tiết sản phẩm.
+// - Ưu tiên các field category/tags nếu backend đã có.
+// - Nếu dữ liệu cũ chưa có category, dùng từ khóa trong tên sản phẩm để phân nhóm.
+// =========================================================
+function normalizeVietnameseText(value) {
+    return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "D")
+        .toLowerCase();
+}
+
+function getProductCategorySource(product) {
+    const fields = [
+        product.category,
+        product.category_name,
+        product.main_category,
+        product.subcategory,
+        product.sub_category,
+        product.product_type,
+        product.type,
+        product.tags,
+        product.title,
+        product.brand
+    ];
+    return normalizeVietnameseText(fields.filter(Boolean).join(" "));
+}
+
+function includesAny(text, keywords) {
+    return keywords.some(keyword => text.includes(keyword));
+}
+
+const HOME_CATEGORY_KEYWORDS = {
+    makeup: [
+        "trang diem", "makeup", "phan", "son", "lip", "eye", "mascara",
+        "eyeliner", "ke mat", "ke may", "eyebrow", "brow", "ma hong", "blush",
+        "cushion", "kem nen", "foundation", "concealer", "che khuyet", "highlight",
+        "primer", "base makeup", "powder", "cheek"
+    ],
+    skincare: [
+        "cham soc da", "skincare", "sua rua mat", "rua mat", "cleanser", "cleansing",
+        "tay trang", "toner", "lotion", "serum", "essence", "duong da", "duong am",
+        "moistur", "cream", "kem duong", "chong nang", "sunscreen", "mat na", "mask"
+    ],
+    supplement: [
+        "thuc pham chuc nang", "supplement", "vien uong", "vitamin", "collagen", "dha",
+        "omega", "canxi", "calcium", "probiotic", "enzyme", "kem zinc", "zinc", "sat iron"
+    ],
+    highend: ["2highend", "highend", "high end", "luxury", "cao cap"]
+};
+
+const HOME_SUBCATEGORY_KEYWORDS = {
+    face: [
+        "kem nen", "foundation", "cushion", "phan phu", "powder", "phan nen", "base",
+        "primer", "lot nen", "concealer", "che khuyet", "highlight", "contour", "tao khoi"
+    ],
+    eyes: ["phan mat", "eye shadow", "eyeshadow", "mascara", "eyeliner", "ke mat", "eye liner"],
+    lips: ["son", "lip", "moi", "rouge"],
+    cheeks: ["ma hong", "blush", "cheek", "fleur cheeks"],
+    brows: ["ke may", "chi may", "eyebrow", "brow", "may"]
+};
+
+function productMatchesHomeCategory(product, category) {
+    if (!category) return true;
+    const text = getProductCategorySource(product);
+    return includesAny(text, HOME_CATEGORY_KEYWORDS[category] || []);
+}
+
+function productMatchesHomeSubcategory(product, subcategory) {
+    if (!subcategory) return true;
+    const text = getProductCategorySource(product);
+    return includesAny(text, HOME_SUBCATEGORY_KEYWORDS[subcategory] || []);
+}
+
+function getProductsForHomeCategory(products, includeSubcategory = true) {
+    let result = [...(products || [])];
+    if (state.homeCategory) {
+        result = result.filter(product => productMatchesHomeCategory(product, state.homeCategory));
+    }
+    if (includeSubcategory && state.homeCategory === "makeup" && state.homeSubcategory) {
+        result = result.filter(product => productMatchesHomeSubcategory(product, state.homeSubcategory));
+    }
+    return result;
+}
+
+function getHomeSectionTitle() {
+    if (state.search) return `KẾT QUẢ TÌM KIẾM`;
+    if (state.homeCategory === "skincare") return "CHĂM SÓC DA";
+    if (state.homeCategory === "supplement") return "THỰC PHẨM CHỨC NĂNG";
+    if (state.homeCategory === "highend") return "2HIGHEND";
+
+    const labels = {
+        face: "TRANG ĐIỂM CHO MẶT",
+        eyes: "TRANG ĐIỂM CHO MẮT",
+        lips: "TRANG ĐIỂM CHO MÔI",
+        cheeks: "TRANG ĐIỂM CHO MÁ",
+        brows: "TRANG ĐIỂM CHO MÀY"
+    };
+    return labels[state.homeSubcategory] || "TRANG ĐIỂM";
+}
+
+function updateHomeCategoryUI() {
+    document.querySelectorAll(".home-main-category").forEach(button => {
+        const active = button.dataset.category === state.homeCategory;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-selected", active ? "true" : "false");
+    });
+
+    const subcategoryNav = document.getElementById("home-makeup-subcategories");
+    if (subcategoryNav) {
+        subcategoryNav.classList.toggle("is-hidden", state.homeCategory !== "makeup");
+    }
+
+    document.querySelectorAll(".home-subcategory").forEach(button => {
+        const active = state.homeCategory === "makeup" && button.dataset.subcategory === state.homeSubcategory;
+        button.classList.toggle("active", active);
+        button.setAttribute("aria-selected", active ? "true" : "false");
+    });
+
+    const sectionTitle = document.getElementById("home-section-title");
+    if (sectionTitle) sectionTitle.textContent = getHomeSectionTitle();
+}
+
+function renderHomeFeaturedBrands() {
+    const container = document.getElementById("home-brand-list");
+    if (!container) return;
+
+    let source = getProductsForHomeCategory(state.allProducts, false);
+    if (!source.length) source = [...state.allProducts];
+
+    const brands = [];
+    const seen = new Set();
+    source.forEach(product => {
+        const brand = String(product.brand || "").trim();
+        if (!brand) return;
+        const key = brand.toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        brands.push(brand);
+    });
+
+    if (!brands.length) {
+        container.innerHTML = '<span class="home-brand-placeholder">Chưa có thông tin thương hiệu.</span>';
+        return;
+    }
+
+    container.innerHTML = brands.slice(0, 8).map(brand => {
+        const safeBrand = escapeHtml(brand);
+        const active = state.selectedBrands.has(brand) ? " active" : "";
+        return `<button type="button" class="home-brand-chip${active}" data-brand="${safeBrand}">${safeBrand}</button>`;
+    }).join("");
+
+    container.querySelectorAll(".home-brand-chip").forEach(button => {
+        button.addEventListener("click", () => {
+            const brand = button.dataset.brand || "";
+            if (state.selectedBrands.has(brand)) state.selectedBrands.delete(brand);
+            else {
+                state.selectedBrands.clear();
+                state.selectedBrands.add(brand);
+            }
+            renderHomeFeaturedBrands();
+            applyClientFilters();
+        });
+    });
+}
+
+function bindHomeCategoryNavigation() {
+    document.querySelectorAll(".home-main-category").forEach(button => {
+        button.addEventListener("click", () => {
+            state.homeCategory = button.dataset.category || "makeup";
+            state.homeSubcategory = state.homeCategory === "makeup" ? "face" : "";
+            state.selectedBrands.clear();
+            state.search = "";
+            const searchInput = getSearchElements().input;
+            if (searchInput) searchInput.value = "";
+            updateHomeCategoryUI();
+            renderHomeFeaturedBrands();
+            applyClientFilters();
+        });
+    });
+
+    document.querySelectorAll(".home-subcategory").forEach(button => {
+        button.addEventListener("click", () => {
+            state.homeCategory = "makeup";
+            state.homeSubcategory = button.dataset.subcategory || "";
+            state.selectedBrands.clear();
+            state.search = "";
+            const searchInput = getSearchElements().input;
+            if (searchInput) searchInput.value = "";
+            updateHomeCategoryUI();
+            renderHomeFeaturedBrands();
+            applyClientFilters();
+        });
+    });
+
+    const showAll = document.getElementById("home-show-all");
+    if (showAll) {
+        showAll.addEventListener("click", () => {
+            state.homeSubcategory = "";
+            state.selectedBrands.clear();
+            updateHomeCategoryUI();
+            renderHomeFeaturedBrands();
+            applyClientFilters();
+        });
+    }
+
+    const clearBrand = document.getElementById("home-clear-brand");
+    if (clearBrand) {
+        clearBrand.addEventListener("click", () => {
+            state.selectedBrands.clear();
+            renderHomeFeaturedBrands();
+            applyClientFilters();
+        });
+    }
+
+    updateHomeCategoryUI();
+}
+
 // --- Logic lọc và sắp xếp tự động ---
 function applyClientFilters() {
     let products = [...state.allProducts];
 
     if (state.search) {
-        const keyword = state.search.toLowerCase();
+        const keyword = normalizeVietnameseText(state.search);
         products = products.filter((item) => {
-            const title = String(item.title || "").toLowerCase();
-            const brand = String(item.brand || "").toLowerCase();
+            const title = normalizeVietnameseText(item.title || "");
+            const brand = normalizeVietnameseText(item.brand || "");
             return title.includes(keyword) || brand.includes(keyword);
         });
+    } else {
+        // Khi không tìm kiếm, danh mục mới là bộ lọc chính của trang chủ.
+        const categorized = getProductsForHomeCategory(products, true);
+        products = categorized;
     }
 
     if (state.selectedBrands.size > 0) {
@@ -253,6 +484,7 @@ function applyClientFilters() {
     }
 
     state.filteredProducts = products;
+    updateHomeCategoryUI();
     renderProducts(products);
 }
 
@@ -415,6 +647,7 @@ async function loadProducts() {
         state.allProducts = normalizeProductsFromApi(products);
 
         renderBrandFilters(state.allProducts);
+        renderHomeFeaturedBrands();
         applyClientFilters(); 
     } catch (error) {
         console.error("Lỗi tải sản phẩm:", error);
@@ -441,6 +674,8 @@ function bindSearch() {
 
     const runSearch = () => {
         state.search = input.value.trim();
+        state.selectedBrands.clear();
+        renderHomeFeaturedBrands();
         applyClientFilters();
     };
 
@@ -576,6 +811,7 @@ document.addEventListener("DOMContentLoaded", () => {
     bindSortTabs();
     bindSearch();
     bindPriceFilter();
+    bindHomeCategoryNavigation();
     loadProducts();
     setupMobileFilterCompact();
     initFloatingContact(); 
