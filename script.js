@@ -201,8 +201,8 @@ function getDisplayOrder(item) {
 // =========================================================
 // DANH MỤC TRANG CHỦ MỚI
 // - Không thay đổi API, giỏ hàng, tìm kiếm hay đường dẫn chi tiết sản phẩm.
-// - Ưu tiên các field category/tags nếu backend đã có.
-// - Nếu dữ liệu cũ chưa có category, dùng từ khóa trong tên sản phẩm để phân nhóm.
+// - Ưu tiên category/subcategory/is_highend/collections do Admin gán chính xác.
+// - Chỉ dùng từ khóa làm fallback cho sản phẩm cũ chưa được phân loại.
 // =========================================================
 function normalizeVietnameseText(value) {
     return String(value || "")
@@ -263,14 +263,57 @@ const HOME_SUBCATEGORY_KEYWORDS = {
     brows: ["ke may", "chi may", "eyebrow", "brow", "may"]
 };
 
+function normalizeTaxonomyValue(value) {
+    return normalizeVietnameseText(value).replace(/\s+/g, " ").trim();
+}
+
+function getProductCollections(product) {
+    const value = product && product.collections;
+    if (Array.isArray(value)) return value.map(normalizeTaxonomyValue).filter(Boolean);
+    if (!value) return [];
+    return String(value).split(/[,;|]/).map(normalizeTaxonomyValue).filter(Boolean);
+}
+
+function productHasExplicitHighend(product) {
+    return !!(product && (
+        Object.prototype.hasOwnProperty.call(product, "is_highend") ||
+        Object.prototype.hasOwnProperty.call(product, "collections")
+    ));
+}
+
+function productIsHighend(product) {
+    if (!product) return false;
+    if (product.is_highend === true || String(product.is_highend).toLowerCase() === "true" || Number(product.is_highend) === 1) {
+        return true;
+    }
+    return getProductCollections(product).includes("highend");
+}
+
 function productMatchesHomeCategory(product, category) {
     if (!category) return true;
+
+    // 2highend là collection độc lập: sản phẩm vẫn có thể đồng thời là Makeup > Môi/Mặt...
+    if (category === "highend") {
+        if (productHasExplicitHighend(product)) return productIsHighend(product);
+        const text = getProductCategorySource(product);
+        return includesAny(text, HOME_CATEGORY_KEYWORDS.highend || []);
+    }
+
+    // Ưu tiên taxonomy do Admin đã gán. Chỉ fallback từ khóa cho dữ liệu cũ chưa phân loại.
+    const explicitCategory = normalizeTaxonomyValue(product && product.category);
+    if (explicitCategory) return explicitCategory === category;
+
     const text = getProductCategorySource(product);
     return includesAny(text, HOME_CATEGORY_KEYWORDS[category] || []);
 }
 
 function productMatchesHomeSubcategory(product, subcategory) {
     if (!subcategory) return true;
+
+    // Khi Admin đã gán danh mục con, dùng giá trị chính xác; dữ liệu cũ mới dùng heuristic.
+    const explicitSubcategory = normalizeTaxonomyValue(product && product.subcategory);
+    if (explicitSubcategory) return explicitSubcategory === subcategory;
+
     const text = getProductCategorySource(product);
     return includesAny(text, HOME_SUBCATEGORY_KEYWORDS[subcategory] || []);
 }
