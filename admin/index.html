@@ -439,6 +439,58 @@
         .bulk-actions-btns select {
             padding: 8px 15px; border: 1px solid var(--border-color); border-radius: 8px; outline: none; font-size: 13px; font-family: inherit; cursor: pointer;
         }
+    
+
+        /* =========================================================
+           PHÂN LOẠI SẢN PHẨM V6 - giữ nguyên UI/logic cũ, bổ sung taxonomy
+           ========================================================= */
+        .taxonomy-status-strip {
+            display:flex; align-items:center; justify-content:space-between; gap:12px;
+            background:#fff; border:1px solid var(--border-color); border-radius:10px;
+            padding:10px 14px; margin:-8px 0 14px; font-size:12px;
+        }
+        .taxonomy-status-strip strong { color:var(--danger); }
+        .taxonomy-toolbar-actions { display:flex; gap:8px; flex-wrap:wrap; }
+        .taxonomy-badge-wrap { display:flex; gap:5px; flex-wrap:wrap; min-width:125px; }
+        .taxonomy-badge { display:inline-flex; align-items:center; min-height:23px; padding:3px 8px; border-radius:999px; font-size:10px; font-weight:700; border:1px solid transparent; white-space:nowrap; }
+        .taxonomy-badge.makeup { background:#fff0f1; color:#ba1a1a; border-color:#ffd5d8; }
+        .taxonomy-badge.skincare { background:#f1f8e9; color:#658f3d; border-color:#dcebcf; }
+        .taxonomy-badge.supplement { background:#fff4e8; color:#dc6c20; border-color:#ffe0c4; }
+        .taxonomy-badge.highend { background:#f7efff; color:#7d48bd; border-color:#e6d5f6; }
+        .taxonomy-badge.sub { background:#f6f7f9; color:#505762; border-color:#e7e9ed; }
+        .taxonomy-badge.unclassified { background:#fff9e6; color:#b77900; border-color:#f8e3a2; }
+        .taxonomy-form-box { margin-top:18px; padding:15px; background:#fffaf8; border:1px solid #f3e7df; border-radius:10px; }
+        .taxonomy-form-box h3 { margin:0 0 12px; font-size:14px; display:flex; align-items:center; gap:8px; }
+        .taxonomy-form-grid { display:grid; grid-template-columns:1.1fr 1.1fr .8fr; gap:15px; }
+        .taxonomy-field label.taxonomy-label { display:block; font-size:11px; font-weight:700; color:#555; margin-bottom:7px; }
+        .taxonomy-choice-row { display:flex; gap:7px; flex-wrap:wrap; }
+        .taxonomy-choice { position:relative; }
+        .taxonomy-choice input { position:absolute; opacity:0; pointer-events:none; }
+        .taxonomy-choice span { display:inline-flex; align-items:center; justify-content:center; min-height:34px; padding:7px 11px; border:1px solid #dde1e7; border-radius:8px; background:#fff; color:#49515d; font-size:11px; font-weight:600; cursor:pointer; transition:.15s; }
+        .taxonomy-choice input:checked + span { border-color:#f57224; background:#fff2eb; color:#d85e17; box-shadow:0 0 0 2px rgba(245,114,36,.08); }
+        .taxonomy-choice.highend input:checked + span { border-color:#8b5cc2; background:#f7efff; color:#7040a8; }
+        .taxonomy-type-input { width:100%; box-sizing:border-box; min-height:36px; padding:8px 10px; border:1px solid var(--border-color); border-radius:8px; font:inherit; font-size:12px; }
+        .taxonomy-suggest-hint { margin-top:10px; min-height:18px; font-size:11px; color:var(--text-light); }
+        .product-bulk-checkbox { width:16px; height:16px; accent-color:var(--accent); }
+        .bulk-product-count { font-weight:700; color:var(--accent); }
+        .taxonomy-modal-content { width:min(760px, calc(100vw - 30px)); }
+        .bulk-taxonomy-grid { display:grid; grid-template-columns:1fr; gap:14px; }
+        .bulk-taxonomy-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:18px; }
+        .suggestion-list { max-height:55vh; overflow:auto; border:1px solid var(--border-color); border-radius:9px; }
+        .suggestion-row { display:grid; grid-template-columns:34px minmax(220px, 1fr) minmax(180px, .7fr) 80px; gap:10px; align-items:center; padding:10px 12px; border-bottom:1px solid #f0f1f3; font-size:12px; }
+        .suggestion-row:last-child { border-bottom:none; }
+        .suggestion-row.header { position:sticky; top:0; z-index:2; background:#fafbfc; font-weight:700; color:#68707d; }
+        .suggestion-confidence.good { color:var(--success); font-weight:700; }
+        .suggestion-confidence.warn { color:var(--warning); font-weight:700; }
+        .suggestion-product-name { font-weight:600; color:#303640; }
+        .suggestion-note { font-size:10px; color:#8a909a; margin-top:3px; }
+        @media (max-width: 1100px) {
+            .filter-bar { flex-wrap:wrap; }
+            .taxonomy-form-grid { grid-template-columns:1fr; }
+            .suggestion-row { grid-template-columns:30px 1fr; }
+            .suggestion-row > div:nth-child(3), .suggestion-row > div:nth-child(4) { grid-column:2; }
+        }
+
     </style>
 </head>
 <body>
@@ -525,10 +577,31 @@
                     <input type="text" id="admin-search-input" placeholder="Tìm kiếm sản phẩm...">
                 </div>
                 <select id="filter-brand"><option value="">Thương hiệu</option></select>
-                <select><option>Trạng thái</option><option>Đang bán</option><option>Hết hàng</option></select>
-                <select><option>Kho</option></select>
-                <select><option>Sắp xếp</option></select>
+                <select id="filter-category">
+                    <option value="">Tất cả danh mục</option>
+                    <option value="makeup">Trang Điểm</option>
+                    <option value="skincare">Chăm sóc da</option>
+                    <option value="supplement">Thực phẩm chức năng</option>
+                    <option value="highend">2highend</option>
+                    <option value="unclassified">⚠ Chưa phân loại</option>
+                </select>
+                <select id="filter-subcategory">
+                    <option value="">Tất cả nhóm con</option>
+                    <option value="face">Mặt</option>
+                    <option value="eyes">Mắt</option>
+                    <option value="lips">Môi</option>
+                    <option value="cheeks">Má</option>
+                    <option value="brows">Mày</option>
+                </select>
+                <button type="button" class="btn-outline" onclick="openAutoSuggestionModal()"><i class="fas fa-wand-magic-sparkles"></i> Gợi ý phân loại</button>
                 <button class="btn-add" onclick="openModal()"><i class="fas fa-plus"></i> Thêm sản phẩm</button>
+            </div>
+            <div class="taxonomy-status-strip">
+                <div><i class="fas fa-layer-group" style="color:var(--accent); margin-right:6px;"></i> Chưa phân loại: <strong id="stat-unclassified">0</strong> sản phẩm</div>
+                <div class="taxonomy-toolbar-actions">
+                    <button type="button" class="btn-outline" onclick="filterUnclassifiedProducts()"><i class="fas fa-triangle-exclamation"></i> Xem chưa phân loại</button>
+                    <button type="button" class="btn-outline" onclick="clearProductTaxonomyFilters()"><i class="fas fa-filter-circle-xmark"></i> Xóa lọc</button>
+                </div>
             </div>
             <div class="reorder-hint">
                 <i class="fas fa-grip-vertical"></i>
@@ -540,9 +613,10 @@
                     <thead>
                         <tr>
                             <th style="width: 70px; text-align: center;">Sắp xếp</th>
-                            <th style="width: 40px; text-align: center;"><input type="checkbox"></th>
+                            <th style="width: 40px; text-align: center;"><input type="checkbox" id="check-all-products" onclick="toggleAllProducts(this)"></th>
                             <th>Sản phẩm</th>
                             <th>Thương hiệu</th>
+                            <th>Danh mục</th>
                             <th>Tồn kho</th>
                             <th>Giá niêm yết</th>
                             <th>Trạng thái</th>
@@ -553,7 +627,10 @@
                 </table>
                 <div class="table-footer">
                     <div class="bulk-actions">
-                        <input type="checkbox"> <span style="margin-left: 8px;">Đã chọn 0 sản phẩm</span>
+                        <span>Đã chọn <span id="selected-product-count" class="bulk-product-count">0</span> sản phẩm</span>
+                        <button type="button" class="btn-outline" onclick="openBulkCategoryModal()"><i class="fas fa-tags"></i> Gán danh mục</button>
+                        <button type="button" class="btn-outline" onclick="suggestSelectedProducts()"><i class="fas fa-wand-magic-sparkles"></i> Gợi ý mục đã chọn</button>
+                        <button type="button" class="btn-outline" onclick="clearProductSelection()"><i class="fas fa-ban"></i> Hủy chọn</button>
                         <button class="btn-outline"><i class="far fa-trash-alt"></i> Xóa</button>
                         <button class="btn-outline"><i class="fas fa-exchange-alt"></i> Đổi thương hiệu</button>
                         <button class="btn-outline"><i class="fas fa-file-excel"></i> Export Excel</button>
@@ -700,6 +777,60 @@
 
     </div>
 
+    <!-- MODAL GÁN DANH MỤC HÀNG LOẠT -->
+    <div id="bulkCategoryModal" class="modal">
+        <div class="modal-content taxonomy-modal-content">
+            <h2 style="margin:0 0 8px; font-size:18px;">Gán danh mục hàng loạt</h2>
+            <p style="margin:0 0 18px; color:var(--text-light); font-size:12px;">Áp dụng cho <strong id="bulk-category-selected-count" style="color:var(--accent);">0</strong> sản phẩm đã chọn.</p>
+            <div class="bulk-taxonomy-grid">
+                <div class="taxonomy-field">
+                    <label class="taxonomy-label">Danh mục chính</label>
+                    <div class="taxonomy-choice-row">
+                        <label class="taxonomy-choice"><input type="radio" name="bulk-category" value="makeup"><span>Trang Điểm</span></label>
+                        <label class="taxonomy-choice"><input type="radio" name="bulk-category" value="skincare"><span>Chăm sóc da</span></label>
+                        <label class="taxonomy-choice"><input type="radio" name="bulk-category" value="supplement"><span>Thực phẩm chức năng</span></label>
+                    </div>
+                </div>
+                <div class="taxonomy-field" id="bulk-subcategory-field">
+                    <label class="taxonomy-label">Danh mục con Trang Điểm</label>
+                    <div class="taxonomy-choice-row">
+                        <label class="taxonomy-choice"><input type="radio" name="bulk-subcategory" value="face"><span>Mặt</span></label>
+                        <label class="taxonomy-choice"><input type="radio" name="bulk-subcategory" value="eyes"><span>Mắt</span></label>
+                        <label class="taxonomy-choice"><input type="radio" name="bulk-subcategory" value="lips"><span>Môi</span></label>
+                        <label class="taxonomy-choice"><input type="radio" name="bulk-subcategory" value="cheeks"><span>Má</span></label>
+                        <label class="taxonomy-choice"><input type="radio" name="bulk-subcategory" value="brows"><span>Mày</span></label>
+                    </div>
+                </div>
+                <div class="taxonomy-field">
+                    <label class="taxonomy-label">2highend</label>
+                    <div class="taxonomy-choice-row">
+                        <label class="taxonomy-choice highend"><input type="checkbox" id="bulk-highend"><span>★ Thêm vào 2highend</span></label>
+                        <label style="display:flex; align-items:center; gap:6px; font-size:11px; color:#6b7280;"><input type="checkbox" id="bulk-highend-update"> Cập nhật trạng thái 2highend (bỏ tick = gỡ)</label>
+                    </div>
+                </div>
+            </div>
+            <div id="bulk-category-message" style="margin-top:12px; font-size:12px;"></div>
+            <div class="bulk-taxonomy-actions">
+                <button type="button" class="btn-outline" onclick="closeBulkCategoryModal()">Hủy</button>
+                <button type="button" class="btn-add" onclick="applyBulkProductCategory()"><i class="fas fa-check"></i> Gán danh mục</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL GỢI Ý PHÂN LOẠI -->
+    <div id="autoSuggestionModal" class="modal">
+        <div class="modal-content taxonomy-modal-content">
+            <h2 style="margin:0 0 8px; font-size:18px;">Gợi ý phân loại tự động</h2>
+            <p style="margin:0 0 14px; color:var(--text-light); font-size:12px;">Hệ thống chỉ gợi ý từ tên/brand. Các mục chắc chắn được tick sẵn; anh vẫn kiểm tra trước khi áp dụng.</p>
+            <div id="suggestion-list" class="suggestion-list"></div>
+            <div id="suggestion-message" style="margin-top:10px; font-size:12px;"></div>
+            <div class="bulk-taxonomy-actions">
+                <button type="button" class="btn-outline" onclick="closeAutoSuggestionModal()">Đóng</button>
+                <button type="button" class="btn-add" onclick="applySelectedSuggestions()"><i class="fas fa-check-double"></i> Áp dụng mục đã tick</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL SẢN PHẨM -->
     <div id="productModal" class="modal">
         <div class="modal-content">
@@ -727,6 +858,40 @@
                         <label style="font-size: 12px; font-weight: 600; color: #555;">Giá cũ (Gạch ngang)</label>
                         <input type="number" id="old_price" style="padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; outline:none;">
                     </div>
+                </div>
+
+                <div class="taxonomy-form-box">
+                    <h3><i class="fas fa-tags" style="color:var(--accent);"></i> Phân loại sản phẩm</h3>
+                    <div class="taxonomy-form-grid">
+                        <div class="taxonomy-field">
+                            <label class="taxonomy-label">Danh mục chính</label>
+                            <div class="taxonomy-choice-row" id="product-category-choices">
+                                <label class="taxonomy-choice"><input type="radio" name="product-category" value="makeup"><span>Trang Điểm</span></label>
+                                <label class="taxonomy-choice"><input type="radio" name="product-category" value="skincare"><span>Chăm sóc da</span></label>
+                                <label class="taxonomy-choice"><input type="radio" name="product-category" value="supplement"><span>Thực phẩm chức năng</span></label>
+                            </div>
+                        </div>
+                        <div class="taxonomy-field" id="product-subcategory-field">
+                            <label class="taxonomy-label">Danh mục con Trang Điểm</label>
+                            <div class="taxonomy-choice-row">
+                                <label class="taxonomy-choice"><input type="radio" name="product-subcategory" value="face"><span>Mặt</span></label>
+                                <label class="taxonomy-choice"><input type="radio" name="product-subcategory" value="eyes"><span>Mắt</span></label>
+                                <label class="taxonomy-choice"><input type="radio" name="product-subcategory" value="lips"><span>Môi</span></label>
+                                <label class="taxonomy-choice"><input type="radio" name="product-subcategory" value="cheeks"><span>Má</span></label>
+                                <label class="taxonomy-choice"><input type="radio" name="product-subcategory" value="brows"><span>Mày</span></label>
+                            </div>
+                        </div>
+                        <div class="taxonomy-field">
+                            <label class="taxonomy-label">Nhóm bổ sung</label>
+                            <div class="taxonomy-choice-row">
+                                <label class="taxonomy-choice highend"><input type="checkbox" id="product-highend"><span>★ 2highend</span></label>
+                            </div>
+                            <label class="taxonomy-label" style="margin-top:10px;">Loại chi tiết (tùy chọn)</label>
+                            <input id="product-type" class="taxonomy-type-input" type="text" placeholder="VD: powder, lipstick, serum">
+                        </div>
+                    </div>
+                    <div class="taxonomy-suggest-hint" id="product-taxonomy-suggestion"></div>
+                    <button type="button" class="btn-outline" style="margin-top:8px;" onclick="suggestCurrentProductCategory()"><i class="fas fa-wand-magic-sparkles"></i> Gợi ý từ tên sản phẩm</button>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; margin-top: 15px;">
@@ -769,6 +934,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="admin/admin.js?v=spx-import-20260709"></script>
+    <script src="admin/admin.js?v=taxonomy-v6-20260831"></script>
 </body>
 </html>

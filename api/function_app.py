@@ -90,6 +90,122 @@ def to_sort_timestamp(value):
     except Exception:
         return 0
 
+
+# --- PHÂN LOẠI SẢN PHẨM / TAXONOMY ---
+VALID_PRODUCT_CATEGORIES = {"makeup", "skincare", "supplement"}
+VALID_MAKEUP_SUBCATEGORIES = {"face", "eyes", "lips", "cheeks", "brows"}
+
+CATEGORY_ALIASES = {
+    "makeup": "makeup", "trang diem": "makeup", "trang điểm": "makeup",
+    "skincare": "skincare", "cham soc da": "skincare", "chăm sóc da": "skincare",
+    "supplement": "supplement", "thuc pham chuc nang": "supplement", "thực phẩm chức năng": "supplement",
+}
+SUBCATEGORY_ALIASES = {
+    "face": "face", "mat": "face", "mặt": "face",
+    "eyes": "eyes", "eye": "eyes", "mắt": "eyes",
+    "lips": "lips", "lip": "lips", "moi": "lips", "môi": "lips",
+    "cheeks": "cheeks", "cheek": "cheeks", "ma": "cheeks", "má": "cheeks",
+    "brows": "brows", "brow": "brows", "may": "brows", "mày": "brows",
+}
+
+def normalize_bool(value, default=False):
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return bool(default)
+    if isinstance(value, (int, float)):
+        return value != 0
+    text = str(value).strip().lower()
+    if text in ("1", "true", "yes", "y", "on", "checked"):
+        return True
+    if text in ("0", "false", "no", "n", "off", "", "none", "null"):
+        return False
+    return bool(default)
+
+def normalize_category_value(value):
+    text = str(value or "").strip().lower()
+    return CATEGORY_ALIASES.get(text, text if text in VALID_PRODUCT_CATEGORIES else "")
+
+def normalize_subcategory_value(value):
+    text = str(value or "").strip().lower()
+    return SUBCATEGORY_ALIASES.get(text, text)
+
+def normalize_collections(value):
+    if isinstance(value, list):
+        raw = value
+    elif value is None:
+        raw = []
+    else:
+        raw = re.split(r"[,;|]", str(value))
+    result = []
+    seen = set()
+    for item in raw:
+        text = str(item or "").strip().lower()
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        result.append(text)
+    return result
+
+def apply_product_taxonomy(existing, data):
+    """Trả về các field phân loại đã chuẩn hóa, giữ tương thích dữ liệu cũ."""
+    existing = existing or {}
+    data = data or {}
+
+    raw_category = data.get("category") if "category" in data else existing.get("category", "")
+    raw_category_text = str(raw_category or "").strip().lower()
+    legacy_highend_category = raw_category_text in ("highend", "2highend", "high end")
+    category = normalize_category_value(raw_category)
+    subcategory = normalize_subcategory_value(
+        data.get("subcategory") if "subcategory" in data else existing.get("subcategory", "")
+    )
+
+    # Hiện UI Trang Điểm có 5 nhóm con cố định. Nếu category khác Makeup mà request
+    # có gửi subcategory rỗng thì cho phép xóa; còn dữ liệu cũ không gửi thì vẫn giữ.
+    if category == "makeup" and subcategory and subcategory not in VALID_MAKEUP_SUBCATEGORIES:
+        subcategory = ""
+
+    product_type = str(
+        data.get("product_type") if "product_type" in data else existing.get("product_type", "")
+    ).strip().lower()
+
+    collections = normalize_collections(
+        data.get("collections") if "collections" in data else existing.get("collections", [])
+    )
+    existing_highend = normalize_bool(existing.get("is_highend"), "highend" in collections)
+    if legacy_highend_category:
+        existing_highend = True
+    is_highend = normalize_bool(data.get("is_highend"), existing_highend) if "is_highend" in data else existing_highend
+
+    # Đồng bộ is_highend <-> collections để frontend cũ/mới đều đọc được.
+    collections = [item for item in collections if item != "highend"]
+    if is_highend:
+        collections.append("highend")
+
+    source = str(
+        data.get("category_source") if "category_source" in data else existing.get("category_source", "")
+    ).strip().lower()
+    if source not in ("manual", "bulk", "suggestion", "migration", ""):
+        source = "manual"
+
+    confidence_raw = data.get("category_confidence") if "category_confidence" in data else existing.get("category_confidence")
+    try:
+        confidence = int(float(confidence_raw)) if confidence_raw not in (None, "") else None
+        if confidence is not None:
+            confidence = max(0, min(100, confidence))
+    except (TypeError, ValueError):
+        confidence = None
+
+    return {
+        "category": category,
+        "subcategory": subcategory,
+        "product_type": product_type,
+        "is_highend": is_highend,
+        "collections": collections,
+        "category_source": source,
+        "category_confidence": confidence,
+    }
+
 def normalize_product(data, existing=None):
     """Chuẩn hóa dữ liệu sản phẩm, hỗ trợ xóa rỗng dữ liệu tùy chọn"""
     existing = existing or {}
@@ -107,7 +223,7 @@ def normalize_product(data, existing=None):
     brand = str(data.get("brand", "")).strip() or existing.get("brand", "")
     current_price = str(data.get("current_price", "")).strip() or existing.get("current_price", "")
 
-    return {
+    product = {
         "title": title.strip() if title else "",
         "brand": brand.strip() if brand else "",
         "current_price": current_price.strip() if current_price else "",
@@ -128,6 +244,8 @@ def normalize_product(data, existing=None):
             to_display_order(existing.get("display_order"), 999999)
         )
     }
+    product.update(apply_product_taxonomy(existing, data))
+    return product
 
 def parse_multipart_file(req: func.HttpRequest):
     """Phân tách dữ liệu file gửi từ trình duyệt (form-data)"""
@@ -251,6 +369,84 @@ def reorder_products(req: func.HttpRequest) -> func.HttpResponse:
             "total": len(normalized_orders)
         })
 
+    except Exception as e:
+        return json_response({"error": str(e)}, 500)
+
+
+@app.route(route="products/bulk-category", methods=["PUT", "OPTIONS"])
+def bulk_product_category(req: func.HttpRequest) -> func.HttpResponse:
+    """Gán danh mục hàng loạt cho các sản phẩm đã tick trong Admin."""
+    if req.method == "OPTIONS":
+        return options_response()
+
+    container = get_cosmos_container()
+    try:
+        body = req.get_json() or {}
+        raw_ids = body.get("ids") or body.get("product_ids") or []
+        if not isinstance(raw_ids, list):
+            return json_response({"error": "ids phải là một danh sách"}, 400)
+
+        product_ids = []
+        seen = set()
+        for raw_id in raw_ids:
+            product_id = str(raw_id or "").strip()
+            if product_id and product_id not in seen:
+                seen.add(product_id)
+                product_ids.append(product_id)
+
+        if not product_ids:
+            return json_response({"error": "Chưa chọn sản phẩm để phân loại"}, 400)
+
+        # Chỉ các field taxonomy sau được phép cập nhật hàng loạt.
+        patch = {}
+        for key in ("category", "subcategory", "product_type", "is_highend", "collections", "category_source", "category_confidence"):
+            if key in body:
+                patch[key] = body[key]
+
+        if not patch:
+            return json_response({"error": "Không có dữ liệu phân loại để cập nhật"}, 400)
+
+        # Nếu Admin chọn category khác Makeup mà không truyền subcategory, chủ động xóa
+        # subcategory Makeup cũ để tránh hiển thị sai.
+        requested_category = normalize_category_value(patch.get("category")) if "category" in patch else None
+        if requested_category and requested_category != "makeup" and "subcategory" not in patch:
+            patch["subcategory"] = ""
+
+        now = datetime.utcnow().isoformat() + "Z"
+        updated_count = 0
+        not_found = []
+        failed = []
+
+        for product_id in product_ids:
+            try:
+                query = "SELECT * FROM c WHERE c.id = @id AND NOT IS_DEFINED(c.type)"
+                items = list(container.query_items(
+                    query=query,
+                    parameters=[{"name": "@id", "value": product_id}],
+                    enable_cross_partition_query=True
+                ))
+                if not items:
+                    not_found.append(product_id)
+                    continue
+
+                product = items[0]
+                taxonomy = apply_product_taxonomy(product, patch)
+                product.update(taxonomy)
+                product["category_updated_at"] = now
+                product["updated_at"] = now
+                container.replace_item(item=product["id"], body=product)
+                updated_count += 1
+            except Exception as item_error:
+                failed.append({"id": product_id, "error": str(item_error)})
+
+        status = 200 if updated_count > 0 else 400
+        return json_response({
+            "message": f"Đã phân loại {updated_count}/{len(product_ids)} sản phẩm",
+            "updated": updated_count,
+            "total": len(product_ids),
+            "not_found": not_found,
+            "failed": failed,
+        }, status)
     except Exception as e:
         return json_response({"error": str(e)}, 500)
 
