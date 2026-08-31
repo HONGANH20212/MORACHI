@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="home-products-page">
     <header class="modern-header">
         <div class="top-header">
             <div class="container top-header-inner">
@@ -143,6 +143,10 @@
         </nav>
 
         <div class="home-makeup-subcategories" id="home-makeup-subcategories" aria-label="Danh mục trang điểm">
+            <div class="home-subcategory-heading">
+                <span class="home-subcategory-heading-icon" aria-hidden="true">✦</span>
+                <span>Danh mục trang điểm</span>
+            </div>
             <button type="button" class="home-subcategory active" data-subcategory="face" aria-selected="true">
                 <span class="home-subcategory-icon" aria-hidden="true">
                     <svg class="morachi-subcategory-svg" viewBox="0 0 64 64" role="img">
@@ -203,7 +207,7 @@
 
         <section class="home-featured-brands" aria-label="Thương hiệu nổi bật">
             <div class="home-featured-heading">
-                <h2>THƯƠNG HIỆU NỔI BẬT</h2>
+                <h2><i class="fa-solid fa-crown" aria-hidden="true"></i> THƯƠNG HIỆU NỔI BẬT</h2>
                 <button type="button" id="home-clear-brand" class="home-link-button">Xem tất cả <i class="fa-solid fa-chevron-right"></i></button>
             </div>
             <div id="home-brand-list" class="home-brand-list" aria-live="polite">

@@ -2047,3 +2047,83 @@ body.home-products-page .home-catalog .btn-buy-now {
         font-size: 9px !important;
     }
 }
+
+/* =============================================================
+   MORACHI V5 - MAIN CATEGORY TEXT ONLY
+   Theo mockup: Trang Điểm / Chăm sóc da / TPCN / 2highend
+   chỉ hiển thị chữ để tiết kiệm chiều cao.
+
+   Chỉ thay đổi 4 tab danh mục CHÍNH trên mobile.
+   Các phần Mặt/Mắt/Môi/Má/Mày, Thương hiệu, sản phẩm và JS giữ nguyên.
+   ============================================================= */
+@media (max-width: 768px) {
+    /* Ẩn icon danh mục chính, không xóa khỏi HTML để không ảnh hưởng cấu trúc */
+    body.home-products-page .home-main-category-icon {
+        display: none !important;
+    }
+
+    /* Hàng 4 tab chỉ còn chữ */
+    body.home-products-page .home-main-categories {
+        gap: 3px !important;
+        padding: 3px !important;
+        border: 1px solid #f0eeee !important;
+        border-radius: 10px !important;
+        background: #ffffff !important;
+    }
+
+    body.home-products-page .home-main-category {
+        min-height: 38px !important;
+        height: 38px !important;
+        padding: 4px 2px !important;
+        gap: 0 !important;
+        border-radius: 8px !important;
+        border: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    body.home-products-page .home-main-category-label {
+        min-height: 0 !important;
+        height: auto !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        font-size: 9.5px !important;
+        line-height: 1.08 !important;
+        font-weight: 500 !important;
+        color: #333333 !important;
+        text-align: center !important;
+    }
+
+    /* Cho trình duyệt tự ngắt dòng TPCN theo chiều rộng tab */
+    body.home-products-page .home-main-category-label br {
+        display: none !important;
+    }
+
+    /* Tab đang chọn giống mockup: nền đỏ, chữ trắng */
+    body.home-products-page .home-main-category.active {
+        background: linear-gradient(180deg, #c91a22 0%, #b3131b 100%) !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 7px rgba(179, 19, 27, .18) !important;
+    }
+
+    body.home-products-page .home-main-category.active .home-main-category-label {
+        color: #ffffff !important;
+        font-weight: 800 !important;
+    }
+
+    /* Bỏ underline cũ vì tab active đã có nền đỏ */
+    body.home-products-page .home-main-category::after {
+        display: none !important;
+    }
+}
+
+@media (max-width: 390px) {
+    body.home-products-page .home-main-category {
+        min-height: 36px !important;
+        height: 36px !important;
+    }
+
+    body.home-products-page .home-main-category-label {
+        font-size: 8.8px !important;
+    }
+}
