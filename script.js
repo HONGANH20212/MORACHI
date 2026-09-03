@@ -8,8 +8,11 @@ const state = {
     search: "",
     minPrice: null,
     maxPrice: null,
-    homeCategory: "makeup",
-    homeSubcategory: "face"
+    // Mặc định KHÔNG lọc theo danh mục để khi vào trang chủ vẫn thấy toàn bộ sản phẩm.
+    // Chỉ bắt đầu lọc khi người dùng chủ động chọn Trang Điểm / Chăm sóc da / TPCN / 2highend
+    // hoặc chọn danh mục con Mặt / Mắt / Môi / Má / Mày.
+    homeCategory: "",
+    homeSubcategory: ""
 };
 // Trang chủ chỉ lấy thứ tự sản phẩm từ API/backend.
 // Không dùng localStorage ở trang khách để điện thoại/máy tính luôn đồng bộ cùng một thứ tự admin đã lưu.
@@ -331,6 +334,7 @@ function getProductsForHomeCategory(products, includeSubcategory = true) {
 
 function getHomeSectionTitle() {
     if (state.search) return `KẾT QUẢ TÌM KIẾM`;
+    if (!state.homeCategory) return "TẤT CẢ SẢN PHẨM";
     if (state.homeCategory === "skincare") return "CHĂM SÓC DA";
     if (state.homeCategory === "supplement") return "THỰC PHẨM CHỨC NĂNG";
     if (state.homeCategory === "highend") return "2HIGHEND";
@@ -413,8 +417,10 @@ function renderHomeFeaturedBrands() {
 function bindHomeCategoryNavigation() {
     document.querySelectorAll(".home-main-category").forEach(button => {
         button.addEventListener("click", () => {
-            state.homeCategory = button.dataset.category || "makeup";
-            state.homeSubcategory = state.homeCategory === "makeup" ? "face" : "";
+            // Chỉ lọc sau khi người dùng chủ động chọn danh mục.
+            // Chọn Trang Điểm chỉ lọc toàn bộ Trang Điểm; không tự ép về Mặt như trước.
+            state.homeCategory = button.dataset.category || "";
+            state.homeSubcategory = "";
             state.selectedBrands.clear();
             state.search = "";
             const searchInput = getSearchElements().input;
@@ -442,8 +448,13 @@ function bindHomeCategoryNavigation() {
     const showAll = document.getElementById("home-show-all");
     if (showAll) {
         showAll.addEventListener("click", () => {
+            // "Xem tất cả" trả trang chủ về đúng trạng thái ban đầu: toàn bộ sản phẩm.
+            state.homeCategory = "";
             state.homeSubcategory = "";
             state.selectedBrands.clear();
+            state.search = "";
+            const searchInput = getSearchElements().input;
+            if (searchInput) searchInput.value = "";
             updateHomeCategoryUI();
             renderHomeFeaturedBrands();
             applyClientFilters();
@@ -473,10 +484,10 @@ function applyClientFilters() {
             const brand = normalizeVietnameseText(item.brand || "");
             return title.includes(keyword) || brand.includes(keyword);
         });
-    } else {
-        // Khi không tìm kiếm, danh mục mới là bộ lọc chính của trang chủ.
-        const categorized = getProductsForHomeCategory(products, true);
-        products = categorized;
+    } else if (state.homeCategory || state.homeSubcategory) {
+        // Chỉ áp dụng taxonomy khi người dùng đã chủ động chọn bộ lọc danh mục.
+        // Trạng thái ban đầu homeCategory/homeSubcategory rỗng => giữ nguyên toàn bộ sản phẩm như website cũ.
+        products = getProductsForHomeCategory(products, true);
     }
 
     if (state.selectedBrands.size > 0) {
