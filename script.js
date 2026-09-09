@@ -337,7 +337,7 @@ function getHomeSectionTitle() {
     if (!state.homeCategory) return "TẤT CẢ SẢN PHẨM";
     if (state.homeCategory === "skincare") return "CHĂM SÓC DA";
     if (state.homeCategory === "supplement") return "THỰC PHẨM CHỨC NĂNG";
-    if (state.homeCategory === "highend") return "2HIGHEND";
+    if (state.homeCategory === "highend") return "Mỹ Phẩm Cao Cấp";
 
     const labels = {
         face: "TRANG ĐIỂM CHO MẶT",
