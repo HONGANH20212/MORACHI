@@ -1,4 +1,4 @@
-/* Homepage-only mobile presentation. Load AFTER style.css. */
+/* Homepage-only mobile presentation v2. Original brand/logo styling comes from style.css. */
 body.home-mobile-refresh .mobile-only { display: none !important; }
 body.home-mobile-refresh .mobile-sheet:not([open]) { display: none; }
 .mobile-sr-only { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
@@ -13,13 +13,8 @@ body.home-mobile-refresh .mobile-sheet:not([open]) { display: none; }
  body.home-mobile-refresh .main-header-inner { display:grid !important; grid-template-columns:44px minmax(0,1fr) 44px; grid-template-rows:auto auto; gap:10px 4px !important; padding:12px 0 10px !important; width:100%; margin:0; }
  body.home-mobile-refresh .mobile-menu-toggle { grid-column:1; grid-row:1; width:44px; height:44px; align-items:center; justify-content:center; border:0; background:none; font-size:22px; color:#252831; }
  body.home-mobile-refresh .logo-area { grid-column:2; grid-row:1; justify-self:center; width:auto !important; margin:0 !important; }
- body.home-mobile-refresh .logo-area a { justify-content:center; gap:0; }
- body.home-mobile-refresh .logo-icon { display:none !important; }
- body.home-mobile-refresh .logo-text { display:flex !important; text-align:center; }
- body.home-mobile-refresh .logo-text h1 { color:#ba1a1a !important; font:500 clamp(27px,8vw,34px)/1.05 Georgia,serif !important; letter-spacing:2px; }
- body.home-mobile-refresh .logo-text p { font-size:12px !important; letter-spacing:2.5px; text-transform:none; margin-top:4px; }
  body.home-mobile-refresh .header-actions { grid-column:3; grid-row:1; display:flex !important; width:44px !important; margin:0 !important; gap:0 !important; }
- body.home-mobile-refresh .header-actions > a, body.home-mobile-refresh .header-actions .action-text { display:none !important; }
+ body.home-mobile-refresh .header-actions > a.action-item, body.home-mobile-refresh .header-actions .action-text { display:none !important; }
  body.home-mobile-refresh .header-actions .action-item { display:flex !important; align-items:center; justify-content:center; width:44px; height:44px; margin:0; padding:0; }
  body.home-mobile-refresh .header-actions .action-icon { color:#252831; font-size:25px !important; }
  body.home-mobile-refresh .cart-count { background:#ba1a1a; color:#fff; font-size:12px; min-width:18px; height:18px; line-height:18px; padding:0 3px; border-radius:20px; text-align:center; }
@@ -41,7 +36,7 @@ body.home-mobile-refresh .mobile-sheet:not([open]) { display: none; }
  body.home-products-page.home-mobile-refresh .home-makeup-subcategories { display:flex !important; gap:7px !important; padding:5px 0 !important; margin:4px 0 0 !important; border:0 !important; border-radius:0 !important; background:#fff !important; overflow-x:auto; scrollbar-width:thin; }
  body.home-products-page.home-mobile-refresh[data-mobile-category]:not([data-mobile-category=""]):not([data-mobile-category="makeup"]) .home-makeup-subcategories.is-hidden { display:none !important; }
  body.home-products-page.home-mobile-refresh .home-subcategory { display:flex !important; flex:0 0 calc((100% - 21px)/4); min-width:68px !important; min-height:40px !important; height:auto !important; padding:9px 8px !important; border:0 !important; border-radius:9px !important; background:#f3f3f5 !important; color:#555862 !important; box-shadow:none !important; }
- body.home-products-page.home-mobile-refresh .home-subcategory > span:last-child { font-size:14px !important; line-height:1.4 !important; }
+ body.home-products-page.home-mobile-refresh .home-subcategory > span:last-child { font-size:14px !important; line-height:1.4 !important; color:inherit !important; }
  body.home-products-page.home-mobile-refresh .home-subcategory.active { background:#ba1a1a !important; color:#fff !important; }
  body.home-products-page.home-mobile-refresh .home-catalog { padding:8px 12px 18px !important; background:#fff; }
  body.home-mobile-refresh .home-section-heading { display:none !important; }
