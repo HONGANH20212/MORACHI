@@ -28,6 +28,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchSubmit = searchShell?.querySelector('.search-submit');
     const searchClear = document.getElementById('mobile-search-clear');
     const searchSuggestions = document.getElementById('mobile-search-suggestions');
+    const mobileHeader = document.querySelector('.modern-header');
+
+    function syncStickyHeaderOffset() {
+        if (!mobile.matches) {
+            document.documentElement.style.removeProperty('--morachi-mobile-header-height');
+            return;
+        }
+        const height = Math.ceil(mobileHeader?.getBoundingClientRect().height || 136);
+        document.documentElement.style.setProperty('--morachi-mobile-header-height', `${height}px`);
+    }
+
+    syncStickyHeaderOffset();
+    window.addEventListener('resize', syncStickyHeaderOffset, { passive: true });
+    window.addEventListener('orientationchange', syncStickyHeaderOffset, { passive: true });
 
     let previousOverflow = '';
     let returnFocus = null;
@@ -554,6 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     mobile.addEventListener('change', () => {
         hideSearchSuggestions();
+        syncStickyHeaderOffset();
         if (!mobile.matches) closeDialogs();
     });
 });
