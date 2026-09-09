@@ -757,76 +757,109 @@ function bindPriceFilter() {
 
 // --- TÍNH NĂNG NÚT LIÊN HỆ NỔI (FLOATING CONTACT) ---
 function initFloatingContact() {
+    if (document.querySelector('.floating-contact')) return;
+
     const style = document.createElement('style');
     style.innerHTML = `
         .floating-contact {
             position: fixed;
-            bottom: 30px;
             right: 30px;
+            bottom: 30px;
+            z-index: 9999;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            z-index: 9999;
+            align-items: flex-end;
+            gap: 12px;
         }
-        .float-btn {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
+        .floating-contact-panel {
+            display: none;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 10px;
+        }
+        .floating-contact.open .floating-contact-panel {
             display: flex;
+        }
+        .floating-contact-link {
+            min-width: 200px;
+            min-height: 44px;
+            padding: 10px 16px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 10px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.3;
+            text-decoration: none;
+            box-shadow: 0 10px 24px rgba(16, 22, 30, 0.18);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+        }
+        .floating-contact-link:hover {
+            transform: translateY(-2px);
+            color: #fff;
+            box-shadow: 0 12px 28px rgba(16, 22, 30, 0.24);
+        }
+        .floating-contact-link i {
+            width: 20px;
+            text-align: center;
+            font-size: 18px;
+            flex: 0 0 auto;
+        }
+        .floating-contact-toggle {
+            min-width: 118px;
+            height: 48px;
+            padding: 0 16px;
+            border: 0;
+            border-radius: 999px;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            color: white;
-            font-size: 22px;
-            text-decoration: none;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            gap: 9px;
+            background: linear-gradient(135deg, #d71920, #b30f16);
+            color: #fff;
+            font: inherit;
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1;
+            cursor: pointer;
+            box-shadow: 0 12px 26px rgba(183, 15, 22, 0.28);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
-            position: relative;
         }
-        .float-btn:hover {
-            transform: translateY(-5px) scale(1.05);
-            color: white;
-            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+        .floating-contact-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 30px rgba(183, 15, 22, 0.34);
         }
-        .float-btn .tooltip {
-            position: absolute;
-            right: 55px;
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 5px 12px;
-            border-radius: 6px;
-            font-size: 13px;
-            white-space: nowrap;
-            opacity: 0;
-            visibility: hidden;
-            transition: 0.3s ease;
-            pointer-events: none;
-            font-weight: bold;
+        .floating-contact-toggle i {
+            font-size: 18px;
+            line-height: 1;
         }
-        .float-btn:hover .tooltip {
-            opacity: 1;
-            visibility: visible;
-            right: 60px;
-        }
-        .btn-messenger { background: linear-gradient(45deg, #00C6FF, #0072FF); }
-        .btn-facebook { background: #1877F2; }
-        .btn-tiktok1 { background: #000000; border: 2px solid #fff; }
-        .btn-tiktok2 { background: #000000; border: 2px solid #00f2fe; }
-
-        @keyframes pulse-ring {
-            0% { box-shadow: 0 0 0 0 rgba(0, 132, 255, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(0, 132, 255, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 132, 255, 0); }
-        }
-        .btn-messenger {
-            animation: pulse-ring 2s infinite;
-        }
+        .floating-contact-toggle .close-label { display: none; }
+        .floating-contact.open .floating-contact-toggle .open-label { display: none; }
+        .floating-contact.open .floating-contact-toggle .close-label { display: inline; }
+        .contact-messenger { background: linear-gradient(45deg, #00C6FF, #0072FF); }
+        .contact-tiktok1 { background: #121212; }
+        .contact-tiktok2 { background: linear-gradient(45deg, #121212, #202020); border: 1px solid #00f2fe33; }
 
         @media (max-width: 768px) {
             .floating-contact {
-                bottom: 20px;
-                right: 15px;
-                transform: scale(0.9);
-                transform-origin: bottom right;
+                right: 12px;
+                bottom: calc(86px + env(safe-area-inset-bottom));
+                gap: 8px;
+            }
+            .floating-contact-link {
+                min-width: 180px;
+                min-height: 40px;
+                padding: 9px 14px;
+                font-size: 13px;
+            }
+            .floating-contact-toggle {
+                min-width: 108px;
+                height: 44px;
+                padding: 0 14px;
+                font-size: 14px;
             }
         }
     `;
@@ -835,25 +868,56 @@ function initFloatingContact() {
     const container = document.createElement('div');
     container.className = 'floating-contact';
     container.innerHTML = `
-        <a href="https://www.facebook.com/profile.php?id=61572066442519" target="_blank" class="float-btn btn-messenger">
-            <i class="fab fa-facebook-messenger"></i>
-            <span class="tooltip">Chat Messenger</span>
-        </a>
-        <a href="https://www.facebook.com/profile.php?id=61572066442519" target="_blank" class="float-btn btn-facebook">
-            <i class="fab fa-facebook-f"></i>
-            <span class="tooltip">Facebook Fanpage</span>
-        </a>
-        <a href="https://www.tiktok.com/@donhatnoidia2026" target="_blank" class="float-btn btn-tiktok1">
-            <i class="fab fa-tiktok"></i>
-            <span class="tooltip">Tiệm đồ nhật nội địa</span>
-        </a>
-        <a href="https://www.tiktok.com/@morachijanpan" target="_blank" class="float-btn btn-tiktok2">
-            <i class="fab fa-tiktok"></i>
-            <span class="tooltip">Morachi</span>
-        </a>
+        <div class="floating-contact-panel" id="floating-contact-panel" hidden>
+            <a href="https://www.facebook.com/profile.php?id=61572066442519" target="_blank" rel="noopener noreferrer" class="floating-contact-link contact-messenger">
+                <i class="fab fa-facebook-messenger" aria-hidden="true"></i>
+                <span>Fanpage / Messenger</span>
+            </a>
+            <a href="https://www.tiktok.com/@donhatnoidia2026" target="_blank" rel="noopener noreferrer" class="floating-contact-link contact-tiktok1">
+                <i class="fab fa-tiktok" aria-hidden="true"></i>
+                <span>TikTok 1 · Tiệm đồ Nhật nội địa</span>
+            </a>
+            <a href="https://www.tiktok.com/@morachijanpan" target="_blank" rel="noopener noreferrer" class="floating-contact-link contact-tiktok2">
+                <i class="fab fa-tiktok" aria-hidden="true"></i>
+                <span>TikTok 2 · Morachi</span>
+            </a>
+        </div>
+        <button type="button" class="floating-contact-toggle" aria-expanded="false" aria-controls="floating-contact-panel" aria-label="Mở liên hệ nhanh">
+            <i class="fa-solid fa-comments" aria-hidden="true"></i>
+            <span class="open-label">Liên hệ</span>
+            <span class="close-label">Đóng</span>
+        </button>
     `;
     document.body.appendChild(container);
+
+    const toggle = container.querySelector('.floating-contact-toggle');
+    const panel = container.querySelector('.floating-contact-panel');
+
+    function setOpen(open) {
+        container.classList.toggle('open', open);
+        toggle.setAttribute('aria-expanded', String(open));
+        toggle.setAttribute('aria-label', open ? 'Đóng liên hệ nhanh' : 'Mở liên hệ nhanh');
+        panel.hidden = !open;
+    }
+
+    toggle.addEventListener('click', (event) => {
+        event.stopPropagation();
+        setOpen(!container.classList.contains('open'));
+    });
+
+    panel.addEventListener('click', (event) => {
+        event.stopPropagation();
+    });
+
+    document.addEventListener('click', (event) => {
+        if (!container.contains(event.target)) setOpen(false);
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') setOpen(false);
+    });
 }
+
 
 window.addEventListener("resize", () => {
     setupMobileFilterCompact();

@@ -637,7 +637,83 @@ body.home-mobile-refresh .mobile-sheet:not([open]) { display: none; }
         top: -8px;
         right: -12px;
     }
-    body.home-mobile-refresh .floating-contact { display: none !important; }
+
+    /* ===== FLOATING CONTACT POPUP ===== */
+    body.home-mobile-refresh .floating-contact {
+        position: fixed !important;
+        right: 10px !important;
+        bottom: calc(86px + env(safe-area-inset-bottom)) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-end !important;
+        gap: 8px !important;
+        z-index: 1400 !important;
+        transform: none !important;
+    }
+    body.home-mobile-refresh .floating-contact-panel {
+        display: none;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 6px;
+    }
+    body.home-mobile-refresh .floating-contact.open .floating-contact-panel {
+        display: flex;
+    }
+    body.home-mobile-refresh .floating-contact-link {
+        min-width: 168px;
+        min-height: 38px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 8px;
+        color: #fff !important;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 1.25;
+        text-decoration: none !important;
+        box-shadow: 0 8px 20px rgba(14, 17, 22, .18);
+    }
+    body.home-mobile-refresh .floating-contact-link i {
+        width: 16px;
+        font-size: 15px;
+        text-align: center;
+        flex: 0 0 auto;
+    }
+    body.home-mobile-refresh .floating-contact-toggle {
+        min-width: 104px;
+        height: 40px;
+        padding: 0 14px;
+        border: 0;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: linear-gradient(135deg, #d71920, #b30f16) !important;
+        color: #fff !important;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1;
+        box-shadow: 0 10px 22px rgba(183, 15, 22, .26);
+    }
+    body.home-mobile-refresh .floating-contact-toggle i {
+        font-size: 16px;
+        line-height: 1;
+    }
+    body.home-mobile-refresh .contact-messenger {
+        background: linear-gradient(45deg, #00C6FF, #0072FF) !important;
+    }
+    body.home-mobile-refresh .contact-tiktok1,
+    body.home-mobile-refresh .contact-tiktok2 {
+        background: #101214 !important;
+    }
+    body.home-mobile-refresh .contact-tiktok2 {
+        border: 1px solid rgba(0, 242, 254, .4);
+    }
+
 
     /* ===== CART ===== */
     body.home-mobile-refresh .cart-drawer {
@@ -919,6 +995,22 @@ body.home-mobile-refresh .mobile-sheet:not([open]) { display: none; }
         font-size: 11px;
         padding-left: 10px;
         padding-right: 10px;
+    }
+    body.home-mobile-refresh .floating-contact {
+        right: 8px !important;
+        bottom: calc(82px + env(safe-area-inset-bottom)) !important;
+        gap: 6px !important;
+    }
+    body.home-mobile-refresh .floating-contact-link {
+        min-width: 152px;
+        min-height: 36px;
+        padding: 7px 11px;
+        font-size: 11px;
+    }
+    body.home-mobile-refresh .floating-contact-toggle {
+        min-width: 98px;
+        height: 38px;
+        font-size: 12px;
     }
     body.home-mobile-refresh .logo-text h1 { font-size: 16px !important; }
     body.home-mobile-refresh .logo-text p { letter-spacing: 2.2px !important; }
