@@ -11,9 +11,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="home-mobile.css?v=20260909">
 </head>
 
-<body class="home-products-page">
+<body class="home-products-page home-mobile-refresh">
     <header class="modern-header">
         <div class="top-header">
             <div class="container top-header-inner">
@@ -38,6 +39,7 @@
 
         <div class="main-header">
             <div class="container main-header-inner">
+                <button type="button" class="mobile-only mobile-menu-toggle" data-open-dialog="mobile-menu" aria-label="Mở menu" aria-haspopup="dialog"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>
                 <div class="logo-area">
                     <a href="/">
                         <img src="images/morachi_logo.png" alt="MORACHI Logo" class="logo-icon">
@@ -49,7 +51,7 @@
                 </div>
 
                 <div class="search-bar">
-                    <input type="text" placeholder="Tìm sản phẩm, thương hiệu bạn mong muốn..." aria-label="Tìm sản phẩm">
+                    <input type="text" placeholder="Tìm sản phẩm, thương hiệu…" aria-label="Tìm sản phẩm">
                     <button type="button" aria-label="Tìm kiếm"><i class="fa-solid fa-magnifying-glass"></i></button>
                 </div>
 
@@ -62,9 +64,9 @@
                         </div>
                     </a>
 
-                    <div class="action-item" onclick="toggleCart()">
+                    <div class="action-item" role="button" tabindex="0" aria-label="Mở giỏ hàng" onclick="toggleCart()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCart();}">
                         <div class="action-icon">
-                            <i class="fa-solid fa-cart-shopping"></i>
+                            <i class="fa-solid fa-bag-shopping"></i>
                             <span class="cart-count" id="cart-count">0</span>
                         </div>
                         <div class="action-text">
@@ -78,13 +80,13 @@
 
         <div class="red-banner">
             <div class="container">
-                <i class="fa-solid fa-truck-fast"></i> CHUYÊN BÁN MỸ PHẨM NHẬT BẢN CHÍNH HÃNG & NHẬN ORDER HÀNG NHẬT BẢN 10-15 DAY
+                <i class="fa-solid fa-truck-fast"></i> <span class="desktop-shipping">CHUYÊN BÁN MỸ PHẨM NHẬT BẢN CHÍNH HÃNG & NHẬN ORDER HÀNG NHẬT BẢN 10-15 DAY</span><span class="mobile-only">Hàng Nhật chính hãng · Order 10–15 ngày</span>
             </div>
         </div>
     </header>
 
     <!-- DANH MỤC CHÍNH: thay cho breadcrumb/sidebar/sort cũ -->
-    <section class="home-category-area container" aria-label="Danh mục sản phẩm">
+    <section id="home-categories" class="home-category-area container" aria-label="Danh mục sản phẩm">
         <nav class="home-main-categories" aria-label="Danh mục chính">
             <button type="button" class="home-main-category active" data-category="makeup" aria-selected="true">
                 <span class="home-main-category-icon" aria-hidden="true">
@@ -128,7 +130,7 @@
                         <path d="M46.5 49s-7-4.1-7-8.3c0-2.2 1.5-3.7 3.6-3.7 1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2 2.1 0 3.6 1.5 3.6 3.7 0 4.2-7 8.3-7 8.3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                     </svg>
                 </span>
-                <span class="home-main-category-label">Thực phẩm<br>chức năng</span>
+                <span class="home-main-category-label"><span class="desktop-category-label">Thực phẩm<br>chức năng</span><span class="mobile-only">TPCN</span></span>
             </button>
             <button type="button" class="home-main-category" data-category="highend" aria-selected="false">
                 <span class="home-main-category-icon" aria-hidden="true">
@@ -138,11 +140,12 @@
                         <path d="M25 40c2.1 3 4.4 4.5 7 4.5s4.9-1.5 7-4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
                     </svg>
                 </span>
-                <span class="home-main-category-label">Luxyry</span>
+                <span class="home-main-category-label">Luxury</span>
             </button>
         </nav>
 
         <div class="home-makeup-subcategories" id="home-makeup-subcategories" aria-label="Danh mục trang điểm">
+            <button type="button" class="home-subcategory mobile-only" data-subcategory="" aria-selected="false"><span>Tất cả</span></button>
             <div class="home-subcategory-heading">
                 <span class="home-subcategory-heading-icon" aria-hidden="true">✦</span>
                 <span>Danh mục trang điểm</span>
@@ -216,7 +219,12 @@
         </section>
     </section>
 
-    <main class="home-catalog container">
+    <main class="home-catalog container" id="home-catalog">
+        <div class="mobile-only mobile-catalog-toolbar">
+            <div><h2>Sản phẩm</h2><span id="mobile-result-count" aria-live="polite"></span></div>
+            <button type="button" class="mobile-filter-button" data-open-dialog="mobile-filters" aria-haspopup="dialog"><i class="fa-solid fa-sliders" aria-hidden="true"></i> Bộ lọc<span id="mobile-filter-count"></span></button>
+            <label class="mobile-sort"><span class="mobile-sr-only">Sắp xếp sản phẩm</span><select id="mobile-sort"><option value="bestseller">Đề xuất</option><option value="newest">Mới nhất</option><option value="price_asc">Giá tăng dần</option><option value="price_desc">Giá giảm dần</option></select></label>
+        </div>
         <div class="home-section-heading">
             <div class="home-section-title-wrap">
                 <span class="home-section-mark"><i class="fa-solid fa-spa"></i></span>
@@ -247,7 +255,35 @@
         </div>
     </div>
 
+    <nav class="mobile-only mobile-bottom-nav" aria-label="Điều hướng chính">
+        <button type="button" class="active" id="mobile-home" aria-current="page"><i class="fa-solid fa-house" aria-hidden="true"></i><span>Trang chủ</span></button>
+        <button type="button" id="mobile-categories"><i class="fa-solid fa-border-all" aria-hidden="true"></i><span>Danh mục</span></button>
+        <a href="tracking.html"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i><span>Tra đơn</span></a>
+        <button type="button" onclick="openCart()"><span class="mobile-bag-icon"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span class="cart-count">0</span></span><span>Giỏ hàng</span></button>
+    </nav>
+    <dialog id="mobile-menu" class="mobile-sheet" aria-labelledby="mobile-menu-title">
+        <div class="mobile-sheet-heading"><h2 id="mobile-menu-title">MORACHI</h2><button type="button" data-close-dialog aria-label="Đóng menu">×</button></div>
+        <div class="mobile-menu-links">
+            <button type="button" id="mobile-menu-all">Tất cả sản phẩm <span>→</span></button>
+            <a href="tracking.html">Tra cứu đơn hàng <span>→</span></a>
+            <a href="tel:0948313842">Gọi shop: 0948 313 842 <span>↗</span></a>
+        </div>
+        <p class="mobile-menu-caption">Liên hệ MORACHI</p>
+        <div id="mobile-contact-links" class="mobile-menu-links"></div>
+        <p class="mobile-menu-caption">18:00–00:00 (T2–CN) · Quận 7, Hồ Chí Minh</p>
+    </dialog>
+    <dialog id="mobile-filters" class="mobile-sheet" aria-labelledby="mobile-filters-title">
+        <div class="mobile-sheet-heading"><h2 id="mobile-filters-title">Bộ lọc sản phẩm</h2><button type="button" data-close-dialog aria-label="Đóng bộ lọc">×</button></div>
+        <div id="mobile-brands-slot"></div>
+        <form id="mobile-price-form">
+            <h3>Khoảng giá (đ)</h3>
+            <div class="mobile-price-fields"><label>Từ<input id="mobile-min-price" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></label><label>Đến<input id="mobile-max-price" type="number" min="0" step="1" inputmode="numeric" placeholder="Không giới hạn"></label></div>
+            <p id="mobile-price-error" role="alert"></p>
+            <div class="mobile-filter-actions"><button type="button" id="mobile-reset-filters">Xóa bộ lọc</button><button type="submit">Xem sản phẩm</button></div>
+        </form>
+    </dialog>
     <script src="cart.js"></script>
     <script src="script.js"></script>
+    <script src="home-mobile.js?v=20260909"></script>
 </body>
 </html>
