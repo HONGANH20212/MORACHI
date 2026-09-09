@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="home-mobile.css?v=20260909-3">
+    <link rel="stylesheet" href="home-mobile.css?v=20260909-4">
 </head>
 
 <body class="home-products-page home-mobile-refresh">
@@ -50,9 +50,11 @@
                     </a>
                 </div>
 
-                <div class="search-bar">
-                    <input type="text" placeholder="Tìm sản phẩm, thương hiệu…" aria-label="Tìm sản phẩm">
-                    <button type="button" aria-label="Tìm kiếm"><i class="fa-solid fa-magnifying-glass"></i></button>
+                <div class="search-bar" id="mobile-search-shell">
+                    <input type="text" placeholder="Tìm sản phẩm, thương hiệu…" aria-label="Tìm sản phẩm" autocomplete="off" aria-controls="mobile-search-suggestions" aria-expanded="false">
+                    <button type="button" class="search-submit" aria-label="Tìm kiếm"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    <button type="button" class="mobile-only mobile-search-clear" id="mobile-search-clear" aria-label="Xóa nội dung tìm kiếm" hidden><i class="fa-solid fa-xmark"></i></button>
+                    <div id="mobile-search-suggestions" class="mobile-only mobile-search-suggestions" role="listbox" aria-label="Gợi ý thương hiệu" hidden></div>
                 </div>
 
                 <div class="header-actions">
@@ -212,11 +214,32 @@
     </section>
 
     <main class="home-catalog container" id="home-catalog">
-        <div class="mobile-only mobile-catalog-toolbar">
-            <div><h2>Sản phẩm</h2><span id="mobile-result-count" aria-live="polite"></span></div>
-            <button type="button" class="mobile-filter-button" data-open-dialog="mobile-filters" aria-haspopup="dialog"><i class="fa-solid fa-sliders" aria-hidden="true"></i> Bộ lọc<span id="mobile-filter-count"></span></button>
-            <label class="mobile-sort"><span class="mobile-sr-only">Sắp xếp sản phẩm</span><select id="mobile-sort"><option value="bestseller">Đề xuất</option><option value="newest">Mới nhất</option><option value="price_asc">Giá tăng dần</option><option value="price_desc">Giá giảm dần</option></select></label>
-        </div>
+        <section class="mobile-only mobile-results-block" aria-label="Kết quả sản phẩm">
+            <div class="mobile-result-heading-row">
+                <div class="mobile-result-heading-copy">
+                    <h2 id="mobile-result-title">Tất cả sản phẩm</h2>
+                    <span id="mobile-result-count" aria-live="polite"></span>
+                </div>
+                <button type="button" id="mobile-clear-active" class="mobile-clear-active" hidden>Xóa lọc</button>
+            </div>
+            <div id="mobile-active-filters" class="mobile-active-filters" aria-live="polite" hidden></div>
+            <div class="mobile-catalog-toolbar">
+                <button type="button" class="mobile-filter-button" data-open-dialog="mobile-filters" aria-haspopup="dialog">
+                    <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+                    <span>Bộ lọc</span>
+                    <span id="mobile-filter-count"></span>
+                </button>
+                <label class="mobile-sort">
+                    <span class="mobile-sr-only">Sắp xếp sản phẩm</span>
+                    <select id="mobile-sort">
+                        <option value="bestseller">Đề xuất</option>
+                        <option value="newest">Mới nhất</option>
+                        <option value="price_asc">Giá tăng dần</option>
+                        <option value="price_desc">Giá giảm dần</option>
+                    </select>
+                </label>
+            </div>
+        </section>
         <div class="home-section-heading">
             <div class="home-section-title-wrap">
                 <span class="home-section-mark"><i class="fa-solid fa-spa"></i></span>
@@ -264,18 +287,63 @@
         <div id="mobile-contact-links" class="mobile-menu-links"></div>
         <p class="mobile-menu-caption">18:00–00:00 (T2–CN) · Quận 7, Hồ Chí Minh</p>
     </dialog>
-    <dialog id="mobile-filters" class="mobile-sheet" aria-labelledby="mobile-filters-title">
-        <div class="mobile-sheet-heading"><h2 id="mobile-filters-title">Bộ lọc sản phẩm</h2><button type="button" data-close-dialog aria-label="Đóng bộ lọc">×</button></div>
-        <div id="mobile-brands-slot"></div>
-        <form id="mobile-price-form">
-            <h3>Khoảng giá (đ)</h3>
-            <div class="mobile-price-fields"><label>Từ<input id="mobile-min-price" type="number" min="0" step="1" inputmode="numeric" placeholder="0"></label><label>Đến<input id="mobile-max-price" type="number" min="0" step="1" inputmode="numeric" placeholder="Không giới hạn"></label></div>
-            <p id="mobile-price-error" role="alert"></p>
-            <div class="mobile-filter-actions"><button type="button" id="mobile-reset-filters">Xóa bộ lọc</button><button type="submit">Xem sản phẩm</button></div>
+    <dialog id="mobile-filters" class="mobile-sheet mobile-filter-drawer" aria-labelledby="mobile-filters-title">
+        <div class="mobile-sheet-heading">
+            <h2 id="mobile-filters-title">Bộ lọc</h2>
+            <button type="button" data-close-dialog aria-label="Đóng bộ lọc"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+        </div>
+
+        <form id="mobile-price-form" class="mobile-filter-form">
+            <section class="mobile-filter-section">
+                <h3>Danh mục</h3>
+                <div class="mobile-filter-chip-row" id="mobile-filter-categories">
+                    <button type="button" data-mobile-filter-category="makeup">Trang điểm</button>
+                    <button type="button" data-mobile-filter-category="skincare">Chăm sóc da</button>
+                    <button type="button" data-mobile-filter-category="supplement">TPCN</button>
+                    <button type="button" data-mobile-filter-category="highend">Luxury</button>
+                </div>
+            </section>
+
+            <section class="mobile-filter-section" id="mobile-filter-subcategory-section" hidden>
+                <h3>Phân loại trang điểm</h3>
+                <div class="mobile-filter-chip-row mobile-filter-subcategory-row" id="mobile-filter-subcategories">
+                    <button type="button" data-mobile-filter-subcategory="">Tất cả</button>
+                    <button type="button" data-mobile-filter-subcategory="face">Mặt</button>
+                    <button type="button" data-mobile-filter-subcategory="eyes">Mắt</button>
+                    <button type="button" data-mobile-filter-subcategory="lips">Môi</button>
+                    <button type="button" data-mobile-filter-subcategory="cheeks">Má</button>
+                    <button type="button" data-mobile-filter-subcategory="brows">Mày</button>
+                </div>
+            </section>
+
+            <section class="mobile-filter-section">
+                <h3>Thương hiệu</h3>
+                <label class="mobile-brand-search" for="mobile-brand-search-input">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    <input id="mobile-brand-search-input" type="search" autocomplete="off" placeholder="Tìm thương hiệu..." aria-label="Tìm thương hiệu trong bộ lọc">
+                </label>
+                <div id="mobile-brand-options" class="mobile-brand-options" aria-live="polite">
+                    <p class="mobile-brand-empty">Đang tải thương hiệu...</p>
+                </div>
+            </section>
+
+            <section class="mobile-filter-section">
+                <h3>Khoảng giá</h3>
+                <div class="mobile-price-fields">
+                    <label><span>Từ</span><span class="mobile-price-input"><input id="mobile-min-price" type="number" min="0" step="1" inputmode="numeric" placeholder=""><b>đ</b></span></label>
+                    <label><span>Đến</span><span class="mobile-price-input"><input id="mobile-max-price" type="number" min="0" step="1" inputmode="numeric" placeholder=""><b>đ</b></span></label>
+                </div>
+                <p id="mobile-price-error" role="alert"></p>
+            </section>
+
+            <div class="mobile-filter-actions">
+                <button type="button" id="mobile-reset-filters">Xóa bộ lọc</button>
+                <button type="submit">Áp dụng</button>
+            </div>
         </form>
     </dialog>
     <script src="cart.js"></script>
     <script src="script.js"></script>
-    <script src="home-mobile.js?v=20260909-2"></script>
+    <script src="home-mobile.js?v=20260909-4"></script>
 </body>
 </html>
