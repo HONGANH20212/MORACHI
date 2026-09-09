@@ -10,7 +10,7 @@
     <meta name="theme-color" content="#b3131b">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=20260909-5">
     <link rel="stylesheet" href="home-mobile.css?v=20260909-4">
 </head>
 
@@ -101,7 +101,11 @@
                         <path d="M35 13h19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
                     </svg>
                 </span>
-                <span class="home-main-category-label">Trang Điểm</span>
+                <span class="home-main-category-copy">
+                    <span class="home-main-category-label">Trang điểm</span>
+                    <span class="home-main-category-desc">Tỏa sáng nét đẹp riêng</span>
+                </span>
+                <span class="home-main-category-arrow" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
             </button>
             <button type="button" class="home-main-category" data-category="skincare" aria-selected="false">
                 <span class="home-main-category-icon" aria-hidden="true">
@@ -114,7 +118,11 @@
                         <path d="M26 38h13M26 43h13" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity=".75"/>
                     </svg>
                 </span>
-                <span class="home-main-category-label">Chăm sóc da</span>
+                <span class="home-main-category-copy">
+                    <span class="home-main-category-label">Chăm sóc da</span>
+                    <span class="home-main-category-desc">Làn da khỏe đẹp mỗi ngày</span>
+                </span>
+                <span class="home-main-category-arrow" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
             </button>
             <button type="button" class="home-main-category" data-category="supplement" aria-selected="false">
                 <span class="home-main-category-icon" aria-hidden="true">
@@ -128,7 +136,11 @@
                         <path d="M46.5 49s-7-4.1-7-8.3c0-2.2 1.5-3.7 3.6-3.7 1.5 0 2.7.8 3.4 2 .7-1.2 1.9-2 3.4-2 2.1 0 3.6 1.5 3.6 3.7 0 4.2-7 8.3-7 8.3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
                     </svg>
                 </span>
-                <span class="home-main-category-label"><span class="desktop-category-label">Thực phẩm<br>chức năng</span><span class="mobile-only">TPCN</span></span>
+                <span class="home-main-category-copy">
+                    <span class="home-main-category-label"><span class="desktop-category-label">Thực phẩm chức năng</span><span class="mobile-only">TPCN</span></span>
+                    <span class="home-main-category-desc">Vì sức khỏe và sắc đẹp</span>
+                </span>
+                <span class="home-main-category-arrow" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
             </button>
             <button type="button" class="home-main-category" data-category="highend" aria-selected="false">
                 <span class="home-main-category-icon" aria-hidden="true">
@@ -138,7 +150,11 @@
                         <path d="M25 40c2.1 3 4.4 4.5 7 4.5s4.9-1.5 7-4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
                     </svg>
                 </span>
-                <span class="home-main-category-label">Luxury</span>
+                <span class="home-main-category-copy">
+                    <span class="home-main-category-label">Luxury</span>
+                    <span class="home-main-category-desc">Tinh hoa làm đẹp cao cấp</span>
+                </span>
+                <span class="home-main-category-arrow" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
             </button>
         </nav>
 
@@ -208,7 +224,7 @@
 
         <section class="home-featured-brands" aria-label="Thương hiệu nổi bật">
             <div class="home-featured-heading">
-                <h2><i class="fa-solid fa-crown" aria-hidden="true"></i> THƯƠNG HIỆU NỔI BẬT</h2>
+                <h2>Thương hiệu nổi bật</h2>
                 <button type="button" id="home-clear-brand" class="home-link-button">Xem tất cả <i class="fa-solid fa-chevron-right"></i></button>
             </div>
             <div id="home-brand-list" class="home-brand-list" aria-live="polite">
