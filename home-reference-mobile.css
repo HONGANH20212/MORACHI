@@ -1202,3 +1202,50 @@
         padding-right: 13px !important;
     }
 }
+
+
+/* =============================================================
+   MORACHI MOBILE FINAL - SINGLE ACTIVE CATEGORY CHIP
+   2026-10-06
+   Visual-only behavior for the main mobile category strip.
+   Existing search/filter/cart/product logic is intentionally untouched.
+   ============================================================= */
+@media (max-width: 768px) {
+    /* Base state: every category chip is white, even if legacy desktop markup
+       still contains class="active" on Trang điểm. */
+    body.home-products-page #home-categories .home-main-category,
+    body.home-products-page #home-categories .home-main-category.active,
+    body.home-products-page #home-categories .home-main-category:not(.active),
+    body.home-products-page #home-categories .home-main-category-all {
+        background: #ffffff !important;
+        color: #17181e !important;
+        border-color: #dedfe4 !important;
+        box-shadow: none !important;
+    }
+
+    body.home-products-page #home-categories .home-main-category .home-main-category-label,
+    body.home-products-page #home-categories .home-main-category.active .home-main-category-label,
+    body.home-products-page #home-categories .home-main-category:not(.active) .home-main-category-label,
+    body.home-products-page #home-categories .home-main-category-all .home-main-category-label {
+        color: #17181e !important;
+    }
+
+    /* Selected state: exactly one chip gets the black treatment. */
+    body.home-products-page #home-categories .home-main-category[aria-selected="true"],
+    body.home-products-page #home-categories .home-main-category-all[aria-selected="true"] {
+        background: #171717 !important;
+        color: #ffffff !important;
+        border-color: #171717 !important;
+        box-shadow: none !important;
+    }
+
+    body.home-products-page #home-categories .home-main-category[aria-selected="true"] .home-main-category-label,
+    body.home-products-page #home-categories .home-main-category-all[aria-selected="true"] .home-main-category-label {
+        color: #ffffff !important;
+    }
+
+    body.home-products-page #home-categories .home-main-category[aria-selected="true"] .home-main-category-icon,
+    body.home-products-page #home-categories .home-main-category-all[aria-selected="true"] .home-main-category-icon {
+        color: #ffffff !important;
+    }
+}

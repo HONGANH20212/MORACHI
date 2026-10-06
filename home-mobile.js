@@ -30,6 +30,51 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchSuggestions = document.getElementById('mobile-search-suggestions');
     const mobileHeader = document.querySelector('.modern-header');
 
+
+    /* ===== MOBILE MAIN CATEGORY: SINGLE SELECTED VISUAL STATE =====
+       Presentation only. Existing category/filter handlers keep running normally.
+       - Default: "Tất cả" is selected.
+       - Clicking another chip only changes aria-selected for the visual state.
+       - No preventDefault/stopPropagation, no filter/cart/search state is overwritten. */
+    const mainCategoryButtons = [
+        ...document.querySelectorAll('#home-categories .home-main-category')
+    ];
+
+    function syncMainCategorySelectedVisual(selectedButton) {
+        if (!selectedButton) return;
+        mainCategoryButtons.forEach(button => {
+            button.setAttribute(
+                'aria-selected',
+                button === selectedButton ? 'true' : 'false'
+            );
+        });
+    }
+
+    if (mainCategoryButtons.length) {
+        const defaultButton =
+            mainCategoryButtons.find(button => button.dataset.category === '') ||
+            mainCategoryButtons[0];
+
+        // Normalize the mobile initial state so only "Tất cả" is black.
+        if (mobile.matches) syncMainCategorySelectedVisual(defaultButton);
+
+        mainCategoryButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                if (!mobile.matches) return;
+                syncMainCategorySelectedVisual(button);
+            });
+        });
+
+        // If the viewport enters mobile mode later, restore one valid selected chip.
+        mobile.addEventListener('change', event => {
+            if (!event.matches) return;
+            const selected = mainCategoryButtons.find(
+                button => button.getAttribute('aria-selected') === 'true'
+            );
+            syncMainCategorySelectedVisual(selected || defaultButton);
+        });
+    }
+
     function syncStickyHeaderOffset() {
         if (!mobile.matches) {
             document.documentElement.style.removeProperty('--morachi-mobile-header-height');
