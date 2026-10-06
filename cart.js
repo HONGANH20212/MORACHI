@@ -22,6 +22,74 @@ let vnProvinces = []; // Dữ liệu địa chỉ mới 2 cấp: Tỉnh/Thành p
 let checkoutItems = [];
 let isBuyNowMode = false;
 
+
+(function installMorachiCartHarmonyStyle() {
+    if (document.getElementById('morachi-cart-harmony-style')) return;
+
+    const style = document.createElement('style');
+    style.id = 'morachi-cart-harmony-style';
+    style.textContent = `
+        body.morachi-cart-open .floating-contact,
+        body.product-detail-page .floating-contact {
+            display: none !important;
+        }
+
+        .cart-drawer .btn-checkout {
+            width: 100% !important;
+            min-height: 56px !important;
+            padding: 0 20px !important;
+            border: 0 !important;
+            border-radius: 999px !important;
+            background: #101010 !important;
+            color: #ffffff !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 10px !important;
+            font-family: 'Encode Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            line-height: 1 !important;
+            text-transform: none !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .18) !important;
+            cursor: pointer !important;
+        }
+
+        .cart-drawer .btn-checkout:hover,
+        .cart-drawer .btn-checkout:active {
+            background: #000000 !important;
+        }
+
+        .cart-drawer .btn-checkout i {
+            font-size: 17px !important;
+        }
+
+        @media (max-width: 768px) {
+            .cart-drawer .cart-footer {
+                padding-left: 18px !important;
+                padding-right: 18px !important;
+                padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+            }
+
+            .cart-drawer .btn-checkout {
+                min-height: 56px !important;
+                font-size: 14px !important;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+})();
+
+function syncMorachiCheckoutButtonUI() {
+    document.querySelectorAll('.cart-drawer .btn-checkout').forEach(btn => {
+        // Giữ nguyên handler/click hiện có, chỉ thay presentation.
+        if (btn.dataset.morachiCheckoutUi === '1') return;
+        btn.dataset.morachiCheckoutUi = '1';
+        btn.innerHTML = '<i class="fa-solid fa-cart-shopping" aria-hidden="true"></i><span>Tiến hành thanh toán</span>';
+    });
+}
+
+
 // 2. Lưu giỏ hàng
 function saveCart() {
     try {
@@ -148,6 +216,7 @@ function updateCartUI() {
     if (checkoutBtn) {
         checkoutBtn.onclick = openCheckoutModal;
     }
+    syncMorachiCheckoutButtonUI();
 }
 
 function changeCartQty(index, delta) {
@@ -2630,3 +2699,12 @@ document.addEventListener('DOMContentLoaded', () => {
     initFloatingContact(); 
     preFetchProvinces(); // Kích hoạt tải dữ liệu địa chỉ ngầm ngay khi vào web
 });
+
+
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', syncMorachiCheckoutButtonUI, { once: true });
+} else {
+    syncMorachiCheckoutButtonUI();
+}
+
