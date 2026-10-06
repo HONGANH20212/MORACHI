@@ -8,10 +8,11 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-logo.png?v=1">
     <link rel="apple-touch-icon" href="/images/icon-logo.png?v=1">
     <meta name="theme-color" content="#b3131b">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Encode+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css?v=20260909-5">
     <link rel="stylesheet" href="home-mobile.css?v=20260909-5">
+    <link rel="stylesheet" href="home-reference-mobile.css?v=20261006-1">
 </head>
 
 <body class="home-products-page home-mobile-refresh">
@@ -86,7 +87,11 @@
     <!-- DANH MỤC CHÍNH: thay cho breadcrumb/sidebar/sort cũ -->
     <section id="home-categories" class="home-category-area container" aria-label="Danh mục sản phẩm">
         <nav class="home-main-categories" aria-label="Danh mục chính">
-            <button type="button" class="home-main-category active" data-category="makeup" aria-selected="true">
+            <button type="button" class="home-main-category home-main-category-all mobile-only" data-category="" aria-selected="true">
+                <span class="home-main-category-icon" aria-hidden="true"><i class="fa-solid fa-border-all"></i></span>
+                <span class="home-main-category-copy"><span class="home-main-category-label">Tất cả</span></span>
+            </button>
+            <button type="button" class="home-main-category active" data-category="makeup" aria-selected="false">
                 <span class="home-main-category-icon" aria-hidden="true">
                     <svg class="morachi-category-svg morachi-icon-makeup" viewBox="0 0 64 64" role="img">
                         <rect x="6" y="35" width="8" height="20" rx="1.5" fill="currentColor"/>
@@ -290,10 +295,9 @@
         </div>
     </div>
 
-    <nav class="mobile-only mobile-bottom-nav" aria-label="Điều hướng chính" style="grid-template-columns:repeat(3,minmax(0,1fr));">
+    <nav class="mobile-only mobile-bottom-nav" aria-label="Điều hướng chính">
         <button type="button" class="active" id="mobile-home" aria-current="page"><i class="fa-solid fa-house" aria-hidden="true"></i><span>Trang chủ</span></button>
-        <!-- Giữ node ẩn để tương thích với home-mobile.js hiện tại, nhưng không còn hiển thị mục Danh mục ở bottom bar. -->
-        <button type="button" id="mobile-categories" hidden aria-hidden="true" tabindex="-1"><i class="fa-solid fa-border-all" aria-hidden="true"></i><span>Danh mục</span></button>
+        <button type="button" id="mobile-categories"><i class="fa-solid fa-border-all" aria-hidden="true"></i><span>Danh mục</span></button>
         <a href="tracking.html"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i><span>Tra đơn</span></a>
         <button type="button" onclick="openCart()"><span class="mobile-bag-icon"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span class="cart-count">0</span></span><span>Giỏ hàng</span></button>
     </nav>

@@ -1,0 +1,667 @@
+/* =============================================================
+   MORACHI MOBILE REFERENCE OVERRIDE
+   - Mobile only: <= 768px
+   - Loaded AFTER home-mobile.css
+   - Desktop styles and existing JS behavior are intentionally untouched.
+   ============================================================= */
+
+@media (max-width: 768px) {
+    :root {
+        --morachi-mobile-pad: 24px;
+        --morachi-mobile-gap: 10px;
+        --morachi-mobile-red: #ed151c;
+        --morachi-mobile-ink: #16171c;
+        --morachi-mobile-border: #ececf0;
+    }
+
+    html,
+    body.home-products-page {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        background: #fff !important;
+    }
+
+    body.home-products-page,
+    body.home-products-page button,
+    body.home-products-page input,
+    body.home-products-page select {
+        font-family: 'Encode Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+    }
+
+    body.home-products-page {
+        padding-bottom: calc(76px + env(safe-area-inset-bottom)) !important;
+    }
+
+    /* Keep desktop-only promo elements out of the app-like mobile header. */
+    body.home-products-page .top-header,
+    body.home-products-page .red-banner,
+    body.home-products-page .mobile-top-promo {
+        display: none !important;
+    }
+
+    body.home-products-page .modern-header {
+        position: relative !important;
+        top: auto !important;
+        overflow: visible !important;
+        background: #fff !important;
+        box-shadow: none !important;
+        border-bottom: 0 !important;
+    }
+
+    body.home-products-page .main-header,
+    body.home-products-page .main-header .container,
+    body.home-products-page .main-header-inner {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        background: #fff !important;
+    }
+
+    body.home-products-page .main-header-inner {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        align-items: center !important;
+        gap: 16px 10px !important;
+        padding: 18px var(--morachi-mobile-pad) 10px !important;
+    }
+
+    body.home-products-page .logo-area {
+        min-width: 0 !important;
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+    }
+
+    body.home-products-page .logo-area a {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+
+    body.home-products-page .logo-icon {
+        width: 38px !important;
+        height: 38px !important;
+        object-fit: contain !important;
+    }
+
+    body.home-products-page .logo-text h1 {
+        margin: 0 !important;
+        color: #111 !important;
+        font-family: 'Playfair Display', serif !important;
+        font-size: 20px !important;
+        font-weight: 700 !important;
+        line-height: 1 !important;
+        letter-spacing: 1.2px !important;
+    }
+
+    body.home-products-page .logo-text p {
+        margin: 4px 0 0 !important;
+        color: #34343a !important;
+        font-size: 7px !important;
+        font-weight: 600 !important;
+        line-height: 1 !important;
+        letter-spacing: 3px !important;
+    }
+
+    /* Keep the existing quick/contact control and cart functional, but compact. */
+    body.home-products-page .mobile-menu-toggle {
+        position: static !important;
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        width: 34px !important;
+        height: 34px !important;
+        margin: 0 42px 0 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        border-radius: 50% !important;
+        background: transparent !important;
+        color: #17181e !important;
+        box-shadow: none !important;
+        font-size: 17px !important;
+    }
+
+    body.home-products-page .header-actions {
+        position: absolute !important;
+        top: 17px !important;
+        right: var(--morachi-mobile-pad) !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 0 !important;
+        z-index: 5 !important;
+    }
+
+    body.home-products-page .header-actions .action-text {
+        display: none !important;
+    }
+
+    body.home-products-page .header-actions .action-icon {
+        width: 34px !important;
+        height: 34px !important;
+        border-radius: 50% !important;
+        background: transparent !important;
+        color: #17181e !important;
+        font-size: 16px !important;
+    }
+
+    body.home-products-page .header-actions .cart-count {
+        top: -2px !important;
+        right: -2px !important;
+        width: 16px !important;
+        height: 16px !important;
+        border: 2px solid #fff !important;
+        background: var(--morachi-mobile-red) !important;
+        color: #fff !important;
+        font-size: 8px !important;
+    }
+
+    /* Search: same scale and position as the supplied reference. */
+    body.home-products-page .search-bar {
+        grid-column: 1 / -1 !important;
+        grid-row: 2 !important;
+        width: calc(100% - 50px) !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        height: 48px !important;
+        margin: 0 !important;
+        padding: 0 12px !important;
+        display: flex !important;
+        align-items: center !important;
+        border: 1px solid #e2e3e7 !important;
+        border-radius: 12px !important;
+        background: #fff !important;
+        box-shadow: none !important;
+    }
+
+    body.home-products-page .search-bar input {
+        min-width: 0 !important;
+        height: 46px !important;
+        padding: 0 6px 0 8px !important;
+        border: 0 !important;
+        background: transparent !important;
+        color: #25262c !important;
+        font-size: 13px !important;
+        font-weight: 400 !important;
+        outline: none !important;
+    }
+
+    body.home-products-page .search-bar input::placeholder {
+        color: #a4a6ae !important;
+        opacity: 1 !important;
+    }
+
+    body.home-products-page .search-bar .search-submit {
+        order: -1 !important;
+        width: 28px !important;
+        min-width: 28px !important;
+        height: 46px !important;
+        padding: 0 !important;
+        color: #15161b !important;
+        background: transparent !important;
+        font-size: 16px !important;
+    }
+
+    body.home-products-page .mobile-search-clear {
+        right: 8px !important;
+    }
+
+    /* Re-use the existing filter-dialog button as the square filter control beside search. */
+    body.home-products-page .mobile-results-block {
+        display: block !important;
+        position: static !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    body.home-products-page .mobile-result-heading-row,
+    body.home-products-page .mobile-active-filters,
+    body.home-products-page .mobile-sort {
+        display: none !important;
+    }
+
+    body.home-products-page .mobile-catalog-toolbar {
+        position: absolute !important;
+        top: 82px !important;
+        right: var(--morachi-mobile-pad) !important;
+        width: 42px !important;
+        height: 48px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+        z-index: 1001 !important;
+    }
+
+    body.home-products-page .mobile-filter-button {
+        width: 42px !important;
+        min-width: 42px !important;
+        height: 48px !important;
+        min-height: 48px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border: 0 !important;
+        border-radius: 12px !important;
+        background: #191919 !important;
+        color: #fff !important;
+        box-shadow: none !important;
+        font-size: 0 !important;
+    }
+
+    body.home-products-page .mobile-filter-button i {
+        margin: 0 !important;
+        font-size: 17px !important;
+    }
+
+    body.home-products-page .mobile-filter-button #mobile-filter-count {
+        display: none !important;
+    }
+
+    /* Compact horizontal category chips. Existing category handlers stay unchanged. */
+    body.home-products-page .home-category-area {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 6px 0 8px !important;
+        border: 0 !important;
+        background: #fff !important;
+        box-shadow: none !important;
+    }
+
+    body.home-products-page .home-main-categories {
+        width: 100% !important;
+        display: flex !important;
+        gap: 8px !important;
+        overflow-x: auto !important;
+        margin: 0 !important;
+        padding: 0 var(--morachi-mobile-pad) !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        background: #fff !important;
+        box-shadow: none !important;
+        scrollbar-width: none !important;
+        -webkit-overflow-scrolling: touch !important;
+        scroll-snap-type: x proximity !important;
+    }
+
+    body.home-products-page .home-main-categories::-webkit-scrollbar {
+        display: none !important;
+    }
+
+    body.home-products-page .home-main-category {
+        flex: 0 0 auto !important;
+        min-width: auto !important;
+        width: auto !important;
+        min-height: 32px !important;
+        height: 32px !important;
+        margin: 0 !important;
+        padding: 0 10px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 5px !important;
+        border: 1px solid #e0e1e5 !important;
+        border-radius: 8px !important;
+        background: #fff !important;
+        color: #17181e !important;
+        box-shadow: none !important;
+        scroll-snap-align: start !important;
+    }
+
+    body.home-products-page .home-main-category-icon {
+        display: inline-flex !important;
+        width: 13px !important;
+        height: 13px !important;
+        min-width: 13px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: currentColor !important;
+    }
+
+    body.home-products-page .home-main-category-icon svg,
+    body.home-products-page .home-main-category-icon i {
+        width: 13px !important;
+        height: 13px !important;
+        font-size: 11px !important;
+    }
+
+    body.home-products-page .home-main-category-copy {
+        display: inline-flex !important;
+        align-items: center !important;
+        min-width: 0 !important;
+    }
+
+    body.home-products-page .home-main-category-label,
+    body.home-products-page .home-main-category.active .home-main-category-label,
+    body.home-products-page .home-main-category:not(.active) .home-main-category-label {
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        color: inherit !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+
+    body.home-products-page .home-main-category-desc,
+    body.home-products-page .home-main-category-arrow,
+    body.home-products-page .desktop-category-label {
+        display: none !important;
+    }
+
+    body.home-products-page .home-main-category.active {
+        border-color: #171717 !important;
+        background: #171717 !important;
+        color: #fff !important;
+        box-shadow: none !important;
+    }
+
+    body.home-products-page .home-main-category::after {
+        display: none !important;
+    }
+
+    /* The reference keeps only the top category strip; detailed filters remain available in the filter drawer. */
+    body.home-products-page .home-makeup-subcategories,
+    body.home-products-page .home-featured-brands,
+    body.home-products-page .home-section-heading {
+        display: none !important;
+    }
+
+    body.home-products-page .home-catalog {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 var(--morachi-mobile-pad) 18px !important;
+        background: #fff !important;
+    }
+
+    body.home-products-page .product-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: var(--morachi-mobile-gap) !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    body.home-products-page .product-card {
+        min-width: 0 !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        display: flex !important;
+        flex-direction: column !important;
+        border: 1px solid #ececf0 !important;
+        border-radius: 12px !important;
+        background: #fff !important;
+        box-shadow: none !important;
+    }
+
+    body.home-products-page .product-img-wrapper {
+        width: 100% !important;
+        aspect-ratio: 1 / 1 !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 10px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: #fff !important;
+        border-radius: 0 !important;
+    }
+
+    body.home-products-page .product-img {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: 100% !important;
+        max-height: 100% !important;
+        object-fit: contain !important;
+    }
+
+    body.home-products-page .discount-badge {
+        top: 10px !important;
+        left: 10px !important;
+        min-height: 21px !important;
+        padding: 4px 8px !important;
+        border: 0 !important;
+        border-radius: 999px !important;
+        background: var(--morachi-mobile-red) !important;
+        color: #fff !important;
+        box-shadow: none !important;
+        font-size: 9px !important;
+        font-weight: 700 !important;
+        line-height: 1 !important;
+        text-transform: none !important;
+    }
+
+    body.home-products-page .discount-badge i {
+        display: none !important;
+    }
+
+    body.home-products-page .btn-wishlist {
+        top: 9px !important;
+        right: 9px !important;
+        width: 34px !important;
+        height: 34px !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border: 0 !important;
+        border-radius: 50% !important;
+        background: rgba(255,255,255,.97) !important;
+        color: #101116 !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,.06) !important;
+        font-size: 17px !important;
+    }
+
+    body.home-products-page .product-info {
+        min-height: 116px !important;
+        padding: 10px 10px 11px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        position: relative !important;
+        border-top: 1px solid #f4f4f5 !important;
+        background: #fff !important;
+    }
+
+    body.home-products-page .product-info .brand {
+        display: none !important;
+    }
+
+    body.home-products-page .product-title {
+        height: 37px !important;
+        min-height: 37px !important;
+        margin: 0 0 10px !important;
+        overflow: hidden !important;
+        display: -webkit-box !important;
+        -webkit-box-orient: vertical !important;
+        -webkit-line-clamp: 2 !important;
+        color: #121318 !important;
+        font-size: 12px !important;
+        font-weight: 500 !important;
+        line-height: 1.48 !important;
+    }
+
+    body.home-products-page .price-group {
+        min-width: 0 !important;
+        margin: auto 48px 0 0 !important;
+        display: flex !important;
+        align-items: baseline !important;
+        gap: 5px !important;
+        white-space: nowrap !important;
+    }
+
+    body.home-products-page .current-price {
+        color: var(--morachi-mobile-red) !important;
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        line-height: 1.1 !important;
+        white-space: nowrap !important;
+    }
+
+    body.home-products-page .old-price {
+        display: none !important;
+    }
+
+    body.home-products-page .btn-buy-now {
+        position: absolute !important;
+        right: 9px !important;
+        bottom: 9px !important;
+        width: 40px !important;
+        min-width: 40px !important;
+        height: 40px !important;
+        min-height: 40px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border: 1px solid #ffb4b6 !important;
+        border-radius: 11px !important;
+        background: #fff !important;
+        color: var(--morachi-mobile-red) !important;
+        box-shadow: none !important;
+        font-size: 0 !important;
+    }
+
+    body.home-products-page .btn-buy-now i {
+        margin: 0 !important;
+        font-size: 17px !important;
+    }
+
+    /* Any rating generated by the existing mobile layer remains visible and compact. */
+    body.home-products-page .product-rating,
+    body.home-products-page .mobile-product-rating {
+        display: flex !important;
+        align-items: center !important;
+        gap: 4px !important;
+        margin-top: 4px !important;
+        color: #737780 !important;
+        font-size: 9px !important;
+        line-height: 1 !important;
+    }
+
+    body.home-products-page .product-rating i,
+    body.home-products-page .mobile-product-rating i {
+        color: #ffb900 !important;
+        font-size: 12px !important;
+    }
+
+    /* Keep the user's prior preference: no "Danh mục" item in the bottom bar. */
+    body.home-products-page .mobile-bottom-nav #mobile-categories {
+        display: none !important;
+    }
+
+    body.home-products-page .mobile-bottom-nav {
+        position: fixed !important;
+        z-index: 2100 !important;
+        left: var(--morachi-mobile-pad) !important;
+        right: var(--morachi-mobile-pad) !important;
+        bottom: calc(7px + env(safe-area-inset-bottom)) !important;
+        width: auto !important;
+        min-height: 56px !important;
+        height: 56px !important;
+        margin: 0 !important;
+        padding: 4px 8px !important;
+        display: grid !important;
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+        align-items: stretch !important;
+        border: 0 !important;
+        border-radius: 25px !important;
+        background: #181818 !important;
+        box-shadow: 0 10px 28px rgba(0,0,0,.18) !important;
+    }
+
+    body.home-products-page .mobile-bottom-nav > a,
+    body.home-products-page .mobile-bottom-nav > button {
+        min-width: 0 !important;
+        height: 48px !important;
+        margin: 0 !important;
+        padding: 5px 2px 4px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 4px !important;
+        border: 0 !important;
+        border-radius: 18px !important;
+        background: transparent !important;
+        color: #fff !important;
+        text-decoration: none !important;
+    }
+
+    body.home-products-page .mobile-bottom-nav > a i,
+    body.home-products-page .mobile-bottom-nav > button i {
+        font-size: 16px !important;
+        line-height: 1 !important;
+    }
+
+    body.home-products-page .mobile-bottom-nav > a > span,
+    body.home-products-page .mobile-bottom-nav > button > span:not(.mobile-bag-icon),
+    body.home-products-page .mobile-bottom-nav .mobile-bag-icon + span {
+        color: inherit !important;
+        font-size: 9px !important;
+        font-weight: 500 !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+
+    body.home-products-page .mobile-bottom-nav .active,
+    body.home-products-page .mobile-bottom-nav [aria-current="page"] {
+        color: #ff343a !important;
+    }
+
+    body.home-products-page .mobile-bottom-nav .mobile-bag-icon {
+        position: relative !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    body.home-products-page .mobile-bottom-nav .cart-count {
+        position: absolute !important;
+        top: -7px !important;
+        right: -9px !important;
+        width: 13px !important;
+        height: 13px !important;
+        border: 1px solid #181818 !important;
+        background: var(--morachi-mobile-red) !important;
+        color: #fff !important;
+        font-size: 7px !important;
+    }
+
+    /* Drawer/dialog functionality is preserved; only make it fit the mobile viewport. */
+    body.home-products-page .mobile-sheet {
+        max-width: 100vw !important;
+    }
+}
+
+@media (max-width: 380px) {
+    body.home-products-page {
+        --morachi-mobile-pad: 20px;
+        --morachi-mobile-gap: 8px;
+    }
+
+    body.home-products-page .home-main-category {
+        padding-left: 9px !important;
+        padding-right: 9px !important;
+    }
+
+    body.home-products-page .home-main-category-label,
+    body.home-products-page .home-main-category.active .home-main-category-label,
+    body.home-products-page .home-main-category:not(.active) .home-main-category-label {
+        font-size: 10.5px !important;
+    }
+
+    body.home-products-page .product-title {
+        font-size: 11.5px !important;
+    }
+
+    body.home-products-page .current-price {
+        font-size: 14px !important;
+    }
+}
