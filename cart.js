@@ -24,8 +24,15 @@ let isBuyNowMode = false;
 
 // 2. Lưu giỏ hàng
 function saveCart() {
-    localStorage.setItem('morachi_cart', JSON.stringify(cart));
-    updateCartUI(); 
+    try {
+        localStorage.setItem('morachi_cart', JSON.stringify(cart));
+        updateCartUI();
+        return true;
+    } catch (error) {
+        console.error('Không thể lưu giỏ hàng:', error);
+        updateCartUI();
+        return false;
+    }
 }
 
 // 3. Mở giỏ hàng (Luôn trượt ra)
@@ -54,16 +61,31 @@ function toggleCart() {
 // 4. Thêm sản phẩm vào giỏ hàng
 function addToCart(product) {
     const qtyToAdd = Math.max(1, Number(product && product.quantity) || 1);
-    const normalizedProduct = normalizeCartItem({ ...(product || {}), quantity: qtyToAdd });
-    const existingItem = cart.find(item => item.id === normalizedProduct.id && item.variant === normalizedProduct.variant);
-    
-    if (existingItem) {
-        existingItem.quantity = Math.max(1, Number(existingItem.quantity) || 1) + qtyToAdd;
-    } else {
-        cart.push(normalizedProduct); 
+    const normalizedProduct = normalizeCartItem({
+        ...(product || {}),
+        quantity: qtyToAdd,
+        variant: (product && product.variant) || 'Mặc định'
+    });
+
+    if (!normalizedProduct.id || !normalizedProduct.title) {
+        console.error('Sản phẩm thêm vào giỏ thiếu id/title:', normalizedProduct);
+        return false;
     }
-    
-    saveCart(); 
+
+    const existingItem = cart.find(item =>
+        String(item.id) === String(normalizedProduct.id) &&
+        String(item.variant || 'Mặc định') === String(normalizedProduct.variant || 'Mặc định')
+    );
+
+    if (existingItem) {
+        existingItem.quantity =
+            Math.max(1, Number(existingItem.quantity) || 1) + qtyToAdd;
+    } else {
+        cart.push(normalizedProduct);
+    }
+
+    const saved = saveCart();
+    return saved ? normalizedProduct : false;
 }
 
 // 5. Cập nhật giao diện giỏ hàng
@@ -177,16 +199,15 @@ function renderCheckoutItemsHtml(items) {
 // Hàm dùng cho nút "Mua ngay" ở trang chi tiết sản phẩm.
 // Hàm này chỉ đưa 1 sản phẩm vào popup thanh toán, sau đó trả lại giỏ hàng cũ.
 window.openBuyNowCheckout = function(item) {
-    if (!item) return;
+    if (!item) return false;
 
-    const oldCart = cloneCheckoutItems(cart);
-    isBuyNowMode = true;
-    cart = [normalizeCartItem(item)];
+    const normalized = normalizeCartItem(item);
+    if (!normalized.id || !normalized.title) {
+        console.error('Sản phẩm Mua ngay không hợp lệ:', normalized);
+        return false;
+    }
 
-    openCheckoutModal();
-
-    cart = oldCart;
-    updateCartUI();
+    return openCheckoutModal([normalized], 'buy-now');
 };
 
 // ==============================================================
@@ -792,13 +813,18 @@ function renderCheckoutOrderItems(items) {
     `).join('');
 }
 
-function openCheckoutModal() {
-    if (!Array.isArray(cart) || cart.length === 0) {
+function openCheckoutModal(itemsOverride = null, mode = 'cart') {
+    const hasOverride =
+        Array.isArray(itemsOverride) && itemsOverride.length > 0;
+    const sourceItems = hasOverride ? itemsOverride : cart;
+
+    if (!Array.isArray(sourceItems) || sourceItems.length === 0) {
         alert('Giỏ hàng của bạn đang trống!');
-        return;
+        return false;
     }
 
-    checkoutItems = cloneCheckoutItems(cart);
+    isBuyNowMode = mode === 'buy-now';
+    checkoutItems = cloneCheckoutItems(sourceItems);
 
     const drawer = document.getElementById('cart-drawer');
     const overlay = document.getElementById('cart-overlay');
@@ -972,8 +998,15 @@ function openCheckoutModal() {
     document.documentElement.classList.add('checkout-open');
     document.body.classList.add('checkout-open');
     initializeCheckoutAddressCache();
+    return true;
 }
 
+
+// Public API cho product-detail.html
+window.addToCart = addToCart;
+window.openCart = openCart;
+window.toggleCart = toggleCart;
+window.openCheckoutModal = openCheckoutModal;
 
 window.closeCheckoutModal = function() {
     const modal = document.getElementById('checkout-modal');
