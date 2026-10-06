@@ -219,15 +219,7 @@
     }
 
     body.home-products-page .mobile-catalog-toolbar {
-        position: absolute !important;
-        top: 82px !important;
-        right: var(--morachi-mobile-pad) !important;
-        width: 42px !important;
-        height: 48px !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        display: block !important;
-        z-index: 1001 !important;
+        display: none !important;
     }
 
     body.home-products-page .mobile-filter-button {
@@ -663,5 +655,188 @@
 
     body.home-products-page .current-price {
         font-size: 14px !important;
+    }
+}
+
+
+/* =============================================================
+   MOBILE HEADER ALIGNMENT PATCH v2
+   Search + filter share one grid row; header icons use normal grid flow.
+   Mobile only. Existing search/filter/cart/dialog JS remains unchanged.
+   ============================================================= */
+@media (max-width: 768px) {
+    body.home-products-page .main-header-inner {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 36px 44px !important;
+        grid-template-rows: 38px 48px !important;
+        column-gap: 9px !important;
+        row-gap: 13px !important;
+        align-items: center !important;
+        padding: 17px var(--morachi-mobile-pad) 10px !important;
+    }
+
+    body.home-products-page .logo-area {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+        align-self: center !important;
+    }
+
+    body.home-products-page .mobile-menu-toggle {
+        position: static !important;
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        justify-self: center !important;
+        align-self: center !important;
+        width: 34px !important;
+        height: 34px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border: 0 !important;
+        border-radius: 50% !important;
+        background: transparent !important;
+        color: #17181e !important;
+        line-height: 1 !important;
+    }
+
+    body.home-products-page .mobile-menu-toggle i {
+        display: block !important;
+        margin: 0 !important;
+        font-size: 16px !important;
+        line-height: 1 !important;
+    }
+
+    body.home-products-page .header-actions {
+        position: static !important;
+        grid-column: 3 !important;
+        grid-row: 1 !important;
+        justify-self: center !important;
+        align-self: center !important;
+        width: 34px !important;
+        height: 34px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0 !important;
+        z-index: auto !important;
+    }
+
+    body.home-products-page .header-actions .action-item,
+    body.home-products-page .header-actions .action-icon {
+        width: 34px !important;
+        height: 34px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        line-height: 1 !important;
+    }
+
+    body.home-products-page .header-actions .action-icon > i {
+        margin: 0 !important;
+        font-size: 16px !important;
+        line-height: 1 !important;
+    }
+
+    body.home-products-page .search-bar {
+        grid-column: 1 / 3 !important;
+        grid-row: 2 !important;
+        align-self: stretch !important;
+        width: 100% !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        height: 48px !important;
+        margin: 0 !important;
+        padding: 0 12px !important;
+        display: flex !important;
+        align-items: center !important;
+        border: 1px solid #e1e2e7 !important;
+        border-radius: 12px !important;
+        background: #fff !important;
+        box-shadow: none !important;
+    }
+
+    body.home-products-page .search-bar .search-submit {
+        order: -1 !important;
+        flex: 0 0 28px !important;
+        width: 28px !important;
+        height: 46px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: #16171c !important;
+        line-height: 1 !important;
+    }
+
+    body.home-products-page .search-bar .search-submit i {
+        margin: 0 !important;
+        font-size: 17px !important;
+        line-height: 1 !important;
+    }
+
+    body.home-products-page .search-bar input {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        width: auto !important;
+        height: 46px !important;
+        margin: 0 !important;
+        padding: 0 5px 0 8px !important;
+        line-height: 46px !important;
+    }
+
+    body.home-products-page .mobile-header-filter {
+        grid-column: 3 !important;
+        grid-row: 2 !important;
+        justify-self: stretch !important;
+        align-self: stretch !important;
+        width: 44px !important;
+        min-width: 44px !important;
+        height: 48px !important;
+        min-height: 48px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        border: 0 !important;
+        border-radius: 12px !important;
+        background: #191919 !important;
+        color: #fff !important;
+        box-shadow: none !important;
+        line-height: 1 !important;
+        cursor: pointer !important;
+        -webkit-tap-highlight-color: transparent !important;
+    }
+
+    body.home-products-page .mobile-header-filter i {
+        display: block !important;
+        margin: 0 !important;
+        font-size: 17px !important;
+        line-height: 1 !important;
+    }
+
+    /* Old toolbar control is replaced visually by mobile-header-filter.
+       Dialog and all filter controls remain untouched. */
+    body.home-products-page .mobile-catalog-toolbar {
+        display: none !important;
+    }
+}
+
+@media (max-width: 380px) {
+    body.home-products-page .main-header-inner {
+        grid-template-columns: minmax(0, 1fr) 34px 42px !important;
+        column-gap: 8px !important;
+    }
+
+    body.home-products-page .mobile-header-filter {
+        width: 42px !important;
+        min-width: 42px !important;
     }
 }

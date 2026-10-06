@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css?v=20260909-5">
     <link rel="stylesheet" href="home-mobile.css?v=20260909-5">
-    <link rel="stylesheet" href="home-reference-mobile.css?v=20261006-1">
+    <link rel="stylesheet" href="home-reference-mobile.css?v=20261006-2">
 </head>
 
 <body class="home-products-page home-mobile-refresh">
@@ -61,6 +61,10 @@
                     <button type="button" class="mobile-only mobile-search-clear" id="mobile-search-clear" aria-label="Xóa nội dung tìm kiếm" hidden><i class="fa-solid fa-xmark"></i></button>
                     <div id="mobile-search-suggestions" class="mobile-only mobile-search-suggestions" role="listbox" aria-label="Gợi ý thương hiệu" hidden></div>
                 </div>
+
+                <button type="button" class="mobile-only mobile-header-filter" data-open-dialog="mobile-filters" aria-haspopup="dialog" aria-label="Mở bộ lọc sản phẩm">
+                    <i class="fa-solid fa-sliders" aria-hidden="true"></i>
+                </button>
 
                 <div class="header-actions">
 <div class="action-item" role="button" tabindex="0" aria-label="Mở giỏ hàng" onclick="toggleCart()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleCart();}">
@@ -297,7 +301,7 @@
 
     <nav class="mobile-only mobile-bottom-nav" aria-label="Điều hướng chính">
         <button type="button" class="active" id="mobile-home" aria-current="page"><i class="fa-solid fa-house" aria-hidden="true"></i><span>Trang chủ</span></button>
-        <button type="button" id="mobile-categories"><i class="fa-solid fa-border-all" aria-hidden="true"></i><span>Danh mục</span></button>
+        <button type="button" id="mobile-categories" hidden aria-hidden="true"><i class="fa-solid fa-border-all" aria-hidden="true"></i><span>Danh mục</span></button>
         <a href="tracking.html"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i><span>Tra đơn</span></a>
         <button type="button" onclick="openCart()"><span class="mobile-bag-icon"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span class="cart-count">0</span></span><span>Giỏ hàng</span></button>
     </nav>
