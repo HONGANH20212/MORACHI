@@ -3095,11 +3095,9 @@
                 closeProductSelector();
                 showProductSelectorToast('Đã thêm sản phẩm vào giỏ hàng');
 
-                window.setTimeout(() => {
-                    if (typeof window.openCart === 'function') {
-                        window.openCart();
-                    }
-                }, 140);
+                // Chỉ cập nhật giỏ hàng + badge.
+                // Không tự mở drawer giỏ hàng sau khi thêm sản phẩm.
+                // Giỏ hàng chỉ mở khi người dùng chủ động bấm icon Giỏ hàng.
             } catch (error) {
                 console.error('Lỗi xử lý giỏ hàng:', error);
                 alert('Có lỗi khi xử lý giỏ hàng. Vui lòng tải lại trang và thử lại.');
