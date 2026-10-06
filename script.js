@@ -181,11 +181,6 @@ function renderProducts(products) {
             ? formatPrice(product.old_price)
             : "";
 
-        const numericRating = Number.parseFloat(product.rating);
-        const rating = Number.isFinite(numericRating)
-            ? Math.min(5, Math.max(0, numericRating)).toFixed(1)
-            : "4.9";
-
         let discountBadgeHTML = "";
         const rawDiscount = String(product.discount || "").trim();
         const lowerDiscount = rawDiscount.toLowerCase();
@@ -251,10 +246,6 @@ function renderProducts(products) {
                                 ${oldPrice ? `<span class="old-price">${oldPrice}</span>` : ""}
                             </div>
 
-                            <div class="product-mobile-rating" aria-label="${rating} trên 5 sao">
-                                <i class="fa-solid fa-star"></i>
-                                <span>${rating}</span>
-                            </div>
                         </div>
 
                         <button
