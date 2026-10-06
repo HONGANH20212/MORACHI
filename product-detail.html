@@ -1466,31 +1466,31 @@
                 position: relative !important;
                 width: 100% !important;
                 height: auto !important;
-                aspect-ratio: 1.18 / 1 !important;
+                aspect-ratio: 1.22 / 1 !important;
                 margin: 0 0 8px !important;
-                padding: 12px !important;
+                padding: 0 !important;
                 overflow: hidden !important;
                 border: 0 !important;
                 border-radius: 18px !important;
-                background: linear-gradient(135deg, #f0f0ef 0%, #e9e7e4 48%, #f6f5f3 100%) !important;
+                background: #f3f2f0 !important;
             }
 
             .pd-main-img::before {
-                content: '';
-                position: absolute;
-                inset: auto -8% -32% -8%;
-                height: 54%;
-                border-radius: 50% 50% 0 0;
-                background: rgba(255,255,255,.42);
-                pointer-events: none;
+                display: none !important;
+                content: none !important;
             }
 
             .pd-main-img img {
                 position: relative;
                 z-index: 1;
+                display: block !important;
                 width: 100% !important;
                 height: 100% !important;
+                max-width: 100% !important;
+                max-height: 100% !important;
                 object-fit: contain !important;
+                object-position: center center !important;
+                border-radius: 18px !important;
             }
 
             .pd-sale-badge {
