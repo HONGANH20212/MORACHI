@@ -290,9 +290,10 @@
         </div>
     </div>
 
-    <nav class="mobile-only mobile-bottom-nav" aria-label="Điều hướng chính">
+    <nav class="mobile-only mobile-bottom-nav" aria-label="Điều hướng chính" style="grid-template-columns:repeat(3,minmax(0,1fr));">
         <button type="button" class="active" id="mobile-home" aria-current="page"><i class="fa-solid fa-house" aria-hidden="true"></i><span>Trang chủ</span></button>
-        <button type="button" id="mobile-categories"><i class="fa-solid fa-border-all" aria-hidden="true"></i><span>Danh mục</span></button>
+        <!-- Giữ node ẩn để tương thích với home-mobile.js hiện tại, nhưng không còn hiển thị mục Danh mục ở bottom bar. -->
+        <button type="button" id="mobile-categories" hidden aria-hidden="true" tabindex="-1"><i class="fa-solid fa-border-all" aria-hidden="true"></i><span>Danh mục</span></button>
         <a href="tracking.html"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i><span>Tra đơn</span></a>
         <button type="button" onclick="openCart()"><span class="mobile-bag-icon"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span class="cart-count">0</span></span><span>Giỏ hàng</span></button>
     </nav>
