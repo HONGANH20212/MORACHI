@@ -39,9 +39,11 @@ function saveCart() {
 function openCart() {
     const drawer = document.getElementById('cart-drawer');
     const overlay = document.getElementById('cart-overlay');
+
     if (drawer && overlay) {
         drawer.classList.add('active');
         overlay.classList.add('active');
+        document.body.classList.add('morachi-cart-open');
         updateCartUI();
     }
 }
@@ -50,10 +52,14 @@ function openCart() {
 function toggleCart() {
     const drawer = document.getElementById('cart-drawer');
     const overlay = document.getElementById('cart-overlay');
-    
+
     if (drawer && overlay) {
-        drawer.classList.toggle('active');
-        overlay.classList.toggle('active');
+        const willOpen = !drawer.classList.contains('active');
+
+        drawer.classList.toggle('active', willOpen);
+        overlay.classList.toggle('active', willOpen);
+        document.body.classList.toggle('morachi-cart-open', willOpen);
+
         updateCartUI();
     }
 }
@@ -830,6 +836,7 @@ function openCheckoutModal(itemsOverride = null, mode = 'cart') {
     const overlay = document.getElementById('cart-overlay');
     if (drawer) drawer.classList.remove('active');
     if (overlay) overlay.classList.remove('active');
+    document.body.classList.remove('morachi-cart-open');
 
     const shippingFee = 15000;
     const subtotal = getCheckoutSubtotal();

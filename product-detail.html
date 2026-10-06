@@ -2094,6 +2094,16 @@
             }
         }
 
+
+
+        /* FIX: Khi drawer giỏ hàng mở, ẩn CTA sticky của trang chi tiết.
+           Tránh xuất hiện 2 nút ở cuối màn hình. */
+        @media (max-width: 768px) {
+            body.morachi-cart-open .pd-actions {
+                display: none !important;
+            }
+        }
+
 </style>
 </head>
 
