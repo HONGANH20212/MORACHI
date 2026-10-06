@@ -840,3 +840,98 @@
         min-width: 42px !important;
     }
 }
+
+/* =============================================================
+   MORACHI MOBILE PATCH - CATEGORY STRIP + SEARCH ICON ALIGNMENT
+   2026-10-06
+   Mobile-only. Keeps existing filter/search/cart/category JS untouched.
+   ============================================================= */
+@media (max-width: 768px) {
+    /* Ensure the compact category strip remains visible under search. */
+    body.home-products-page #home-categories.home-category-area {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 6px 0 8px !important;
+        background: #ffffff !important;
+    }
+
+    body.home-products-page #home-categories .home-main-categories {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        align-items: center !important;
+        gap: 8px !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 var(--morachi-mobile-pad) !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        white-space: nowrap !important;
+        scrollbar-width: none !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    body.home-products-page #home-categories .home-main-categories::-webkit-scrollbar {
+        display: none !important;
+    }
+
+    body.home-products-page #home-categories .home-main-category,
+    body.home-products-page #home-categories .home-main-category-all {
+        display: inline-flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        flex: 0 0 auto !important;
+    }
+
+    /* Search shell: icon and placeholder are separate flex items. */
+    body.home-products-page .search-bar {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding: 0 12px !important;
+    }
+
+    body.home-products-page .search-bar .search-submit {
+        position: static !important;
+        inset: auto !important;
+        transform: none !important;
+        order: -1 !important;
+        flex: 0 0 24px !important;
+        width: 24px !important;
+        min-width: 24px !important;
+        height: 46px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    body.home-products-page .search-bar .search-submit i {
+        position: static !important;
+        transform: none !important;
+        margin: 0 !important;
+        font-size: 17px !important;
+        line-height: 1 !important;
+    }
+
+    body.home-products-page .search-bar input {
+        position: static !important;
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+        width: auto !important;
+        height: 46px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        text-indent: 0 !important;
+        line-height: normal !important;
+    }
+
+    body.home-products-page .search-bar input::placeholder {
+        opacity: 1 !important;
+    }
+}
