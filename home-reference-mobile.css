@@ -935,3 +935,189 @@
         opacity: 1 !important;
     }
 }
+
+
+/* =============================================================
+   MORACHI MOBILE PATCH - CATEGORY ICONS / CHIP SIZE
+   2026-10-06
+   - Mobile only. Desktop keeps the original SVG category artwork.
+   - Uses simple Font Awesome line icons like the reference UI.
+   ============================================================= */
+.mobile-category-fa,
+.mobile-category-label {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    body.home-products-page #home-categories.home-category-area {
+        height: auto !important;
+        min-height: 48px !important;
+        overflow: visible !important;
+        padding: 7px 0 9px !important;
+    }
+
+    body.home-products-page #home-categories .home-main-categories {
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 8px !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        padding: 0 var(--morachi-mobile-pad) !important;
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+    }
+
+    body.home-products-page #home-categories .home-main-category,
+    body.home-products-page #home-categories .home-main-category-all {
+        position: static !important;
+        inset: auto !important;
+        transform: none !important;
+        display: inline-flex !important;
+        flex-direction: row !important;
+        flex: 0 0 auto !important;
+        align-items: center !important;
+        justify-content: center !important;
+        grid-template-columns: none !important;
+        grid-template-rows: none !important;
+        width: auto !important;
+        min-width: 0 !important;
+        height: 32px !important;
+        min-height: 32px !important;
+        max-height: 32px !important;
+        margin: 0 !important;
+        padding: 0 11px !important;
+        gap: 6px !important;
+        overflow: visible !important;
+        box-sizing: border-box !important;
+        border: 1px solid #dedfe4 !important;
+        border-radius: 9px !important;
+        background: #fff !important;
+        color: #17181e !important;
+        box-shadow: none !important;
+        line-height: 1 !important;
+    }
+
+    body.home-products-page #home-categories .home-main-category.active,
+    body.home-products-page #home-categories .home-main-category-all[aria-selected="true"] {
+        border-color: #171717 !important;
+        background: #171717 !important;
+        color: #fff !important;
+    }
+
+    body.home-products-page #home-categories .home-main-category-icon {
+        position: static !important;
+        inset: auto !important;
+        transform: none !important;
+        display: inline-flex !important;
+        flex: 0 0 14px !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 14px !important;
+        min-width: 14px !important;
+        height: 14px !important;
+        min-height: 14px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        color: currentColor !important;
+    }
+
+    /* Desktop illustration stays in HTML, but is not used in the compact mobile chip. */
+    body.home-products-page #home-categories .home-main-category-icon .morachi-category-svg {
+        display: none !important;
+    }
+
+    body.home-products-page #home-categories .home-main-category-icon .mobile-category-fa {
+        position: static !important;
+        transform: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 14px !important;
+        min-width: 14px !important;
+        height: 14px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 13px !important;
+        line-height: 14px !important;
+        color: currentColor !important;
+    }
+
+    body.home-products-page #home-categories .home-main-category-copy {
+        position: static !important;
+        inset: auto !important;
+        transform: none !important;
+        display: inline-flex !important;
+        flex: 0 0 auto !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: auto !important;
+        min-width: 0 !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        gap: 0 !important;
+        overflow: visible !important;
+    }
+
+    body.home-products-page #home-categories .home-main-category-label,
+    body.home-products-page #home-categories .home-main-category.active .home-main-category-label,
+    body.home-products-page #home-categories .home-main-category:not(.active) .home-main-category-label {
+        position: static !important;
+        transform: none !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        width: auto !important;
+        min-width: 0 !important;
+        height: auto !important;
+        min-height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        color: inherit !important;
+        font-size: 11.5px !important;
+        font-weight: 600 !important;
+        line-height: 1 !important;
+        letter-spacing: 0 !important;
+        white-space: nowrap !important;
+        text-align: center !important;
+    }
+
+    body.home-products-page #home-categories .desktop-category-label {
+        display: none !important;
+    }
+
+    body.home-products-page #home-categories .mobile-category-label,
+    body.home-products-page #home-categories .home-main-category-label > .mobile-only {
+        display: inline !important;
+    }
+
+    body.home-products-page #home-categories .home-main-category-desc,
+    body.home-products-page #home-categories .home-main-category-arrow {
+        display: none !important;
+    }
+
+    body.home-products-page #home-categories .home-main-category::before,
+    body.home-products-page #home-categories .home-main-category::after {
+        display: none !important;
+        content: none !important;
+    }
+}
+
+@media (max-width: 380px) {
+    body.home-products-page #home-categories .home-main-category,
+    body.home-products-page #home-categories .home-main-category-all {
+        height: 31px !important;
+        min-height: 31px !important;
+        max-height: 31px !important;
+        padding: 0 10px !important;
+        gap: 5px !important;
+    }
+
+    body.home-products-page #home-categories .home-main-category-label,
+    body.home-products-page #home-categories .home-main-category.active .home-main-category-label,
+    body.home-products-page #home-categories .home-main-category:not(.active) .home-main-category-label {
+        font-size: 11px !important;
+    }
+}
