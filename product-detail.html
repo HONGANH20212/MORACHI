@@ -2459,10 +2459,9 @@
         }
 
         function handleAddToCart() {
-            if (window.matchMedia('(max-width: 768px)').matches) {
-                addCurrentMobileSelectionToCart();
-                return;
-            }
+            // Giữ nguyên chức năng cũ trên mọi thiết bị:
+            // Bấm "Thêm giỏ hàng" luôn mở bảng chọn phân loại + số lượng
+            // trước khi xác nhận thêm vào giỏ.
             openProductSelector('cart');
         }
 
