@@ -1249,3 +1249,34 @@
         color: #ffffff !important;
     }
 }
+
+
+/* =============================================================
+   MORACHI MOBILE STICKY HEADER + CATEGORY
+   - Chỉ mobile <= 768px
+   - Giữ nguyên search/filter/category/cart logic hiện có
+   ============================================================= */
+@media (max-width: 768px) {
+    body.home-products-page .modern-header {
+        position: sticky !important;
+        position: -webkit-sticky !important;
+        top: 0 !important;
+        z-index: 1800 !important;
+        background: #ffffff !important;
+        isolation: isolate !important;
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06) !important;
+    }
+
+    body.home-products-page #home-categories.home-category-area {
+        position: sticky !important;
+        position: -webkit-sticky !important;
+        top: var(--morachi-mobile-header-height, 124px) !important;
+        z-index: 1750 !important;
+        background: #ffffff !important;
+        box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06) !important;
+    }
+
+    body.home-products-page #home-categories .home-main-categories {
+        background: #ffffff !important;
+    }
+}
