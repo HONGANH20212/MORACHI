@@ -1396,6 +1396,467 @@
             }
         }
 
+
+
+        /* =============================================================
+           MORACHI PRODUCT DETAIL MOBILE - REFERENCE UI 2026-10-06
+           Mobile only. Desktop layout/logic remains unchanged.
+           ============================================================= */
+        .pd-mobile-back,
+        .pd-mobile-favorite,
+        .pd-mobile-quick-info,
+        .pd-mobile-cart-price-wrap {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            html, body {
+                width: 100%;
+                max-width: 100%;
+                overflow-x: hidden;
+                background: #f5f7fa !important;
+            }
+
+            body {
+                padding-bottom: calc(78px + env(safe-area-inset-bottom)) !important;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif !important;
+            }
+
+            /* On a real phone the OS/browser already provides the system status area. */
+            .modern-header,
+            .breadcrumb,
+            .main-layout > .sidebar {
+                display: none !important;
+            }
+
+            .main-layout.container {
+                width: 100% !important;
+                max-width: 520px !important;
+                margin: 0 auto !important;
+                padding: 0 !important;
+                background: #fff !important;
+            }
+
+            .main-layout > .content {
+                width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                background: #fff !important;
+            }
+
+            .pd-wrapper.pd-hero-card {
+                display: block !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 14px 14px 12px !important;
+                border: 0 !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                background: #fff !important;
+            }
+
+            .pd-gallery {
+                width: 100% !important;
+                margin: 0 0 12px !important;
+            }
+
+            .pd-main-img {
+                position: relative !important;
+                width: 100% !important;
+                height: auto !important;
+                aspect-ratio: 1.18 / 1 !important;
+                margin: 0 0 8px !important;
+                padding: 12px !important;
+                overflow: hidden !important;
+                border: 0 !important;
+                border-radius: 18px !important;
+                background: linear-gradient(135deg, #f0f0ef 0%, #e9e7e4 48%, #f6f5f3 100%) !important;
+            }
+
+            .pd-main-img::before {
+                content: '';
+                position: absolute;
+                inset: auto -8% -32% -8%;
+                height: 54%;
+                border-radius: 50% 50% 0 0;
+                background: rgba(255,255,255,.42);
+                pointer-events: none;
+            }
+
+            .pd-main-img img {
+                position: relative;
+                z-index: 1;
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: contain !important;
+            }
+
+            .pd-sale-badge {
+                display: none !important;
+            }
+
+            .pd-mobile-back,
+            .pd-mobile-favorite {
+                position: absolute;
+                top: 12px;
+                z-index: 5;
+                width: 36px;
+                height: 36px;
+                display: inline-flex !important;
+                align-items: center;
+                justify-content: center;
+                padding: 0;
+                border: 0;
+                border-radius: 50%;
+                background: rgba(255,255,255,.96);
+                color: #202126;
+                box-shadow: 0 3px 10px rgba(0,0,0,.08);
+                font-size: 17px;
+                cursor: pointer;
+            }
+
+            .pd-mobile-back { left: 12px; }
+            .pd-mobile-favorite { right: 12px; }
+            .pd-mobile-favorite.active { color: #e91722; }
+
+            .pd-img-count {
+                left: 12px !important;
+                bottom: 10px !important;
+                z-index: 5 !important;
+                min-width: 38px;
+                padding: 5px 9px !important;
+                border-radius: 999px !important;
+                background: rgba(24,24,24,.72) !important;
+                color: #fff !important;
+                font-size: 11px !important;
+                line-height: 1 !important;
+                text-align: center;
+            }
+
+            .pd-thumbs {
+                display: flex !important;
+                gap: 8px !important;
+                margin: 0 !important;
+                padding: 0 2px 2px !important;
+                overflow-x: auto !important;
+                scrollbar-width: none;
+            }
+            .pd-thumbs::-webkit-scrollbar { display: none; }
+
+            .pd-thumb {
+                flex: 0 0 46px !important;
+                width: 46px !important;
+                height: 46px !important;
+                padding: 3px !important;
+                border: 1px solid #e2e3e6 !important;
+                border-radius: 6px !important;
+                background: #fff !important;
+                object-fit: contain !important;
+            }
+
+            .pd-thumb.active {
+                border: 1.5px solid #ff2028 !important;
+            }
+
+            .pd-info {
+                width: 100% !important;
+                padding: 0 2px !important;
+            }
+
+            .pd-brand {
+                margin: 6px 0 3px !important;
+                color: #92949b !important;
+                font-size: 10px !important;
+                font-weight: 700 !important;
+                line-height: 1.2 !important;
+                letter-spacing: .35px !important;
+                text-transform: uppercase !important;
+            }
+
+            .pd-title {
+                max-width: calc(100% - 98px);
+                margin: 0 0 8px !important;
+                color: #17181c !important;
+                font-size: 19px !important;
+                font-weight: 800 !important;
+                line-height: 1.16 !important;
+                letter-spacing: -.25px !important;
+                -webkit-line-clamp: 2 !important;
+            }
+
+            .pd-meta-line {
+                display: none !important;
+            }
+
+            .pd-price-box {
+                display: flex !important;
+                align-items: center !important;
+                gap: 8px !important;
+                margin: 0 0 2px !important;
+                flex-wrap: wrap !important;
+            }
+
+            .pd-price-now {
+                color: #ef171f !important;
+                font-size: 24px !important;
+                font-weight: 800 !important;
+                line-height: 1.05 !important;
+            }
+
+            .pd-price-old {
+                color: #9c9da2 !important;
+                font-size: 12px !important;
+                font-weight: 500 !important;
+            }
+
+            .pd-save-badge {
+                min-height: 26px !important;
+                padding: 5px 9px !important;
+                border-radius: 999px !important;
+                background: #fff0f1 !important;
+                color: #ef171f !important;
+                font-size: 12px !important;
+                font-weight: 800 !important;
+            }
+
+            .pd-save-text {
+                margin: 0 0 8px !important;
+                color: #f11820 !important;
+                font-size: 12px !important;
+                font-weight: 700 !important;
+            }
+
+            .pd-mobile-quick-info {
+                display: block !important;
+            }
+
+            .pd-mobile-description {
+                position: relative;
+                margin: 8px 0 10px;
+                color: #8d8f96;
+                font-size: 11px;
+                line-height: 1.45;
+            }
+
+            .pd-mobile-description-text {
+                display: -webkit-box;
+                overflow: hidden;
+                -webkit-line-clamp: 3;
+                -webkit-box-orient: vertical;
+            }
+
+            .pd-mobile-readmore {
+                margin-top: 1px;
+                padding: 0;
+                border: 0;
+                background: transparent;
+                color: #1f2024;
+                font-size: 11px;
+                font-weight: 700;
+                cursor: pointer;
+            }
+
+            .pd-mobile-title-qty {
+                position: absolute;
+                top: auto;
+                right: 16px;
+                margin-top: -122px;
+                display: flex !important;
+                flex-direction: column;
+                align-items: flex-end;
+                gap: 4px;
+                z-index: 3;
+            }
+
+            .pd-mobile-qty-label { display: none; }
+
+            .pd-qty-control.pd-mobile-qty {
+                height: 32px !important;
+                display: grid !important;
+                grid-template-columns: 28px 30px 28px !important;
+                border: 1px solid #e6e6e8 !important;
+                border-radius: 999px !important;
+                overflow: hidden !important;
+                box-shadow: none !important;
+                background: #fff !important;
+            }
+
+            .pd-mobile-qty button,
+            .pd-mobile-qty input {
+                width: auto !important;
+                height: 30px !important;
+                padding: 0 !important;
+                border: 0 !important;
+                background: #fff !important;
+                color: #313238 !important;
+                font-size: 13px !important;
+                font-weight: 600 !important;
+                text-align: center !important;
+            }
+
+            .pd-mobile-qty input {
+                min-width: 0 !important;
+                outline: 0 !important;
+            }
+
+            .pd-mobile-variants {
+                padding-top: 10px;
+                border-top: 1px solid #ececef;
+            }
+
+            .pd-mobile-variants-label {
+                margin-bottom: 8px;
+                color: #24252a;
+                font-size: 12px;
+                font-weight: 700;
+            }
+
+            .pd-mobile-variant-list {
+                display: flex;
+                gap: 9px;
+                overflow-x: auto;
+                padding-bottom: 2px;
+                scrollbar-width: none;
+            }
+            .pd-mobile-variant-list::-webkit-scrollbar { display: none; }
+
+            .pd-mobile-variant-btn {
+                flex: 0 0 48px;
+                width: 48px;
+                height: 48px;
+                padding: 3px;
+                border: 1px solid #e0e1e4;
+                border-radius: 7px;
+                background: #fff;
+                cursor: pointer;
+            }
+
+            .pd-mobile-variant-btn.active {
+                border: 1.5px solid #ff1f27;
+                box-shadow: 0 0 0 1px rgba(255,31,39,.04);
+            }
+
+            .pd-mobile-variant-btn img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
+
+            /* Keep full product information available lower on the page, but remove blocks not present in the reference hero. */
+            .pd-service-card,
+            .pd-purchase-hint {
+                display: none !important;
+            }
+
+            .pd-desc-container {
+                margin: 4px 14px 22px !important;
+                padding: 0 !important;
+            }
+
+            .pd-accordion-item {
+                border-radius: 12px !important;
+            }
+
+            .pd-accordion-item summary {
+                min-height: 46px;
+                padding: 12px 14px !important;
+                font-size: 13px !important;
+            }
+
+            .pd-accordion-item .pd-section-content {
+                padding: 0 14px 14px !important;
+                font-size: 12px !important;
+                line-height: 1.65 !important;
+            }
+
+            .pd-actions {
+                position: fixed !important;
+                left: max(12px, calc((100vw - 520px) / 2 + 12px)) !important;
+                right: max(12px, calc((100vw - 520px) / 2 + 12px)) !important;
+                bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+                z-index: 2200 !important;
+                display: block !important;
+                padding: 0 !important;
+                border: 0 !important;
+                background: transparent !important;
+                box-shadow: none !important;
+            }
+
+            .pd-actions .pd-btn-buy {
+                display: none !important;
+            }
+
+            .pd-actions .pd-btn-cart {
+                width: 100% !important;
+                min-height: 54px !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 9px !important;
+                padding: 0 16px !important;
+                border: 0 !important;
+                border-radius: 999px !important;
+                background: #101010 !important;
+                color: #fff !important;
+                box-shadow: 0 8px 24px rgba(0,0,0,.20) !important;
+                font-size: 13px !important;
+                font-weight: 700 !important;
+                line-height: 1 !important;
+                flex-direction: row !important;
+            }
+
+            .pd-actions .pd-btn-cart i {
+                font-size: 18px !important;
+            }
+
+            .pd-mobile-cart-price-wrap {
+                display: inline-flex !important;
+                align-items: center;
+                gap: 7px;
+                min-width: 0;
+                color: #fff;
+            }
+
+            .pd-mobile-cart-separator {
+                color: rgba(255,255,255,.42);
+                font-weight: 400;
+            }
+
+            .pd-mobile-cart-price-wrap strong {
+                color: #fff;
+                font-size: 12px;
+                font-weight: 800;
+                white-space: nowrap;
+            }
+
+            .pd-mobile-cart-price-wrap del {
+                color: rgba(255,255,255,.42);
+                font-size: 9px;
+                font-weight: 500;
+                white-space: nowrap;
+            }
+
+            .pd-selector-modal {
+                z-index: 4000 !important;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .pd-title {
+                max-width: calc(100% - 84px);
+                font-size: 17px !important;
+            }
+            .pd-mobile-title-qty {
+                right: 14px;
+            }
+            .pd-actions .pd-btn-cart {
+                padding: 0 12px !important;
+                gap: 7px !important;
+                font-size: 12px !important;
+            }
+        }
 </style>
 </head>
 
@@ -1782,6 +2243,12 @@
                     <div class="pd-gallery">
                         <div class="pd-main-img">
                             ${discountText ? `<span class="pd-sale-badge">${discountText}</span>` : ''}
+                            <button type="button" class="pd-mobile-back" onclick="goBackFromProduct()" aria-label="Quay lại">
+                                <i class="fa-solid fa-chevron-left"></i>
+                            </button>
+                            <button type="button" class="pd-mobile-favorite" onclick="toggleProductFavorite(this)" aria-label="Yêu thích sản phẩm" aria-pressed="false">
+                                <i class="fa-regular fa-heart"></i>
+                            </button>
                             <img src="${p.thumbnail || 'images/icon-logo.png'}" id="pd-main-image" alt="${p.title || 'Sản phẩm'}" onerror="this.src='images/icon-logo.png'">
                             <span class="pd-img-count">1/${Math.max(images.length, 1)}</span>
                         </div>
@@ -1807,6 +2274,35 @@
                             ${savePercent ? `<span class="pd-save-badge">-${savePercent}%</span>` : ''}
                         </div>
                         ${savePercent ? `<div class="pd-save-text">Tiết kiệm ${formatVND(oldPriceNumber - currentPriceNumber)} (${savePercent}%)</div>` : ''}
+
+                        <div class="pd-mobile-quick-info">
+                            <div class="pd-mobile-description">
+                                <div class="pd-mobile-description-text">${safeDescription}</div>
+                                <button type="button" class="pd-mobile-readmore" onclick="document.getElementById('sec-desc')?.scrollIntoView({behavior:'smooth', block:'start'})">Read More…</button>
+                            </div>
+
+                            <div class="pd-mobile-title-qty">
+                                <span class="pd-mobile-qty-label">Số lượng</span>
+                                <div class="pd-qty-control pd-mobile-qty">
+                                    <button type="button" onclick="changeProductQty(-1)" aria-label="Giảm số lượng">−</button>
+                                    <input id="pd-qty" value="1" inputmode="numeric" aria-label="Số lượng" onchange="normalizeProductQty(this)" onblur="normalizeProductQty(this)">
+                                    <button type="button" onclick="changeProductQty(1)" aria-label="Tăng số lượng">+</button>
+                                </div>
+                            </div>
+
+                            ${variants.length ? `
+                                <div class="pd-mobile-variants">
+                                    <div class="pd-mobile-variants-label">Chọn phân loại</div>
+                                    <div class="pd-mobile-variant-list">
+                                        ${variants.map((variant, index) => `
+                                            <button type="button" class="pd-mobile-variant-btn ${index === 0 ? 'active' : ''}" onclick="selectInlineVariant(${index}, this)" aria-pressed="${index === 0 ? 'true' : 'false'}" title="${escapePdHtml(variant.name || `Phân loại ${index + 1}`)}">
+                                                <img src="${escapePdHtml(variant.image || p.thumbnail || 'images/icon-logo.png')}" alt="${escapePdHtml(variant.name || `Phân loại ${index + 1}`)}" onerror="this.src='images/icon-logo.png'">
+                                            </button>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
                     </div>
                 </div>
 
@@ -1855,7 +2351,11 @@
                 </div>
 
                 <div class="pd-actions">
-                    <button class="pd-btn-cart" onclick="handleAddToCart()"><i class="fas fa-cart-shopping"></i><span>Thêm giỏ hàng</span></button>
+                    <button class="pd-btn-cart" onclick="handleAddToCart()">
+                        <i class="fas fa-cart-shopping"></i>
+                        <span class="pd-cart-label">Thêm giỏ hàng</span>
+                        <span class="pd-mobile-cart-price-wrap"><b class="pd-mobile-cart-separator">|</b><strong id="pd-mobile-cart-price">${formatVND(p.current_price)}</strong>${p.old_price ? `<del>${formatVND(p.old_price)}</del>` : ''}</span>
+                    </button>
                     <button class="pd-btn-buy" onclick="handleBuyNow()"><span>Mua ngay</span></button>
                 </div>
             `;
@@ -1864,12 +2364,15 @@
 
             if (variants.length > 0) {
                 currentVariant = variants[0];
+                productSelectorVariantIndex = 0;
                 updateVariantStatus(variants[0]);
             } else {
                 currentVariant = null;
+                productSelectorVariantIndex = 0;
                 updateVariantStatus({ status: 'instock', stock: 10 });
             }
 
+            updateTotalPriceDisplay();
             bindTabScroll();
         }
 
@@ -1931,10 +2434,20 @@
         }
 
         function updateTotalPriceDisplay() {
-            const totalEl = document.getElementById('pd-total-price');
-            if (!totalEl) return;
             const total = getCurrentUnitPrice() * getSelectedQuantity();
-            totalEl.innerText = formatVND(total);
+            const totalEl = document.getElementById('pd-total-price');
+            if (totalEl) totalEl.innerText = formatVND(total);
+
+            const mobilePrice = document.getElementById('pd-mobile-cart-price');
+            if (mobilePrice) mobilePrice.innerText = formatVND(total);
+        }
+
+        function normalizeProductQty(input) {
+            if (!input) return 1;
+            const qty = Math.max(1, parseInt(input.value || '1', 10) || 1);
+            input.value = qty;
+            updateTotalPriceDisplay();
+            return qty;
         }
 
         function changeProductQty(delta) {
@@ -1946,7 +2459,83 @@
         }
 
         function handleAddToCart() {
+            if (window.matchMedia('(max-width: 768px)').matches) {
+                addCurrentMobileSelectionToCart();
+                return;
+            }
             openProductSelector('cart');
+        }
+
+        function goBackFromProduct() {
+            if (window.history.length > 1) window.history.back();
+            else window.location.href = '/';
+        }
+
+        function toggleProductFavorite(button) {
+            if (!button) return;
+            const active = button.getAttribute('aria-pressed') === 'true';
+            button.setAttribute('aria-pressed', active ? 'false' : 'true');
+            button.classList.toggle('active', !active);
+            const icon = button.querySelector('i');
+            if (icon) {
+                icon.classList.toggle('fa-regular', active);
+                icon.classList.toggle('fa-solid', !active);
+            }
+        }
+
+        function selectInlineVariant(index, button) {
+            const variants = getProductSelectorVariants();
+            const variant = variants[index];
+            if (!variant) return;
+
+            currentVariant = variant;
+            productSelectorVariantIndex = index;
+
+            document.querySelectorAll('.pd-mobile-variant-btn').forEach((item, itemIndex) => {
+                const selected = itemIndex === index;
+                item.classList.toggle('active', selected);
+                item.setAttribute('aria-pressed', selected ? 'true' : 'false');
+            });
+
+            const mainImage = document.getElementById('pd-main-image');
+            if (mainImage) mainImage.src = getSelectorVariantImage(variant);
+
+            const price = getSelectorVariantPrice(variant);
+            const priceView = document.getElementById('pd-price-view');
+            if (priceView) priceView.innerText = formatVND(price);
+
+            const thumbs = document.querySelectorAll('.pd-thumb');
+            let activeIndex = 1;
+            thumbs.forEach((thumb, thumbIndex) => {
+                const isCurrent = variant.image && thumb.src.includes(variant.image);
+                thumb.classList.toggle('active', Boolean(isCurrent));
+                if (isCurrent) activeIndex = thumbIndex + 1;
+            });
+            const counter = document.querySelector('.pd-img-count');
+            if (counter) counter.innerText = `${activeIndex}/${Math.max(thumbs.length, 1)}`;
+
+            updateVariantStatus(variant);
+            updateTotalPriceDisplay();
+        }
+
+        function addCurrentMobileSelectionToCart() {
+            if (!currentProduct) return;
+            const variants = getProductSelectorVariants();
+            let index = variants.findIndex(item => item === currentVariant || (
+                currentVariant && item && item.name === currentVariant.name
+            ));
+            if (index < 0) index = 0;
+
+            productSelectorVariantIndex = index;
+            productSelectorQuantity = getSelectedQuantity();
+            const item = buildProductSelectorItem();
+
+            if (typeof addToCart === 'function') {
+                addToCart(item);
+                showProductSelectorToast('Đã thêm sản phẩm vào giỏ hàng');
+            } else {
+                alert('Lỗi: File cart.js chưa được tải!');
+            }
         }
 
         function handleBuyNow() {
