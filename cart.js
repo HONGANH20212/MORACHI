@@ -34,6 +34,24 @@ let isBuyNowMode = false;
             display: none !important;
         }
 
+        /* Khi drawer giỏ hàng mở:
+           - Ẩn bottom navigation của trang chủ.
+           - Đưa overlay/drawer lên trên toàn bộ fixed navigation.
+           Nhờ vậy nút "Tiến hành thanh toán" không còn bị che. */
+        body.morachi-cart-open .mobile-bottom-nav {
+            display: none !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+
+        body.morachi-cart-open .cart-overlay {
+            z-index: 2998 !important;
+        }
+
+        body.morachi-cart-open .cart-drawer {
+            z-index: 2999 !important;
+        }
+
         .cart-drawer .btn-checkout {
             width: 100% !important;
             min-height: 56px !important;
@@ -66,9 +84,13 @@ let isBuyNowMode = false;
 
         @media (max-width: 768px) {
             .cart-drawer .cart-footer {
+                flex: 0 0 auto !important;
+                position: relative !important;
+                z-index: 4 !important;
                 padding-left: 18px !important;
                 padding-right: 18px !important;
                 padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+                background: #ffffff !important;
             }
 
             .cart-drawer .btn-checkout {
