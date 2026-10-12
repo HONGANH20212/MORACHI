@@ -1,6 +1,16 @@
 {
   "routes": [
     {
+      "route": "/api/cost-opening",
+      "methods": [
+        "GET",
+        "PUT"
+      ],
+      "allowedRoles": [
+        "morachiadmin"
+      ]
+    },
+    {
       "route": "/api/track",
       "methods": [
         "GET"
