@@ -492,21 +492,23 @@
         }
 
     </style>
+<!-- MORACHI_ADMIN_UNIFIED_V3 -->
+<link rel="stylesheet" href="/admin/unified-v3.css?v=20261028-3">
+<script defer src="/admin/unified-v3.js?v=20261028-3"></script>
 </head>
 <body>
     <div class="sidebar">
         <div class="sidebar-logo">MORACHI</div>
         <div class="sidebar-menu">
-            <div class="menu-item active" id="menu-products" onclick="switchTab('products')">
-                <i class="fas fa-box"></i> Kho sản phẩm
-            </div>
-            <div class="menu-item" id="menu-orders" onclick="switchTab('orders')">
-                <i class="fas fa-shopping-cart"></i> Đơn đặt hàng
-            </div>
-            <div class="menu-item">
-                <i class="fas fa-cog"></i> Cấu hình
-            </div>
-        </div>
+    <button type="button" class="menu-item active" id="menu-products" data-mu3-page="products" aria-current="page"><i class="fas fa-box" aria-hidden="true"></i><span>Kho sản phẩm</span></button>
+    <button type="button" class="menu-item" id="menu-orders" data-mu3-page="orders" aria-current="false"><i class="fas fa-shopping-cart" aria-hidden="true"></i><span>Đơn đặt hàng</span></button>
+    <button type="button" class="menu-item" id="menu-offline" data-mu3-page="offline" aria-current="false"><i class="fas fa-cash-register" aria-hidden="true"></i><span>Tạo đơn Offline</span></button>
+    <button type="button" class="menu-item" id="menu-sku" data-mu3-page="sku" aria-current="false"><i class="fas fa-barcode" aria-hidden="true"></i><span>Kho SKU</span></button>
+    <button type="button" class="menu-item" id="menu-pick" data-mu3-page="pick" aria-current="false"><i class="fas fa-boxes-stacked" aria-hidden="true"></i><span>Đợt nhập hàng</span></button>
+    <button type="button" class="menu-item" id="menu-jpy" data-mu3-page="jpy" aria-current="false"><i class="fas fa-file-import" aria-hidden="true"></i><span>Nhập giá Yên hàng loạt</span></button>
+    <button type="button" class="menu-item" id="menu-revenue" data-mu3-page="revenue" aria-current="false"><i class="fas fa-chart-line" aria-hidden="true"></i><span>Doanh thu & Lợi nhuận</span></button>
+    <div class="menu-item mu3-noninteractive"><i class="fas fa-cog" aria-hidden="true"></i><span>Cấu hình</span></div>
+</div>
         <div class="sidebar-footer">
             <img src="https://ui-avatars.com/api/?name=Admin&background=f57224&color=fff" alt="User">
             <div class="user-info">
@@ -934,6 +936,6 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="admin/admin.js?v=taxonomy-v6-20260831"></script>
+    <script src="/admin/admin.js?v=taxonomy-v6-20260831"></script>
 </body>
 </html>

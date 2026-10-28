@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#1e2636">
+<title>MORACHI • Quản lý đợt nhập hàng (UAT)</title>
+<style>
+:root{--navy:#1e2636;--orange:#f77722;--ink:#202939;--muted:#738095;--bg:#f4f6fa;--line:#e5e9f0;--green:#168758;--red:#c84648;--amber:#a76a16}
+*{box-sizing:border-box}body{margin:0;background:#e9edf5;color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}.phone{width:min(100%,460px);min-height:100dvh;margin:auto;position:relative;background:var(--bg);padding-bottom:calc(85px + env(safe-area-inset-bottom));box-shadow:0 0 35px #15213e12}
+.header{background:var(--navy);color:#fff;border-radius:0 0 26px 26px;padding:18px 15px}.headtop{display:flex;align-items:center;justify-content:space-between;gap:8px}.logo{font-size:20px;letter-spacing:.4px;font-weight:850}.sub{font-size:11px;color:#c2cad7;margin-top:3px}.env{font-size:11px;color:#ffd0a8;background:#563826;padding:8px 9px;border-radius:10px;font-weight:750}
+.content{padding:14px 13px}.heading{font-size:21px;font-weight:850;margin:0 0 5px}.description{color:var(--muted);font-size:12px;line-height:1.5;margin:0 0 13px}.card{background:#fff;border:1px solid #edf0f5;border-radius:18px;padding:14px;margin:0 0 12px;box-shadow:0 4px 14px #18203409}.row{display:flex;align-items:center;justify-content:space-between;gap:9px}.small{font-size:12px;color:var(--muted);line-height:1.5}.name{font-size:15px;font-weight:850}.eyebrow{font-size:11px;color:var(--muted);font-weight:750;letter-spacing:.4px;text-transform:uppercase}.batch-name{font-size:16px;font-weight:850;margin:7px 0}.status,.badge{display:inline-block;font-size:11px;font-weight:800;padding:6px 9px;border-radius:999px}.status{background:#fff0e2;color:#ac5a0e}.status.ok,.badge.green{background:#e8f7ee;color:#117d4d}.badge.orange{background:#fff3e6;color:#a86818}.badge.gray{background:#f0f2f6;color:#6d7686}.badge.red{background:#fff0f0;color:#b8313b}.over{background:#fff1e5;color:#b75a17;border:1px solid #f8c69e;border-radius:10px;padding:6px 8px;display:inline-block;font-size:11px;font-weight:800;margin-top:6px}
+.timeline,.cols{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}.timebox{background:#f7f8fb;border-radius:12px;padding:10px}.timebox strong{display:block;margin-top:4px;font-size:13px}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.metric{background:#fff;border:1px solid #edf0f5;border-radius:15px;text-align:center;padding:12px 6px;min-width:0}.metric strong{display:block;font-size:20px}.metric span{display:block;font-size:11px;color:var(--muted);margin-top:3px}.track{height:9px;background:#e9ecf1;border-radius:20px;overflow:hidden;margin:11px 0 6px}.track>div{height:100%;background:linear-gradient(90deg,#f77722,#f5a35e);border-radius:20px;transition:width .15s}
+.button{border:0;border-radius:13px;min-height:43px;padding:10px 12px;font-weight:800;font-size:13px}.primary{background:var(--orange);color:white}.outline{background:white;color:var(--ink);border:1px solid #dfe4ed}.dark{background:var(--navy);color:#fff}.danger{color:#bd3b46;border:1px solid #f2c1c6;background:#fff5f5}.tiny{padding:8px 10px;min-height:36px;font-size:12px}.actions{display:flex;gap:9px;margin-top:12px}.actions>.button{flex:1}.note{border:1px solid #d9e4f8;background:#edf3ff;border-radius:12px;padding:11px;font-size:12px;color:#466185;line-height:1.5;margin-bottom:12px}.warn{border-color:#f4cba4;background:#fff5eb;color:#a6541a}.banner{font-size:12px;margin:10px 0;color:#657a96;line-height:1.5}.filter-scroll{display:flex;gap:7px;overflow-x:auto;padding:3px 0 6px;scrollbar-width:none}.chip{border:1px solid #e5e9f0;border-radius:999px;background:#fff;padding:9px 12px;white-space:nowrap;font-size:12px;font-weight:750;color:#677285}.chip.active{background:var(--navy);color:#fff;border-color:var(--navy)}
+.product{display:flex;gap:11px;align-items:flex-start}.product-photo{height:79px;width:76px;flex:none;background:#f7f8fa;border:1px solid #ebedf2;border-radius:13px;overflow:hidden;display:grid;place-items:center;color:#a1683e;font-weight:750;text-align:center;font-size:11px}.product-photo img{width:100%;height:100%;object-fit:contain}.product-info{flex:1;min-width:0}.product-title{font-size:13px;font-weight:850;line-height:1.45;margin:3px 0}.quantities{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0}.qty{background:#f7f8fa;text-align:center;padding:10px 4px;border-radius:12px}.qty label{font-size:10px;color:#7b8595;display:block}.qty strong{font-size:19px;display:block;margin-top:3px}.qty.remaining strong{color:#ce6a13}.spaced{margin-top:12px}.history{max-height:240px;overflow:auto}.history p{padding:8px 0;margin:0;border-bottom:1px solid var(--line);font-size:12px;color:#596579;line-height:1.5}.history p:last-child{border:0}.empty{text-align:center;padding:24px 8px;color:#7a889c;font-size:13px;line-height:1.6}
+.bottom{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(100%,460px);display:grid;grid-template-columns:1fr 1fr;gap:6px;background:white;border-top:1px solid var(--line);padding:9px 12px calc(9px + env(safe-area-inset-bottom));z-index:10}.nav{border:0;border-radius:12px;padding:9px;background:transparent;font-weight:800;color:#8791a1;font-size:12px}.nav span{font-size:20px;display:block;margin-bottom:4px}.nav.active{background:#fff0e4;color:#d95d12}
+.sheet-backdrop{position:fixed;inset:0;background:#0f1b30a8;display:none;z-index:30}.sheet-backdrop.show{display:block}.sheet{position:fixed;left:50%;bottom:0;transform:translate(-50%,110%);transition:transform .16s ease;background:white;z-index:31;width:min(100%,460px);border-radius:24px 24px 0 0;max-height:91dvh;overflow:auto;padding:16px 14px calc(20px + env(safe-area-inset-bottom))}.sheet.open{transform:translate(-50%,0)}.grab{width:44px;height:5px;background:#dce1e9;border-radius:999px;margin:-3px auto 14px}.form-label{display:block;font-size:12px;font-weight:750;color:#647187;margin:10px 0 5px}input[type=datetime-local],input[type=number],input[type=text],input[type=search],select{width:100%;padding:12px 11px;border:1px solid var(--line);background:#fff;border-radius:11px;font-size:14px;color:var(--ink);outline-color:var(--orange)}.pick-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin:12px 0 10px}.pick-num{height:49px;min-width:0;border:1px solid #dfe4ed;background:#fff;border-radius:13px;color:var(--ink);font-size:17px;font-weight:850;touch-action:manipulation}.pick-num.selected{border:2px solid var(--orange);background:#fff0e5;color:#c95f16}.pick-num.other{font-size:13px}.other-box{padding:10px 12px;border:1px solid #f6cba9;background:#fff8f2;border-radius:13px;margin:8px 0}.summary{font-size:12px;font-weight:750;color:#9c561b;background:#fff3e9;border-radius:12px;padding:10px 12px;margin:10px 0}.pick-warning{color:#a95316;background:#fff4e8;border:1px solid #f6cba9;border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.45;margin:8px 0}.hidden{display:none!important}.chooser{display:grid;grid-template-columns:1fr 1fr;gap:9px;max-height:46dvh;overflow:auto;margin-top:10px}.choice{background:#fff;border:1px solid var(--line);border-radius:14px;padding:9px;text-align:left;min-width:0}.choice .photo{display:block;width:100%;height:88px;object-fit:contain;background:#f8f9fb;border-radius:10px;margin-bottom:7px}.choice strong{font-size:12px;line-height:1.35;display:block}.choice .small{font-size:11px}.revenue-placeholder{background:#f8f9fc;border:1px dashed #d7dce7;border-radius:15px;padding:19px 12px;text-align:center;color:#607188;line-height:1.6;font-size:13px}@media(max-width:355px){.pick-grid{gap:5px}.pick-num{height:43px}.content{padding:12px 9px}}@media(min-width:600px){body{padding:12px 0}.phone{border-radius:22px;overflow:hidden;min-height:calc(100dvh - 24px)}}
+</style>
+<!-- MORACHI_ADMIN_UNIFIED_V3 EMBED -->
+<script data-mu3-embed="1">(function(){if(window.self===window.top){location.replace('/admin/#pick');return;}document.documentElement.classList.add('mu3-embedded','mu3-pick');})();</script>
+<link rel="stylesheet" href="/admin/embedded-v3.css?v=20261028-3">
+</head>
+<body>
+<div class="phone">
+  <header class="header"><div class="headtop"><div><div class="logo">MORACHI</div><div class="sub">Đợt nhập hàng · Pick hàng</div></div><span class="env">UAT · LOCAL</span></div></header>
+  <section class="content" id="pickPage">
+    <div class="row"><h1 class="heading">Đợt nhập hàng</h1><a class="small" href="/admin/" style="text-decoration:none">‹ Admin</a></div>
+    <p class="description">Lập danh sách cần mua, ghi nhận số đã pick và thời gian thực hiện trên điện thoại.</p>
+    <div class="note warn"><b>Bản thử giao diện:</b> Lưu dữ liệu đợt pick trên trình duyệt này. Người dùng ở điện thoại khác chưa nhìn thấy các thay đổi. Không thay đổi tồn kho Cosmos DB.</div>
+    <div class="card"><div class="row"><span class="eyebrow">Đợt hiện tại</span><span id="batchStatus" class="status">Chưa tạo</span></div>
+      <div class="batch-name" id="batchTitle">Chưa có đợt nhập</div>
+      <label class="form-label" for="batchSelector">Chuyển đợt nhập</label><select id="batchSelector"><option value="">Chưa có đợt nhập</option></select>
+      <div class="timeline"><div class="timebox"><span class="small">Bắt đầu</span><strong id="startLabel">—</strong></div><div class="timebox"><span class="small">Hạn hoàn tất</span><strong id="endLabel">—</strong></div></div>
+      <div class="actions"><button class="button outline" id="newBatch">＋ Tạo đợt mới</button><button class="button outline" id="editBatch">✎ Thời gian</button></div>
+      <div class="actions"><button class="button dark" id="addSku">＋ Thêm SKU cần mua</button><button class="button primary" id="completeBatch">✓ Hoàn tất pick</button></div>
+    </div>
+    <div class="metrics"><div class="metric"><strong id="planned">0</strong><span>Dự kiến</span></div><div class="metric"><strong id="picked">0</strong><span>Đã pick</span></div><div class="metric"><strong id="remaining">0</strong><span>Còn thiếu</span></div></div>
+    <div class="card"><div class="row"><strong>Tiến độ đợt nhập</strong><b id="percent">0%</b></div><div class="track"><div id="progress" style="width:0"></div></div><div class="small" id="progressLabel">0 SKU đã đủ</div><div id="extraBox" class="over hidden">Vượt kế hoạch</div></div>
+    <div class="row" style="margin:16px 0 8px"><strong>Danh sách cần pick</strong><span class="small" id="skuCount">0 SKU</span></div>
+    <div class="filter-scroll" id="filters"><button class="chip active" data-filter="all">Tất cả</button><button class="chip" data-filter="need">Còn thiếu</button><button class="chip" data-filter="none">Chưa pick</button><button class="chip" data-filter="done">Đã đủ ✓</button></div>
+    <div id="products" class="spaced"></div>
+    <div class="card"><div class="row"><strong>Nhật ký pick hàng</strong><button class="button outline tiny" id="exportJson">Xuất dữ liệu</button></div><div id="history" class="history"><div class="empty">Chưa có lịch sử</div></div></div>
+    <div class="note">Tồn kho thực tế đọc từ <b>/api/manage/products → variants[].stock</b>. Pick đủ hoặc vượt kế hoạch <b>không cộng vào kho</b>; chỉ cập nhật kho qua quy trình nhận hàng riêng.</div>
+  </section>
+  <section class="content hidden" id="revenuePage"><h1 class="heading">Doanh thu</h1><p class="description">Trang Doanh thu tách riêng như thiết kế đã chốt.</p><div class="card"><div class="revenue-placeholder"><b>Chưa kết nối dữ liệu đơn hàng.</b><br>Không hiển thị số liệu doanh thu giả. Ở bước tiếp theo, trang này sẽ tổng hợp doanh thu, giá vốn và lợi nhuận từ đơn hàng MORACHI.</div></div></section>
+  <nav class="bottom"><button class="nav active" data-page="pickPage"><span>📦</span>Đợt nhập</button><button class="nav" data-page="revenuePage"><span>📈</span>Doanh thu</button></nav>
+</div>
+<div id="backdrop" class="sheet-backdrop"></div><aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Chỉnh đợt nhập"><div class="grab"></div><div id="sheetContent"></div></aside>
+<script>
+'use strict';
+/* UI-only UAT: /api/manage/products GET; localStorage for planned/picked; NEVER writes Cosmos DB. */
+const STORAGE_KEY='morachi_pick_batches_ui_v1';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+const stamp=d=>new Intl.DateTimeFormat('vi-VN',{dateStyle:'short',timeStyle:'short'}).format(d instanceof Date?d:new Date(d));
+const pad=n=>String(n).padStart(2,'0');
+const toInputDate=d=>{const x=new Date(d);return `${x.getFullYear()}-${pad(x.getMonth()+1)}-${pad(x.getDate())}T${pad(x.getHours())}:${pad(x.getMinutes())}`};
+const number=n=>new Intl.NumberFormat('vi-VN').format(n);
+const validPositive=n=>Number.isSafeInteger(n)&&n>0&&n<=999999;
+const remaining=line=>Math.max(0,line.plan-line.picked);
+const excess=line=>Math.max(0,line.picked-line.plan);
+let db={batches:[],activeId:''},catalog=[],catalogMap=new Map(),catalogLoaded=false,catalogError='',filter='all',activeLineKey='',pickMode='quick';
+try{const raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');if(raw&&Array.isArray(raw.batches))db=raw}catch(e){console.warn('Không đọc được bản nháp pick',e)}
+function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(db))}catch(e){alert('Không lưu được vào trình duyệt. Kiểm tra dung lượng bộ nhớ.')}}
+function active(){return db.batches.find(b=>b.id===db.activeId)||null}
+function makeId(){return 'NH-'+new Date().toISOString().slice(0,10).replaceAll('-','')+'-'+Math.random().toString(36).slice(2,7).toUpperCase()}
+function openSheet(html){$('sheetContent').innerHTML=html;$('backdrop').classList.add('show');$('sheet').classList.add('open')}
+function closeSheet(){$('sheet').classList.remove('open');$('backdrop').classList.remove('show');$('sheetContent').innerHTML=''}
+function sheetHeader(title){return `<div class="row"><strong style="font-size:19px">${esc(title)}</strong><button class="button outline tiny" onclick="closeSheet()">Đóng ✕</button></div>`}
+function productKey(sku){return sku}
+function resolve(line){return catalogMap.get(line.key)||null}
+function imageUrl(src){if(typeof src!=='string')return '';const t=src.trim();if(t.startsWith('/'))return t;if(t.startsWith('./images/'))return '/'+t.slice(2);if(t.startsWith('images/'))return '/'+t;if(/^https:\/\//i.test(t))return t;return ''}
+function photo(url,name){return url?`<img src="${esc(url)}" alt="${esc(name)}" loading="lazy" onerror="this.style.display='none';this.parentElement.textContent='📦'">`:'📦'}
+async function loadCatalog(){
+ try{
+  const response=await fetch('/api/manage/products',{cache:'no-store',credentials:'same-origin'});
+  if(!response.ok)throw new Error('HTTP '+response.status);
+  const products=await response.json();if(!Array.isArray(products))throw new Error('API không trả danh sách sản phẩm');
+  const rows=[];
+  for(const p of products){const variants=Array.isArray(p.variants)?p.variants:[];
+   for(let i=0;i<variants.length;i++){
+    const v=variants[i]||{};const sku=String(v.sku||'').trim();if(!sku)continue;
+    rows.push({key:productKey(sku),productId:String(p.id),variantIndex:i,sku,brand:String(p.brand||''),title:String(p.title||''),variant:String(v.name||`Phân loại ${i+1}`),image:imageUrl(v.image||p.thumbnail||p.image),stock:v.stock!==null&&v.stock!==undefined&&Number.isFinite(Number(v.stock))?Number(v.stock):null});
+   }
+  }
+  catalog=rows;catalogMap=new Map(rows.map(p=>[p.key,p]));catalogLoaded=true;catalogError='';render();
+ }catch(e){catalogLoaded=false;catalogError=String(e.message||e);console.error(e);render()}
+}
+function logEvent(batch,action,detail,sku=''){
+ batch.logs??=[];batch.logs.unshift({time:new Date().toISOString(),action,detail,sku});batch.updatedAt=new Date().toISOString();save();
+}
+function render(){
+ const b=active(),open=!!(b&&!b.done);
+ $('batchTitle').textContent=b?`${b.id} · ${b.title}`:'Chưa có đợt nhập';
+ $('batchStatus').textContent=!b?'Chưa tạo':b.done?'Hoàn tất pick':'Đang thực hiện';
+ $('batchStatus').className='status'+(b?.done?' ok':'');
+ $('startLabel').textContent=b?stamp(b.start):'—';$('endLabel').textContent=b?stamp(b.end):'—';
+ $('batchSelector').innerHTML=db.batches.length?db.batches.map(x=>`<option value="${esc(x.id)}" ${b?.id===x.id?'selected':''}>${esc(x.id)} · ${esc(x.title)} ${x.done?'✓':''}</option>`).join(''):'<option value="">Chưa có đợt nhập</option>';
+ $('editBatch').disabled=!open;$('addSku').disabled=!open;
+ const lines=b?.lines||[],totalPlan=lines.reduce((s,x)=>s+x.plan,0),totalPicked=lines.reduce((s,x)=>s+x.picked,0),totalMissing=lines.reduce((s,x)=>s+remaining(x),0),totalExtra=lines.reduce((s,x)=>s+excess(x),0);
+ $('planned').textContent=number(totalPlan);$('picked').textContent=number(totalPicked);$('remaining').textContent=number(totalMissing);
+ const doneQty=lines.reduce((s,x)=>s+Math.min(x.picked,x.plan),0);const pct=totalPlan?Math.min(100,Math.round(doneQty/totalPlan*100)):0;
+ $('percent').textContent=pct+'%';$('progress').style.width=pct+'%';$('skuCount').textContent=lines.length+' SKU';
+ $('progressLabel').textContent=`${lines.filter(x=>x.picked>=x.plan).length}/${lines.length} SKU đã pick đủ`;
+ $('extraBox').textContent=`Đã pick vượt kế hoạch tổng cộng +${number(totalExtra)} món`;$('extraBox').classList.toggle('hidden',!totalExtra);
+ $('completeBatch').disabled=!open||lines.length===0||totalMissing>0;
+ const shown=[...lines].filter(x=>filter==='all'||filter==='need'&&remaining(x)>0||filter==='none'&&x.picked===0||filter==='done'&&remaining(x)===0).sort((a,c)=>remaining(c)-remaining(a));
+ $('products').innerHTML=!b?'<div class="empty">Bấm “Tạo đợt mới” để bắt đầu.</div>':!lines.length?'<div class="empty">Bấm “Thêm SKU cần mua” để lập danh sách cho đợt này.</div>':shown.length?shown.map(line=>{
+  const live=resolve(line),r=remaining(line),ex=excess(line),img=live?.image||line.image;
+  const color=ex>0||r===0?'green':line.picked>0?'orange':'gray';
+  const status=ex>0?`Pick vượt +${number(ex)}`:r===0?'✓ Đã pick đủ':line.picked?'Đang pick':'Chưa pick';
+  const stock=catalogLoaded?(live&&live.stock!==null?number(live.stock):'—'):'—';
+  return `<article class="card"><div class="product"><div class="product-photo">${photo(img,line.title)}</div><div class="product-info"><div class="eyebrow">${esc(line.brand)}</div><div class="product-title">${esc(line.title)}</div><div class="small">${esc(line.variant)}</div><div class="small">${esc(line.sku)} · Tồn kho hiện tại: <b>${stock}</b></div><span class="badge ${color}">${esc(status)}</span></div></div>
+  <div class="quantities"><div class="qty"><label>Dự kiến</label><strong>${number(line.plan)}</strong></div><div class="qty"><label>Đã pick</label><strong>${number(line.picked)}</strong></div><div class="qty remaining"><label>Còn thiếu</label><strong>${number(r)}</strong></div></div>
+  ${ex>0?`<div class="over">Vượt dự kiến +${number(ex)} món</div>`:''}
+  <div class="small" style="margin-top:7px">${line.last?'Lần pick gần nhất: '+esc(stamp(line.last)):'Chưa ghi nhận pick'} · ${esc(line.picker||'')}</div>
+  <div class="actions"><button class="button outline" data-action="plan" data-key="${esc(line.key)}" ${!open?'disabled':''}>Sửa kế hoạch</button><button class="button primary" data-action="pick" data-key="${esc(line.key)}" ${!open?'disabled':''}>${r===0?'+ Pick thêm':'+ Ghi nhận pick'}</button></div></article>`;
+ }).join(''):'<div class="empty">Không có SKU phù hợp bộ lọc.</div>';
+ if(catalogError)$('products').insertAdjacentHTML('afterbegin',`<div class="note warn">Không tải được API /api/manage/products: ${esc(catalogError)}. Tồn kho hiện tại chưa được xác minh.</div>`);
+ const logs=b?.logs||[];$('history').innerHTML=logs.length?logs.slice(0,100).map(x=>`<p><b>${esc(stamp(x.time))}</b> · ${esc(x.sku)}<br>${esc(x.detail)}</p>`).join(''):'<div class="empty">Chưa có lịch sử</div>';
+}
+function createBatchForm(){const now=new Date(),end=new Date(now.getTime()+2*86400000);openSheet(sheetHeader('Tạo đợt nhập mới')+`<label class="form-label">Tên đợt nhập</label><input id="batchName" type="text" maxlength="100" value="Đợt hàng Nhật"><label class="form-label">Bắt đầu</label><input id="batchStart" type="datetime-local" value="${toInputDate(now)}"><label class="form-label">Hạn hoàn tất</label><input id="batchEnd" type="datetime-local" value="${toInputDate(end)}"><button class="button primary spaced" style="width:100%" onclick="createBatch()">Tạo đợt nhập</button>`)}
+function createBatch(){const title=$('batchName').value.trim(),start=$('batchStart').value,end=$('batchEnd').value;if(!title||!start||!end||end<start){alert('Vui lòng nhập tên và thời gian hợp lệ.');return}const b={id:makeId(),title,start:new Date(start).toISOString(),end:new Date(end).toISOString(),createdAt:new Date().toISOString(),done:false,lines:[],logs:[]};db.batches.unshift(b);db.activeId=b.id;logEvent(b,'create','Tạo đợt nhập mới');closeSheet();render()}
+function editBatchForm(){const b=active();if(!b||b.done)return;openSheet(sheetHeader('Chỉnh thời gian đợt nhập')+`<label class="form-label">Tên đợt nhập</label><input id="batchName" type="text" maxlength="100" value="${esc(b.title)}"><label class="form-label">Bắt đầu</label><input id="batchStart" type="datetime-local" value="${toInputDate(b.start)}"><label class="form-label">Hạn hoàn tất</label><input id="batchEnd" type="datetime-local" value="${toInputDate(b.end)}"><button class="button primary spaced" style="width:100%" onclick="updateBatch()">Lưu thay đổi</button>`)}
+function updateBatch(){const b=active(),title=$('batchName').value.trim(),start=$('batchStart').value,end=$('batchEnd').value;if(!b||!title||!start||!end||end<start){alert('Thời gian hoặc tên chưa hợp lệ.');return}b.title=title;b.start=new Date(start).toISOString();b.end=new Date(end).toISOString();logEvent(b,'edit','Điều chỉnh tên/thời gian đợt nhập');closeSheet();render()}
+function addSkuForm(){const b=active();if(!b||b.done)return;const loaded=catalog.length;
+ openSheet(sheetHeader('Thêm SKU vào đợt nhập')+`<p class="small">Tìm theo SKU, tên hoặc màu. Tồn kho đọc từ Kho sản phẩm UAT.</p><input type="search" id="skuSearch" placeholder="Tìm SKU / tên / màu..." oninput="renderChoices()"><div class="small spaced" id="choiceCount">${loaded} SKU</div><div class="chooser" id="choices"></div>`);
+ renderChoices();}
+function renderChoices(){const b=active(),q=($('skuSearch')?.value||'').toLowerCase().trim();if(!$('choices'))return;
+ const available=catalog.filter(x=>!b.lines.some(line=>line.key===x.key)&&`${x.sku} ${x.brand} ${x.title} ${x.variant}`.toLowerCase().includes(q));
+ $('choiceCount').textContent=`${available.length} SKU có thể thêm`;
+ $('choices').innerHTML=catalogLoaded?available.slice(0,80).map(x=>`<button class="choice" data-key="${esc(x.key)}"><img class="photo" src="${esc(x.image||'')}" alt="" loading="lazy" onerror="this.style.display='none'"><strong>${esc(x.title)}</strong><span class="small">${esc(x.variant)}<br>${esc(x.sku)} · Kho: ${x.stock??'—'}</span></button>`).join('')||'<div class="empty">Không còn SKU phù hợp</div>':'<div class="note warn">Chưa tải được danh sách từ /api/manage/products. Kiểm tra Azure Functions rồi tải lại trang.</div>';
+}
+function planNewSku(key){const p=catalogMap.get(key),b=active();if(!p||!b||b.done)return;openSheet(sheetHeader('Lập kế hoạch nhập')+`<div class="product spaced"><div class="product-photo">${photo(p.image,p.title)}</div><div class="product-info"><b>${esc(p.title)}</b><div class="small">${esc(p.variant)}</div><div class="small">${esc(p.sku)} · Kho: ${p.stock??'—'}</div></div></div><label class="form-label" for="planInput">Số lượng dự kiến cần pick</label><input id="planInput" type="number" min="1" max="999999" step="1" inputmode="numeric" value="1"><button class="button primary spaced" style="width:100%" id="addLineBtn">Thêm vào đợt nhập</button>`);$('addLineBtn').onclick=()=>addLine(key)}
+function addLine(key){const b=active(),p=catalogMap.get(key),n=Number($('planInput').value);if(!b||b.done||!p||!validPositive(n)){alert('Số lượng phải là số nguyên dương.');return}if(b.lines.some(x=>x.key===key)){alert('SKU này đã có trong đợt');return}b.lines.push({key,sku:p.sku,productId:p.productId,variantIndex:p.variantIndex,title:p.title,brand:p.brand,variant:p.variant,image:p.image,plan:n,picked:0,last:'',picker:''});logEvent(b,'add',`Thêm kế hoạch ${n} món`,p.sku);closeSheet();render()}
+function editPlan(key){const b=active(),p=b?.lines.find(x=>x.key===key);if(!p||b.done)return;openSheet(sheetHeader('Sửa kế hoạch')+`<div class="small spaced">${esc(p.title)} · ${esc(p.variant)} · ${esc(p.sku)}</div><label class="form-label">Số lượng dự kiến</label><input id="planInput" type="number" min="1" max="999999" value="${p.plan}"><p class="small">Có thể đặt kế hoạch thấp hơn số đã pick; hệ thống sẽ hiển thị phần vượt.</p><button class="button primary spaced" style="width:100%" id="savePlanBtn">Lưu kế hoạch</button>`);$('savePlanBtn').onclick=()=>savePlan(key)}
+function savePlan(key){const b=active(),p=b?.lines.find(x=>x.key===key),n=Number($('planInput').value);if(!p||!validPositive(n)){alert('Số lượng không hợp lệ');return}const old=p.plan;p.plan=n;logEvent(b,'plan',`Kế hoạch ${old} → ${n}`,p.sku);closeSheet();render()}
+function pickForm(key){const b=active(),p=b?.lines.find(x=>x.key===key);if(!p||b.done)return;activeLineKey=key;pickMode='quick';const btns=Array.from({length:10},(_,i)=>`<button class="pick-num ${i===0?'selected':''}" data-qty="${i+1}" aria-pressed="${i===0}">${i+1}</button>`).join('');
+ openSheet(sheetHeader('Ghi nhận pick hàng')+`<p class="small">${esc(p.title)} · ${esc(p.variant)}</p><div class="metrics"><div class="metric"><strong>${number(p.plan)}</strong><span>Dự kiến</span></div><div class="metric"><strong>${number(p.picked)}</strong><span>Đã pick</span></div><div class="metric"><strong>${number(remaining(p))}</strong><span>Còn thiếu</span></div></div><label class="form-label">Số lượng <b>vừa pick được</b> (không phải tổng)</label><div class="pick-grid" id="pickOptions">${btns}<button class="pick-num other" data-qty="other">Khác…</button></div><div id="otherBox" class="other-box hidden"><label class="form-label">Số lượng khác</label><input id="otherInput" type="number" min="1" max="999999" step="1" inputmode="numeric" placeholder="Nhập số lượng bất kỳ"></div><label class="form-label">Người pick (tùy chọn)</label><input id="pickerName" type="text" maxlength="100" value="${esc(localStorage.getItem('morachi_picker_name')||'')}" placeholder="Tên người mua hàng"><div id="pickSummary" class="summary"></div><div id="pickWarning" class="pick-warning hidden"></div><p class="small">Thời gian ghi nhận: <b>${esc(stamp(new Date()))}</b></p><button class="button primary" style="width:100%" id="confirmPick">Xác nhận đã pick</button><p class="small">Pick vượt kế hoạch được phép. Không cộng tồn kho.</p>`);
+ $('pickOptions').onclick=e=>{const btn=e.target.closest('[data-qty]');if(!btn)return;pickMode=btn.dataset.qty;for(const el of $('pickOptions').querySelectorAll('[data-qty]')){el.classList.toggle('selected',el===btn);el.setAttribute('aria-pressed',String(el===btn))}$('otherBox').classList.toggle('hidden',pickMode!=='other');if(pickMode==='other'){$('otherInput').value='';$('otherInput').focus()}refreshPickSummary()};
+ $('otherInput').oninput=refreshPickSummary;$('confirmPick').onclick=savePick;refreshPickSummary();}
+function pickedQty(){return pickMode==='other'?Number($('otherInput')?.value):Number(pickMode==='quick'?1:pickMode)}
+function refreshPickSummary(){const b=active(),p=b?.lines.find(x=>x.key===activeLineKey);if(!p)return;const n=pickedQty();const valid=validPositive(n);$('confirmPick').disabled=!valid;$('pickSummary').textContent=valid?`Sẽ ghi nhận: +${number(n)} món · Tổng đã pick: ${number(p.picked+n)}`:'Nhập số lượng hợp lệ';const extra=valid?Math.max(0,p.picked+n-p.plan):0;$('pickWarning').classList.toggle('hidden',!extra);if(extra)$('pickWarning').textContent=`Pick vượt dự kiến +${number(extra)} món (${number(p.picked+n)}/${number(p.plan)}). Vẫn được xác nhận; tồn kho không thay đổi.`}
+function savePick(){const b=active(),p=b?.lines.find(x=>x.key===activeLineKey),n=pickedQty();if(!b||b.done||!p||!validPositive(n)||!Number.isSafeInteger(p.picked+n))return;const picker=$('pickerName').value.trim();p.picked+=n;p.last=new Date().toISOString();p.picker=picker;try{localStorage.setItem('morachi_picker_name',picker)}catch(e){}const extra=excess(p);logEvent(b,'pick',`Pick thêm +${n} món · Tổng ${p.picked}${extra?' · Vượt +'+extra:''}${picker?' · '+picker:''}`,p.sku);closeSheet();render()}
+function complete(){const b=active();if(!b||b.done)return;if(!b.lines.length||b.lines.some(x=>remaining(x)>0)){alert('Chỉ hoàn tất khi tất cả SKU đã pick đủ.');return}if(!confirm('Xác nhận HOÀN TẤT đợt pick? Dữ liệu tồn kho không thay đổi.'))return;b.done=true;b.completedAt=new Date().toISOString();logEvent(b,'complete','Hoàn tất pick toàn đợt');render()}
+function exportJson(){const b=active();if(!b){alert('Chưa có đợt nhập');return}const blob=new Blob([JSON.stringify(b,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download=`${b.id}-pick-backup.json`;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+$('backdrop').onclick=closeSheet;$('newBatch').onclick=createBatchForm;$('editBatch').onclick=editBatchForm;$('addSku').onclick=addSkuForm;$('completeBatch').onclick=complete;$('exportJson').onclick=exportJson;
+$('batchSelector').onchange=e=>{db.activeId=e.target.value;save();render()};
+$('filters').onclick=e=>{const btn=e.target.closest('[data-filter]');if(!btn)return;filter=btn.dataset.filter;for(const x of $('filters').querySelectorAll('[data-filter]'))x.classList.toggle('active',x===btn);render()};
+$('products').onclick=e=>{const btn=e.target.closest('[data-action]');if(!btn)return;const key=btn.dataset.key;if(btn.dataset.action==='pick')pickForm(key);if(btn.dataset.action==='plan')editPlan(key)};
+$('sheetContent').onclick=e=>{const btn=e.target.closest('.choice[data-key]');if(btn)planNewSku(btn.dataset.key)};
+for(const btn of document.querySelectorAll('.nav'))btn.onclick=()=>{for(const x of document.querySelectorAll('.nav'))x.classList.toggle('active',x===btn);$('pickPage').classList.toggle('hidden',btn.dataset.page!=='pickPage');$('revenuePage').classList.toggle('hidden',btn.dataset.page!=='revenuePage');window.scrollTo(0,0)};
+render();loadCatalog();
+</script>
+</body>
+</html>

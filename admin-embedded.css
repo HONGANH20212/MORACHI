@@ -1,0 +1,24 @@
+/* Loaded by legacy feature pages; only active when inside /admin/ frame. */
+html.mu-embedded{background:#f3f5f9!important}
+html.mu-embedded body{background:#f3f5f9!important;margin:0!important;padding:0!important;min-width:0!important}
+html.mu-embedded body > .layout > .side,html.mu-embedded body > .app > .sidebar{display:none!important}
+html.mu-embedded body > .layout > .app{margin:0!important;padding:12px!important;max-width:none!important;width:100%!important}
+html.mu-embedded body > .layout{min-height:0!important}
+html.mu-embedded body > .app{display:block!important;width:100%!important;max-width:none!important;margin:0!important}
+html.mu-embedded body > .app > .workspace{min-width:0!important;width:100%!important;max-width:none!important}
+html.mu-embedded body > .app .mobile-head{display:none!important}
+html.mu-embedded body > .phone,html.mu-embedded body > #app{width:100%!important;max-width:none!important;min-height:100dvh!important;margin:0!important;border-radius:0!important;box-shadow:none!important;overflow:visible!important}
+html.mu-embedded body > .phone .header{border-radius:14px!important;margin:0 12px!important}
+html.mu-embedded body > .phone .chooser{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+html.mu-embedded body > #app .grid{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+html.mu-embedded body > #app .grid.two{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+html.mu-embedded body > .hero,html.mu-embedded body > .wrap{width:100%!important;max-width:none!important;margin:0!important}
+html.mu-embedded body > .hero{padding-left:20px!important;padding-right:20px!important}
+html.mu-embedded body > .wrap{padding:12px 16px!important}
+html.mu-embedded body > .phone > .bottom,html.mu-embedded body > #app > .bottom{width:100%!important;max-width:none!important}
+html.mu-embedded body > #app .sheet,html.mu-embedded body > .phone .sheet{width:min(100%,600px)!important}
+@media(max-width:1100px){html.mu-embedded body > #app .grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:700px){html.mu-embedded body > #app .grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}html.mu-embedded body > .phone .chooser{grid-template-columns:repeat(2,minmax(0,1fr))!important}html.mu-embedded body > .layout > .app{padding:11px!important}html.mu-embedded body > .hero{padding:13px!important}}
+/* Đợt nhập: menu chính đã nằm trong /admin/, ẩn bottom navigation cũ (tab doanh thu chỉ là placeholder). */
+html.mu-embedded body > .phone > .bottom{display:none!important}
+html.mu-embedded body > .phone{padding-bottom:22px!important}

@@ -1,4 +1,4 @@
-#!/home/MORACHI-SHOP/api/.venv/bin/python3
+#!/home/vthanh1/MORACHI_SHOP/api/.venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys

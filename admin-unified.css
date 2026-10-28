@@ -1,0 +1,42 @@
+/* MORACHI_ADMIN_UNIFIED_V2 — Desktop + mobile: one /admin/ shell. */
+body.morachi-unified-v2{display:flex;min-width:320px;background:#f4f6fa;overflow-x:hidden}
+body.morachi-unified-v2 > .sidebar{width:244px;overflow-y:auto;box-shadow:2px 0 13px #14223a0a;z-index:160}
+body.morachi-unified-v2 .sidebar-menu{overflow-y:auto;min-height:0;padding:0 12px 10px}
+body.morachi-unified-v2 .sidebar-menu .menu-item{min-height:43px;box-sizing:border-box;text-decoration:none;padding:11px 13px;cursor:pointer;color:#b1baca;font-weight:600;line-height:1.35;margin-bottom:3px;border-radius:10px}
+body.morachi-unified-v2 .sidebar-menu .menu-item:hover{background:#ffffff16;color:#fff}
+body.morachi-unified-v2 .sidebar-menu .menu-item.active{background:#fa7721;color:#fff}
+body.morachi-unified-v2 .sidebar-menu .menu-item i{width:20px;text-align:center}
+body.morachi-unified-v2 .sidebar-footer{flex-wrap:wrap;gap:9px;padding:15px}
+body.morachi-unified-v2 #mu-logout{color:#e1e9f2;font-size:12px;text-decoration:none;padding:4px 8px}
+body.morachi-unified-v2 > .main{box-sizing:border-box;min-width:0;width:calc(100% - 244px);margin-left:244px;padding:23px 27px 30px}
+body.morachi-unified-v2 .stats-grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:13px}
+body.morachi-unified-v2 .stat-card{min-width:0;padding:16px 13px}
+body.morachi-unified-v2 #section-unified{display:block;min-width:0}
+body.morachi-unified-v2 #section-unified[hidden],body.morachi-unified-v2 #section-products:not(.active),body.morachi-unified-v2 #section-orders:not(.active){display:none!important}
+body.morachi-unified-v2 .mu-panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;gap:8px}
+body.morachi-unified-v2 .mu-panel-head h1{font-size:21px;color:#1e2838;margin:0;font-weight:800}
+body.morachi-unified-v2 .mu-panel-head p{font-size:12px;color:#8290a2;margin:6px 0 0}
+body.morachi-unified-v2 .mu-tag{padding:7px 10px;background:#e9f1ff;color:#46658c;border-radius:99px;font-size:11px;font-weight:800}
+body.morachi-unified-v2 .mu-loading{min-height:0;font-size:12px;color:#9b691e;margin:0}
+body.morachi-unified-v2 #mu-tool-frame{display:block;width:100%;border:0;background:#f3f5f9;border-radius:16px;min-height:540px;height:calc(100dvh - 116px);max-height:none}
+body.morachi-unified-v2 #mu-mobile-header{display:none}
+body.morachi-unified-v2 #mu-overlay{display:none}
+@media(max-width:1300px){body.morachi-unified-v2 .stats-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:950px){
+ body.morachi-unified-v2 > .sidebar{width:min(82vw,290px);transform:translateX(-102%);transition:transform .2s ease}
+ body.morachi-unified-v2 > .sidebar.mu-sidebar-open{transform:translateX(0)}
+ body.morachi-unified-v2 > .main{margin-left:0!important;width:100%!important;padding:0 12px 20px!important}
+ body.morachi-unified-v2 #mu-mobile-header{height:54px;display:flex;align-items:center;gap:11px;margin:0 -12px 14px;padding:0 15px;background:#202a3b;color:#fff;position:sticky;top:0;z-index:100}
+ body.morachi-unified-v2 #mu-mobile-header b{font-size:14px}
+ body.morachi-unified-v2 #mu-mobile-header span{font-size:10px;color:#bac6d7;margin-left:auto}
+ body.morachi-unified-v2 #mu-hamburger{background:#ffffff22;color:#fff;border:0;border-radius:9px;font-size:21px;height:35px;width:38px}
+ body.morachi-unified-v2 #mu-overlay.mu-overlay-show{position:fixed;inset:0;display:block;background:#132036aa;z-index:150}
+ body.morachi-unified-v2 .mu-panel-head h1{font-size:18px}
+ body.morachi-unified-v2 #mu-tool-frame{height:calc(100dvh - 138px);border-radius:10px;min-height:430px}
+ body.morachi-unified-v2 .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ body.morachi-unified-v2 .filter-bar{flex-wrap:wrap;gap:9px}
+ body.morachi-unified-v2 .top-header h1{font-size:17px}
+ body.morachi-unified-v2 .table-container,body.morachi-unified-v2 .table-wrapper{overflow-x:auto}
+}
+@media(max-width:480px){body.morachi-unified-v2 .stat-card{padding:11px 8px}body.morachi-unified-v2 .stats-grid{gap:7px}body.morachi-unified-v2 #mu-tool-frame{height:calc(100dvh - 127px)}body.morachi-unified-v2 .mu-panel-head p{display:none}}
+@media(prefers-reduced-motion:reduce){body.morachi-unified-v2 > .sidebar{transition:none}}

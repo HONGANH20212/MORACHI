@@ -1,0 +1,33 @@
+/* MORACHI ADMIN v3: preserve original sidebar and content, responsive desktop/mobile. */
+body.morachi-unified-v3 { min-width:320px; overflow-x:hidden; background:#f5f6fa; }
+body.morachi-unified-v3 > .sidebar { width:250px; z-index:180; overflow-y:auto; }
+body.morachi-unified-v3 > .sidebar .sidebar-menu { overflow-y:auto; min-height:0; padding:0 12px 14px; }
+body.morachi-unified-v3 .sidebar-menu button.menu-item { border:0; width:100%; text-align:left; background:transparent; font:inherit; display:flex; align-items:center; min-height:44px; color:#b0bacb; cursor:pointer; }
+body.morachi-unified-v3 .sidebar-menu button.menu-item.active { background:#f77921; color:white; }
+body.morachi-unified-v3 .sidebar-menu button.menu-item:hover:not(.active) { background:#ffffff14; color:#fff; }
+body.morachi-unified-v3 .sidebar-menu .mu3-noninteractive { opacity:.55; cursor:default; }
+body.morachi-unified-v3 > .main { margin-left:250px; min-width:0; box-sizing:border-box; width:calc(100% - 250px); }
+body.morachi-unified-v3 #mu3-section { width:100%; min-width:0; box-sizing:border-box; }
+body.morachi-unified-v3 #mu3-section:not(.active),body.morachi-unified-v3 #mu3-section[hidden] { display:none!important; }
+body.morachi-unified-v3 #mu3-section.active { display:block!important; }
+body.morachi-unified-v3 .mu3-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin:0 0 13px; }
+body.morachi-unified-v3 .mu3-heading h1 { font-size:22px; margin:0; color:#1e2533; font-weight:750; }
+body.morachi-unified-v3 .mu3-heading span { font-size:11px; font-weight:bold; background:#eaf1fb; border-radius:15px; padding:8px 10px; color:#567297; }
+body.morachi-unified-v3 #mu3-status { font-size:12px; color:#a46b2b; }
+body.morachi-unified-v3 #mu3-tool { border:0; background:#f5f6fa; border-radius:12px; display:block; width:100%; height:calc(100dvh - 125px); min-height:500px; }
+body.morachi-unified-v3 #mu3-mobile-header,body.morachi-unified-v3 #mu3-shade { display:none; }
+body.morachi-unified-v3 #section-products:not(.active),body.morachi-unified-v3 #section-orders:not(.active) { display:none!important; }
+@media(max-width:1100px){body.morachi-unified-v3 .stats-grid {grid-template-columns:repeat(3,minmax(0,1fr))} }
+@media(max-width:850px){
+ body.morachi-unified-v3 > .sidebar { transform:translateX(-105%); transition:transform .2s; width:min(82vw,280px); position:fixed; }
+ body.morachi-unified-v3 > .sidebar.mu3-open { transform:translateX(0); }
+ body.morachi-unified-v3 > .main {margin-left:0!important;width:100%!important;padding:0 12px 20px!important;}
+ body.morachi-unified-v3 #mu3-mobile-header { display:flex; align-items:center; gap:12px; min-height:53px; padding:0 14px; margin:0 -12px 12px; background:#202938; color:white; position:sticky; top:0; z-index:125; }
+ body.morachi-unified-v3 #mu3-menu-toggle { height:38px; width:42px; background:#ffffff16; color:white; font-size:22px; border:0; border-radius:9px; }
+ body.morachi-unified-v3 #mu3-shade.active { display:block; position:fixed; inset:0; background:#081525a0; z-index:170; }
+ body.morachi-unified-v3 .stats-grid {grid-template-columns:repeat(2,minmax(0,1fr));}
+ body.morachi-unified-v3 #mu3-tool {height:calc(100dvh - 134px);min-height:410px;}
+ body.morachi-unified-v3 .mu3-heading h1 {font-size:18px;}
+ body.morachi-unified-v3 .table-container,body.morachi-unified-v3 .table-wrapper {overflow-x:auto;}
+}
+@media(max-width:420px){body.morachi-unified-v3 #mu3-tool{height:calc(100dvh - 127px)} }

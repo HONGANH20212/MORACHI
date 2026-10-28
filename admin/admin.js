@@ -3,6 +3,29 @@ var isEditing = false;
 var allProductsData = [];
 var allOrdersData = [];
 
+// MORACHI_SMOOTH_ADMIN_V1: reconcile table rows, not the page.
+window.morachiSmoothRows = function(tbody, html, keyAttribute) {
+    if (!tbody) return;
+    const draft = document.createElement('tbody');
+    draft.innerHTML = html;
+    const upcoming = Array.from(draft.children);
+    const old = new Map();
+    for (const row of Array.from(tbody.children)) {
+        const key = row.getAttribute(keyAttribute);
+        if (key && !old.has(key)) old.set(key, row);
+    }
+    for (let i = 0; i < upcoming.length; i++) {
+        const fresh = upcoming[i];
+        const key = fresh.getAttribute(keyAttribute);
+        const previous = key ? old.get(key) : null;
+        const row = previous && previous.innerHTML === fresh.innerHTML ? previous : fresh;
+        // A replaced row is only the one whose data changed.
+        if (previous && row !== previous) previous.replaceWith(row);
+        if (tbody.children[i] !== row) tbody.insertBefore(row, tbody.children[i] || null);
+    }
+    while (tbody.children.length > upcoming.length) tbody.lastElementChild.remove();
+};
+
 // =========================================================
 // TÍNH NĂNG SẮP XẾP SẢN PHẨM BẰNG KÉO THẢ
 // - Lưu vào API nếu backend hỗ trợ display_order
@@ -84,7 +107,7 @@ window.sortProductsForAdmin = function(products) {
 
 window.verifyProductOrderSavedToServer = async function(expectedIds) {
     try {
-        const res = await fetch(`${API_BASE_URL}/products?t=${Date.now()}&verify_order=1`, {
+        const res = await fetch(`${API_BASE_URL}/manage/products?t=${Date.now()}&verify_order=1`, {
             cache: "no-store",
             headers: { "Cache-Control": "no-cache" }
         });
@@ -278,12 +301,13 @@ window.enableProductDragSort = function() {
     const tbody = document.getElementById("admin-product-list");
     if (!tbody) return;
 
-    let draggedRow = null;
+    const dragState = tbody.__morachiDragState || (tbody.__morachiDragState = {current:null});
     const rows = [...tbody.querySelectorAll("tr[data-product-id]")];
 
     rows.forEach(row => {
         const handle = row.querySelector(".drag-handle");
-        if (!handle) return;
+        if (!handle || row.dataset.morachiDragBound === '1') return;
+        row.dataset.morachiDragBound = '1';
 
         row.draggable = false;
 
@@ -300,7 +324,7 @@ window.enableProductDragSort = function() {
         }, { passive: true });
 
         row.addEventListener("dragstart", (event) => {
-            draggedRow = row;
+            dragState.current = row;
             row.classList.add("dragging");
             event.dataTransfer.effectAllowed = "move";
             event.dataTransfer.setData("text/plain", row.dataset.productId || "");
@@ -309,23 +333,21 @@ window.enableProductDragSort = function() {
         row.addEventListener("dragend", () => {
             row.classList.remove("dragging");
             row.draggable = false;
-            draggedRow = null;
+            dragState.current = null;
             window.persistProductOrder();
         });
     });
 
-    tbody.addEventListener("dragover", (event) => {
-        if (!draggedRow) return;
-
-        event.preventDefault();
-        const afterElement = window.getDragAfterElement(tbody, event.clientY);
-
-        if (afterElement == null) {
-            tbody.appendChild(draggedRow);
-        } else {
-            tbody.insertBefore(draggedRow, afterElement);
-        }
-    });
+    if (!tbody.dataset.morachiDragOverBound) {
+        tbody.dataset.morachiDragOverBound = '1';
+        tbody.addEventListener("dragover", (event) => {
+            if (!dragState.current) return;
+            event.preventDefault();
+            const afterElement = window.getDragAfterElement(tbody, event.clientY);
+            if (afterElement == null) tbody.appendChild(dragState.current);
+            else tbody.insertBefore(dragState.current, afterElement);
+        });
+    }
 };
 
 
@@ -727,7 +749,7 @@ window.applyBulkProductCategory = async function() {
         if (msg) { msg.style.color = "var(--success)"; msg.innerText = result.message || "Cập nhật thành công."; }
         window.clearShopProductCache();
         window.clearProductSelection();
-        await window.loadAdminProducts();
+        await window.loadAdminProducts({silent:true});
         setTimeout(window.closeBulkCategoryModal, 700);
     } catch (error) {
         if (msg) { msg.style.color = "var(--danger)"; msg.innerText = error.message; }
@@ -818,7 +840,7 @@ window.applySelectedSuggestions = async function() {
         if (msg) { msg.style.color = "var(--success)"; msg.innerText = `Đã áp dụng phân loại cho ${updated} sản phẩm.`; }
         window.clearShopProductCache();
         window.clearProductSelection();
-        await window.loadAdminProducts();
+        await window.loadAdminProducts({silent:true});
         setTimeout(window.closeAutoSuggestionModal, 900);
     } catch (error) {
         if (msg) { msg.style.color = "var(--danger)"; msg.innerText = `Có lỗi: ${error.message}`; }
@@ -829,18 +851,20 @@ window.applySelectedSuggestions = async function() {
 // PHẦN 1: QUẢN LÝ KHO SẢN PHẨM
 // =========================================================
 
-window.loadAdminProducts = async function() {
+window.loadAdminProducts = async function(options = {}) {
     const tbody = document.getElementById("admin-product-list");
     if (!tbody) return;
-    tbody.innerHTML = "<tr><td colspan='9' style='text-align:center; padding: 40px;'><i class='fas fa-spinner fa-spin'></i> Đang tải dữ liệu...</td></tr>";
+    const silent = !!options.silent || !!tbody.querySelector('tr[data-product-id]');
+    const serial = window.__morachiProductsRequest = (window.__morachiProductsRequest || 0) + 1;
+    if (!silent) tbody.innerHTML = "<tr><td colspan='9' style='text-align:center; padding: 40px;'><i class='fas fa-spinner fa-spin'></i> Đang tải dữ liệu...</td></tr>";
 
     try {
-        const response = await fetch(`${API_BASE_URL}/products?t=${new Date().getTime()}`);
+        const response = await fetch(`${API_BASE_URL}/manage/products?t=${new Date().getTime()}`, {cache:'no-store'});
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const products = await response.json();
-        
-        allProductsData = Array.isArray(products)
-            ? sortProductsByDisplayOrder(products)
-            : [];
+        if (serial !== window.__morachiProductsRequest) return;
+        if (!Array.isArray(products)) throw new Error('API trả về danh sách sản phẩm không hợp lệ');
+        allProductsData = sortProductsByDisplayOrder(products);
 
         window.updateDashboardStats(allProductsData);
         window.updateTaxonomyStats(allProductsData);
@@ -848,7 +872,9 @@ window.loadAdminProducts = async function() {
         window.bindTaxonomyFilters();
         window.applyAdminProductFilters();
     } catch (err) {
-        tbody.innerHTML = "<tr><td colspan='9' style='text-align:center; color:red; padding: 40px;'>Lỗi kết nối API!</td></tr>";
+        console.error('Không đồng bộ được sản phẩm:', err);
+        if (!silent) tbody.innerHTML = "<tr><td colspan='9' style='text-align:center; color:red; padding: 40px;'>Lỗi kết nối API!</td></tr>";
+        else if (typeof window.showReorderStatus === 'function') window.showReorderStatus('Không cập nhật được sản phẩm, dữ liệu đang hiển thị được giữ nguyên.', 'error');
     }
 }
 
@@ -932,11 +958,11 @@ window.renderTable = function(products) {
     const sortedProducts = window.sortProductsForAdmin(products || []);
 
     if (sortedProducts.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='9' style='text-align:center; padding: 40px; color:#888;'>Không tìm thấy sản phẩm phù hợp.</td></tr>";
+        window.morachiSmoothRows(tbody, "<tr><td colspan='9' style='text-align:center; padding: 40px; color:#888;'>Không tìm thấy sản phẩm phù hợp.</td></tr>", 'data-product-id');
         return;
     }
 
-    tbody.innerHTML = sortedProducts.map((p, index) => {
+    const productRowsHtml = sortedProducts.map((p, index) => {
         const variants = p.variants || [];
         let totalStock = variants.reduce((sum, v) => sum + (parseInt(v.stock) || 0), 0);
 
@@ -1006,6 +1032,7 @@ window.renderTable = function(products) {
             </tr>
         `;
     }).join("");
+    window.morachiSmoothRows(tbody, productRowsHtml, 'data-product-id');
 
     window.enableProductDragSort();
     window.updateProductSelectionUI();
@@ -1017,7 +1044,8 @@ window.deleteProduct = async function(id, brand) {
         const res = await fetch(`${API_BASE_URL}/products/${id}`, { method: "DELETE" });
         if (res.ok) { 
             window.clearShopProductCache();
-            window.loadAdminProducts(); 
+            await window.loadAdminProducts({silent:true});
+            window.showReorderStatus?.('Đã xóa sản phẩm', 'success');
         }
     } catch (err) { alert("Lỗi hệ thống khi xóa!"); }
 }
@@ -1255,7 +1283,9 @@ if (form) {
                 
                 window.clearShopProductCache();
                 
-                setTimeout(() => { window.closeModal(); window.loadAdminProducts(); }, 1200);
+                window.closeModal();
+                await window.loadAdminProducts({silent:true});
+                window.showReorderStatus?.(isEditing ? 'Đã cập nhật sản phẩm' : 'Đã thêm sản phẩm', 'success');
             } else {
                 throw new Error("API backend từ chối lưu dữ liệu");
             }
@@ -1485,30 +1515,36 @@ window.updateOrderDashboardStats = function(orders) {
     if(statDelivering) statDelivering.innerHTML = deliveringCount.toLocaleString('vi-VN');
 }
 
-window.loadOrders = async function() {
+window.loadOrders = async function(options = {}) {
     const tbody = document.getElementById('admin-order-list');
     if (!tbody) return;
-
-    tbody.innerHTML = "<tr><td colspan='8' style='text-align:center; padding: 40px;'><i class='fas fa-spinner fa-spin'></i> Đang tải đơn hàng...</td></tr>";
+    const silent = !!options.silent || !!tbody.querySelector('tr[data-order-id]');
+    const serial = window.__morachiOrdersRequest = (window.__morachiOrdersRequest || 0) + 1;
+    if (!silent) tbody.innerHTML = "<tr><td colspan='8' style='text-align:center; padding: 40px;'><i class='fas fa-spinner fa-spin'></i> Đang tải đơn hàng...</td></tr>";
 
     try {
-        const response = await fetch(`${API_BASE_URL}/orders?t=${new Date().getTime()}`);
-        if (!response.ok) throw new Error("API lỗi");
+        const response = await fetch(`${API_BASE_URL}/orders?t=${new Date().getTime()}`, {cache:'no-store'});
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const orders = await response.json();
-        
-        allOrdersData = Array.isArray(orders) ? orders : [];
+        if (serial !== window.__morachiOrdersRequest) return;
+        if (!Array.isArray(orders)) throw new Error('API trả về danh sách đơn hàng không hợp lệ');
+        allOrdersData = orders;
         localStorage.setItem('morachi_orders', JSON.stringify(allOrdersData));
 
-        const checkAllEl = document.getElementById('check-all-orders');
-        if (checkAllEl) checkAllEl.checked = false;
-        window.updateBulkActionBar(); 
-
+        if (!silent) {
+            const checkAllEl = document.getElementById('check-all-orders');
+            if (checkAllEl) checkAllEl.checked = false;
+        }
         window.updateOrderDashboardStats(allOrdersData);
-        window.renderOrdersTable(allOrdersData);
-        
+        const activeFilter = String(window.__morachiOrderStatusFilter || '').toLowerCase();
+        window.renderOrdersTable(activeFilter
+            ? allOrdersData.filter(o => String(o.status || 'Chờ xác nhận').toLowerCase() === activeFilter)
+            : allOrdersData);
+        window.updateBulkActionBar();
     } catch (err) {
         console.error("Lỗi lấy đơn hàng:", err);
-        tbody.innerHTML = "<tr><td colspan='8' style='text-align:center; color:red; padding: 40px;'>Lỗi kết nối máy chủ!</td></tr>";
+        if (!silent) tbody.innerHTML = "<tr><td colspan='8' style='text-align:center; color:red; padding: 40px;'>Lỗi kết nối máy chủ!</td></tr>";
+        else window.showReorderStatus?.('Không đồng bộ được đơn hàng; danh sách hiện tại vẫn được giữ nguyên.', 'error');
     }
 }
 
@@ -1517,11 +1553,11 @@ window.renderOrdersTable = function(ordersList) {
     if (!tbody) return;
 
     if (!ordersList || ordersList.length === 0) {
-        tbody.innerHTML = "<tr><td colspan='8' style='text-align:center; padding: 40px; color:#888;'>Không tìm thấy đơn hàng phù hợp với trạng thái này.</td></tr>";
+        window.morachiSmoothRows(tbody, "<tr><td colspan='8' style='text-align:center; padding: 40px; color:#888;'>Không tìm thấy đơn hàng phù hợp với trạng thái này.</td></tr>", 'data-order-id');
         return;
     }
 
-    tbody.innerHTML = ordersList.map(o => {
+    const orderRowsHtml = ordersList.map(o => {
         const c = o.customer_info || {};
         const items = o.items || [];
         
@@ -1620,7 +1656,7 @@ window.renderOrdersTable = function(ordersList) {
             : ``;
 
         return `
-            <tr>
+            <tr data-order-id="${o.id}">
                 <td style="text-align: center;">
                     <input type="checkbox" class="order-checkbox" value="${o.id}" data-orderid="${o.order_id || 'N/A'}" data-total="${o.total_amount || 0}" onclick="window.updateBulkActionBar()">
                 </td>
@@ -1651,9 +1687,11 @@ window.renderOrdersTable = function(ordersList) {
             </tr>
         `;
     }).join('');
+    window.morachiSmoothRows(tbody, orderRowsHtml, 'data-order-id');
 }
 
 window.filterOrdersByStatus = function(status) {
+    window.__morachiOrderStatusFilter = status || '';
     const checkAllEl = document.getElementById('check-all-orders');
     if (checkAllEl) checkAllEl.checked = false;
     window.updateBulkActionBar();
@@ -1757,7 +1795,7 @@ window.applyBulkStatus = async function() {
         const checkAllEl = document.getElementById('check-all-orders');
         if(checkAllEl && checkAllEl.checked) checkAllEl.click(); 
         
-        window.loadOrders(); 
+        await window.loadOrders({silent:true});
     } catch (err) {
         alert("Có lỗi xảy ra trong quá trình cập nhật trên máy chủ!");
     }
@@ -1778,7 +1816,8 @@ window.updateOrderStatus = async function(id, currentStatus, currentSpxCode) {
         });
 
         if (response.ok) {
-            window.loadOrders(); 
+            await window.loadOrders({silent:true});
+            window.showReorderStatus?.('Đã cập nhật trạng thái đơn', 'success');
         } else {
             alert("Lỗi khi cập nhật trên máy chủ!");
         }
@@ -1998,7 +2037,7 @@ window.importSPXTrackingFile = async function(input) {
 
     try {
         if (!Array.isArray(allOrdersData) || allOrdersData.length === 0) {
-            await window.loadOrders();
+            await window.loadOrders({silent:true});
         }
 
         const rows = await window.readSPXFileRows(file);

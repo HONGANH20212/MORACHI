@@ -13,6 +13,9 @@ from azure.storage.blob import BlobServiceClient, ContentSettings
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
+from jpy_import_web import jpy_import_bp
+app.register_functions(jpy_import_bp)
+
 # --- CẤU HÌNH KẾT NỐI (Lấy từ Environment Variables của Azure) ---
 COSMOS_URL = os.environ.get("COSMOS_URL")
 COSMOS_KEY = os.environ.get("COSMOS_KEY")
@@ -287,6 +290,43 @@ def upload_image(req: func.HttpRequest) -> func.HttpResponse:
     except Exception as e:
         return json_response({"error": str(e)}, 500)
 
+
+PUBLIC_FIELDS = {
+    "id", "title", "brand", "category", "subcategory",
+    "collections", "thumbnail", "description", "current_price",
+    "old_price", "discount", "display_order", "status",
+    "product_type", "rating", "sold_text", "is_highend",
+    "ingredients", "specifications", "usage_manual",
+    "created_at", "updated_at"
+}
+PUBLIC_VARIANT_FIELDS = {
+    "name", "image", "price", "status", "stock", "date", "sku"
+}
+
+def public_product(p):
+    result = {k: v for k, v in p.items() if k in PUBLIC_FIELDS}
+    result["variants"] = [
+        {k: v for k, v in variant.items() if k in PUBLIC_VARIANT_FIELDS}
+        for variant in (p.get("variants") or [])
+        if isinstance(variant, dict)
+    ]
+    return result
+
+
+@app.route(route="manage/products", methods=["GET"])
+def admin_products(req: func.HttpRequest) -> func.HttpResponse:
+    container = get_cosmos_container()
+    query = "SELECT * FROM c WHERE c.status = 'active' AND NOT IS_DEFINED(c.type)"
+    items = list(container.query_items(
+        query=query, enable_cross_partition_query=True
+    ))
+    items.sort(key=lambda x: (
+        to_display_order(x.get("display_order"), 999999),
+        -to_sort_timestamp(x.get("created_at"))
+    ))
+    return json_response(items)
+
+
 @app.route(route="products", methods=["GET", "POST", "OPTIONS"])
 def products(req: func.HttpRequest) -> func.HttpResponse:
     if req.method == "OPTIONS": return options_response()
@@ -301,7 +341,7 @@ def products(req: func.HttpRequest) -> func.HttpResponse:
                 to_display_order(x.get("display_order"), 999999),
                 -to_sort_timestamp(x.get("created_at"))
             ))
-            return json_response(items)
+            return json_response([public_product(p) for p in items])
 
         if req.method == "POST":
             body = req.get_json()
@@ -1657,3 +1697,12 @@ def track_order(req: func.HttpRequest) -> func.HttpResponse:
 
     except Exception as e:
         return json_response({"error": str(e)}, 500)
+
+# MORACHI UAT FINANCE BLUEPRINT (added by install_revenue.py)
+from finance_api import finance_bp
+app.register_blueprint(finance_bp)
+
+
+# MORACHI_OFFLINE_ORDERS_V1: Tạo đơn Offline dùng chung doanh thu /api/finance/report.
+from offline_orders_api import bp_offline_orders
+app.register_blueprint(bp_offline_orders)

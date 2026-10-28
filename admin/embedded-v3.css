@@ -1,0 +1,32 @@
+/* Applies only when legacy tool is embedded inside /admin/#... */
+html.mu3-embedded,html.mu3-embedded body{margin:0!important;padding:0!important;min-width:0!important;width:100%!important;max-width:none!important;background:#f5f6fa!important;overflow-x:hidden!important;}
+/* Remove duplicate navigation and duplicate header; main Admin provides both. */
+html.mu3-embedded body > .app > .sidebar,
+html.mu3-embedded body > .layout > .side,
+html.mu3-embedded body > .app > .workspace > .mobile-head,
+html.mu3-embedded body > .phone > .bottom,
+html.mu3-embedded body > #app > .bottom,
+html.mu3-embedded body > #app > .bottom-nav,
+html.mu3-embedded body > .bottom-nav,
+html.mu3-embedded body > .app > .workspace > .bottom-nav,
+html.mu3-embedded .side-link{display:none!important;}
+html.mu3-embedded body > .app { width:100%!important;max-width:none!important;min-width:0!important;display:block!important;margin:0!important; }
+html.mu3-embedded body > .app > .workspace{width:100%!important;max-width:none!important;min-width:0!important;}
+html.mu3-embedded body > .app > .workspace > .content{padding:12px 14px 24px!important;}
+html.mu3-embedded body > .layout{width:100%!important;max-width:none!important;display:block!important;}
+html.mu3-embedded body > .layout > .app{margin:0!important;width:100%!important;max-width:none!important;padding:10px 12px 24px!important;}
+html.mu3-embedded body > .phone,html.mu3-embedded body > #app{margin:0!important;width:100%!important;max-width:none!important;border-radius:0!important;box-shadow:none!important;min-height:100%!important;}
+html.mu3-embedded body > #app .grid:not(.two){grid-template-columns:repeat(5,minmax(0,1fr))!important;}
+html.mu3-embedded body > #app .grid.two{grid-template-columns:repeat(4,minmax(0,1fr))!important;}
+html.mu3-embedded body > .phone .chooser {grid-template-columns:repeat(4,minmax(0,1fr))!important;}
+html.mu3-embedded body > .hero,html.mu3-embedded body > .wrap {width:100%!important;max-width:none!important;margin:0!important;}
+html.mu3-embedded body > .hero {padding:10px 14px!important;}
+html.mu3-embedded body > .wrap {padding:10px 14px!important;}
+html.mu3-embedded body > .phone > .header{border-radius:15px!important;}
+html.mu3-embedded body > .phone .sheet,html.mu3-embedded body > #app .sheet {width:min(100%,580px)!important;}
+@media(max-width:1050px){html.mu3-embedded body > #app .grid:not(.two) {grid-template-columns:repeat(3,minmax(0,1fr))!important;} }
+@media(max-width:650px){
+ html.mu3-embedded body > #app .grid:not(.two){grid-template-columns:repeat(3,minmax(0,1fr))!important;}
+ html.mu3-embedded body > .phone .chooser{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+ html.mu3-embedded body > .app > .workspace > .content{padding:12px!important;}
+}

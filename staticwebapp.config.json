@@ -1,6 +1,55 @@
 {
   "routes": [
     {
+      "route": "/api/manage/products",
+      "methods": [
+        "GET"
+      ],
+      "allowedRoles": [
+        "morachiadmin"
+      ]
+    },
+    {
+      "route": "/api/offline-orders",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "morachiadmin"
+      ]
+    },
+    {
+      "route": "/api/offline-orders/recent",
+      "methods": [
+        "GET"
+      ],
+      "allowedRoles": [
+        "morachiadmin"
+      ]
+    },
+    {
+      "route": "/admin/offline-orders.html",
+      "allowedRoles": [
+        "morachiadmin"
+      ]
+    },
+    {
+      "route": "/api/finance/*",
+      "allowedRoles": [
+        "morachiadmin"
+      ]
+    },
+    {
+      "route": "/api/inventory/jpy/*",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "allowedRoles": [
+        "morachiadmin"
+      ]
+    },
+    {
       "route": "/api/track",
       "methods": [
         "GET"
