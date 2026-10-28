@@ -49,7 +49,10 @@ def positive_int(value, field, minimum=1, maximum=100_000_000):
 def uat_container():
     url = txt(os.getenv('COSMOS_URL'), 500)
     host = (urlparse(url).hostname or '').lower()
-    if (urlparse(url).scheme != 'https' or host != 'mrc-uat.documents.azure.com'
+    if (urlparse(url).scheme != 'https' or host != (
+    f"{(os.environ.get('COSMOS_ALLOWED_ACCOUNT') or 'mrc-uat').strip().lower()}"
+    ".documents.azure.com"
+)
             or os.getenv('COSMOS_DB_NAME', 'morachi-db') != 'morachi-db'
             or os.getenv('COSMOS_CONTAINER_NAME', 'products') != 'products'):
         raise PermissionError('Chỉ cho phép Cosmos DB UAT mrc-uat / morachi-db / products')

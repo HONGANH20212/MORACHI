@@ -21,7 +21,9 @@ jpy_import_bp = func.Blueprint()
 RATE = 170
 MAX_ROWS = 1500
 MAX_BODY = 700_000
-EXPECTED_UAT_ACCOUNT = "mrc-uat"
+EXPECTED_UAT_ACCOUNT = (
+    os.environ.get("COSMOS_ALLOWED_ACCOUNT") or "mrc-uat"
+).strip().lower()
 
 
 def _response(data, status=200):

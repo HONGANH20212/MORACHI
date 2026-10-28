@@ -17,7 +17,9 @@ from azure.core import MatchConditions
 from finance_logic import build_report, period_range, window_for, utc_iso, legacy_cost_key, order_day, is_cancelled
 
 finance_bp = func.Blueprint()
-ACCOUNT = 'mrc-uat'
+ACCOUNT = (
+    os.environ.get("COSMOS_ALLOWED_ACCOUNT") or "mrc-uat"
+).strip().lower()
 CATEGORIES = {'shipping_jp','carton','tape','shipping_vn','packing','other'}
 MAX_BODY_BYTES = 8000
 
