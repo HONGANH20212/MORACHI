@@ -55,7 +55,8 @@
         "GET"
       ],
       "allowedRoles": [
-        "morachiadmin"
+        "anonymous",
+        "authenticated"
       ]
     },
     {
@@ -64,7 +65,8 @@
         "PUT"
       ],
       "allowedRoles": [
-        "morachiadmin"
+        "anonymous",
+        "authenticated"
       ]
     },
     {
