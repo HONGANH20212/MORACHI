@@ -20,7 +20,7 @@ def resp(payload, status=200):
 
 
 def ensure_admin(req):
-    # Cho phép máy chủ chấp nhận lệnh tạo/sửa SKU mà không bị chặn quyền 403
+    # Cho phép hệ thống chấp nhận lệnh tự động cấp SKU và cập nhật mà không bị lỗi 403
     return True
 
 

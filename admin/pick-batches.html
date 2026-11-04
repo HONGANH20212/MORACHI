@@ -34,7 +34,33 @@
       <div class="actions"><button class="button outline" id="newBatch">＋ Tạo đợt mới</button><button class="button outline" id="editBatch">✎ Thời gian</button></div>
       <div class="actions"><button class="button dark" id="addSku">＋ Thêm SKU cần mua</button><button class="button primary" id="completeBatch">✓ Hoàn tất pick</button></div>
     </div>
-    <div class="metrics"><div class="metric"><strong id="planned">0</strong><span>Dự kiến</span></div><div class="metric"><strong id="picked">0</strong><span>Đã pick</span></div><div class="metric"><strong id="remaining">0</strong><span>Còn thiếu</span></div></div>
+
+    <!-- HÀNG 1: SỐ LƯỢNG MÓN -->
+    <div class="metrics">
+      <div class="metric"><strong id="planned">0</strong><span>Dự kiến</span></div>
+      <div class="metric"><strong id="picked">0</strong><span>Đã pick</span></div>
+      <div class="metric"><strong id="remaining">0</strong><span>Còn thiếu</span></div>
+    </div>
+
+    <!-- HÀNG 2: TIỀN VỐN (YÊN + VNĐ x170) -->
+    <div class="metrics" style="margin-top: 8px;">
+      <div class="metric" style="background:#fffcf9; border-color:#fce4d2;">
+        <strong id="costPlanned" style="color:#d96317; font-size: 17px;">¥0</strong>
+        <small id="costPlannedVnd" style="display:block; font-size:11px; color:#8590a2; margin: 3px 0 4px;">≈ 0 đ</small>
+        <span style="font-weight:700; color:#5c6879;">Vốn cần chuẩn bị</span>
+      </div>
+      <div class="metric" style="background:#f8fcf9; border-color:#d7f0e0;">
+        <strong id="costPicked" style="color:#138452; font-size: 17px;">¥0</strong>
+        <small id="costPickedVnd" style="display:block; font-size:11px; color:#8590a2; margin: 3px 0 4px;">≈ 0 đ</small>
+        <span style="font-weight:700; color:#5c6879;">Tiền hàng đã pick</span>
+      </div>
+      <div class="metric" style="background:#fbfbfe; border-color:#e4e8f3;">
+        <strong id="costRemaining" style="color:#202939; font-size: 17px;">¥0</strong>
+        <small id="costRemainingVnd" style="display:block; font-size:11px; color:#8590a2; margin: 3px 0 4px;">≈ 0 đ</small>
+        <span style="font-weight:700; color:#5c6879;">Số tiền vốn còn lại</span>
+      </div>
+    </div>
+
     <div class="card"><div class="row"><strong>Tiến độ đợt nhập</strong><b id="percent">0%</b></div><div class="track"><div id="progress" style="width:0"></div></div><div class="small" id="progressLabel">0 SKU đã đủ</div><div id="extraBox" class="over hidden">Vượt kế hoạch</div></div>
     <div class="row" style="margin:16px 0 8px"><strong>Danh sách cần pick</strong><span class="small" id="skuCount">0 SKU</span></div>
     <div class="filter-scroll" id="filters"><button class="chip active" data-filter="all">Tất cả</button><button class="chip" data-filter="need">Còn thiếu</button><button class="chip" data-filter="none">Chưa pick</button><button class="chip" data-filter="done">Đã đủ ✓</button></div>
@@ -45,11 +71,12 @@
   <section class="content hidden" id="revenuePage"><h1 class="heading">Doanh thu</h1><p class="description">Trang Doanh thu tách riêng như thiết kế đã chốt.</p><div class="card"><div class="revenue-placeholder"><b>Chưa kết nối dữ liệu đơn hàng.</b><br>Không hiển thị số liệu doanh thu giả. Ở bước tiếp theo, trang này sẽ tổng hợp doanh thu, giá vốn và lợi nhuận từ đơn hàng MORACHI.</div></div></section>
   <nav class="bottom"><button class="nav active" data-page="pickPage"><span>📦</span>Đợt nhập</button><button class="nav" data-page="revenuePage"><span>📈</span>Doanh thu</button></nav>
 </div>
-<div id="backdrop" class="sheet-backdrop"></div><aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Chỉnh đợt nhập"><div class="grab"></div><div id="sheetContent"></div></aside>
+<div id="backdrop" class="sheet-backdrop"></div><aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Chỉnh đợt nhập"><div class="grabber"></div><div id="sheetContent"></div></aside>
 <script>
 'use strict';
 /* UI-only UAT: /api/manage/products GET; localStorage for planned/picked; NEVER writes Cosmos DB. */
 const STORAGE_KEY='morachi_pick_batches_ui_v1';
+const RATE = 170;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const stamp=d=>new Intl.DateTimeFormat('vi-VN',{dateStyle:'short',timeStyle:'short'}).format(d instanceof Date?d:new Date(d));
@@ -80,7 +107,19 @@ async function loadCatalog(){
   for(const p of products){const variants=Array.isArray(p.variants)?p.variants:[];
    for(let i=0;i<variants.length;i++){
     const v=variants[i]||{};const sku=String(v.sku||'').trim();if(!sku)continue;
-    rows.push({key:productKey(sku),productId:String(p.id),variantIndex:i,sku,brand:String(p.brand||''),title:String(p.title||''),variant:String(v.name||`Phân loại ${i+1}`),image:imageUrl(v.image||p.thumbnail||p.image),stock:v.stock!==null&&v.stock!==undefined&&Number.isFinite(Number(v.stock))?Number(v.stock):null});
+    const yenPrice = Number(v.purchase_price_jpy || 0);
+    rows.push({
+      key:productKey(sku),
+      productId:String(p.id),
+      variantIndex:i,
+      sku,
+      brand:String(p.brand||''),
+      title:String(p.title||''),
+      variant:String(v.name||`Phân loại ${i+1}`),
+      image:imageUrl(v.image||p.thumbnail||p.image),
+      stock:v.stock!==null&&v.stock!==undefined&&Number.isFinite(Number(v.stock))?Number(v.stock):null,
+      purchase_price_jpy: yenPrice
+    });
    }
   }
   catalog=rows;catalogMap=new Map(rows.map(p=>[p.key,p]));catalogLoaded=true;catalogError='';render();
@@ -98,7 +137,29 @@ function render(){
  $('batchSelector').innerHTML=db.batches.length?db.batches.map(x=>`<option value="${esc(x.id)}" ${b?.id===x.id?'selected':''}>${esc(x.id)} · ${esc(x.title)} ${x.done?'✓':''}</option>`).join(''):'<option value="">Chưa có đợt nhập</option>';
  $('editBatch').disabled=!open;$('addSku').disabled=!open;
  const lines=b?.lines||[],totalPlan=lines.reduce((s,x)=>s+x.plan,0),totalPicked=lines.reduce((s,x)=>s+x.picked,0),totalMissing=lines.reduce((s,x)=>s+remaining(x),0),totalExtra=lines.reduce((s,x)=>s+excess(x),0);
+ 
+ // Tính toán tổng tiền Yên và VNĐ (x170)
+ let yenPlanned = 0, yenPicked = 0, yenRemaining = 0;
+ lines.forEach(line => {
+   const live = resolve(line);
+   const unitYen = Number(live?.purchase_price_jpy || line.purchase_price_jpy || 0);
+   yenPlanned += line.plan * unitYen;
+   yenPicked += line.picked * unitYen;
+   yenRemaining += remaining(line) * unitYen;
+ });
+
  $('planned').textContent=number(totalPlan);$('picked').textContent=number(totalPicked);$('remaining').textContent=number(totalMissing);
+ 
+ // Hiển thị 3 ô tiền vốn mới
+ if ($('costPlanned')) $('costPlanned').textContent = '¥' + number(yenPlanned);
+ if ($('costPlannedVnd')) $('costPlannedVnd').textContent = '≈ ' + number(yenPlanned * RATE) + ' đ';
+
+ if ($('costPicked')) $('costPicked').textContent = '¥' + number(yenPicked);
+ if ($('costPickedVnd')) $('costPickedVnd').textContent = '≈ ' + number(yenPicked * RATE) + ' đ';
+
+ if ($('costRemaining')) $('costRemaining').textContent = '¥' + number(yenRemaining);
+ if ($('costRemainingVnd')) $('costRemainingVnd').textContent = '≈ ' + number(yenRemaining * RATE) + ' đ';
+
  const doneQty=lines.reduce((s,x)=>s+Math.min(x.picked,x.plan),0);const pct=totalPlan?Math.min(100,Math.round(doneQty/totalPlan*100)):0;
  $('percent').textContent=pct+'%';$('progress').style.width=pct+'%';$('skuCount').textContent=lines.length+' SKU';
  $('progressLabel').textContent=`${lines.filter(x=>x.picked>=x.plan).length}/${lines.length} SKU đã pick đủ`;
@@ -110,7 +171,8 @@ function render(){
   const color=ex>0||r===0?'green':line.picked>0?'orange':'gray';
   const status=ex>0?`Pick vượt +${number(ex)}`:r===0?'✓ Đã pick đủ':line.picked?'Đang pick':'Chưa pick';
   const stock=catalogLoaded?(live&&live.stock!==null?number(live.stock):'—'):'—';
-  return `<article class="card"><div class="product"><div class="product-photo">${photo(img,line.title)}</div><div class="product-info"><div class="eyebrow">${esc(line.brand)}</div><div class="product-title">${esc(line.title)}</div><div class="small">${esc(line.variant)}</div><div class="small">${esc(line.sku)} · Tồn kho hiện tại: <b>${stock}</b></div><span class="badge ${color}">${esc(status)}</span></div></div>
+  const unitYen = Number(live?.purchase_price_jpy || line.purchase_price_jpy || 0);
+  return `<article class="card"><div class="product"><div class="product-photo">${photo(img,line.title)}</div><div class="product-info"><div class="eyebrow">${esc(line.brand)}</div><div class="product-title">${esc(line.title)}</div><div class="small">${esc(line.variant)}</div><div class="small">${esc(line.sku)} · Giá: <b>¥${number(unitYen)}</b> · Tồn: <b>${stock}</b></div><span class="badge ${color}">${esc(status)}</span></div></div>
   <div class="quantities"><div class="qty"><label>Dự kiến</label><strong>${number(line.plan)}</strong></div><div class="qty"><label>Đã pick</label><strong>${number(line.picked)}</strong></div><div class="qty remaining"><label>Còn thiếu</label><strong>${number(r)}</strong></div></div>
   ${ex>0?`<div class="over">Vượt dự kiến +${number(ex)} món</div>`:''}
   <div class="small" style="margin-top:7px">${line.last?'Lần pick gần nhất: '+esc(stamp(line.last)):'Chưa ghi nhận pick'} · ${esc(line.picker||'')}</div>
@@ -129,10 +191,10 @@ function addSkuForm(){const b=active();if(!b||b.done)return;const loaded=catalog
 function renderChoices(){const b=active(),q=($('skuSearch')?.value||'').toLowerCase().trim();if(!$('choices'))return;
  const available=catalog.filter(x=>!b.lines.some(line=>line.key===x.key)&&`${x.sku} ${x.brand} ${x.title} ${x.variant}`.toLowerCase().includes(q));
  $('choiceCount').textContent=`${available.length} SKU có thể thêm`;
- $('choices').innerHTML=catalogLoaded?available.slice(0,80).map(x=>`<button class="choice" data-key="${esc(x.key)}"><img class="photo" src="${esc(x.image||'')}" alt="" loading="lazy" onerror="this.style.display='none'"><strong>${esc(x.title)}</strong><span class="small">${esc(x.variant)}<br>${esc(x.sku)} · Kho: ${x.stock??'—'}</span></button>`).join('')||'<div class="empty">Không còn SKU phù hợp</div>':'<div class="note warn">Chưa tải được danh sách từ /api/manage/products. Kiểm tra Azure Functions rồi tải lại trang.</div>';
+ $('choices').innerHTML=catalogLoaded?available.slice(0,80).map(x=>`<button class="choice" data-key="${esc(x.key)}"><img class="photo" src="${esc(x.image||'')}" alt="" loading="lazy" onerror="this.style.display='none'"><strong>${esc(x.title)}</strong><span class="small">${esc(x.variant)}<br>${esc(x.sku)} · Kho: ${x.stock??'—'} · ¥${number(x.purchase_price_jpy||0)}</span></button>`).join('')||'<div class="empty">Không còn SKU phù hợp</div>':'<div class="note warn">Chưa tải được danh sách từ /api/manage/products. Kiểm tra Azure Functions rồi tải lại trang.</div>';
 }
-function planNewSku(key){const p=catalogMap.get(key),b=active();if(!p||!b||b.done)return;openSheet(sheetHeader('Lập kế hoạch nhập')+`<div class="product spaced"><div class="product-photo">${photo(p.image,p.title)}</div><div class="product-info"><b>${esc(p.title)}</b><div class="small">${esc(p.variant)}</div><div class="small">${esc(p.sku)} · Kho: ${p.stock??'—'}</div></div></div><label class="form-label" for="planInput">Số lượng dự kiến cần pick</label><input id="planInput" type="number" min="1" max="999999" step="1" inputmode="numeric" value="1"><button class="button primary spaced" style="width:100%" id="addLineBtn">Thêm vào đợt nhập</button>`);$('addLineBtn').onclick=()=>addLine(key)}
-function addLine(key){const b=active(),p=catalogMap.get(key),n=Number($('planInput').value);if(!b||b.done||!p||!validPositive(n)){alert('Số lượng phải là số nguyên dương.');return}if(b.lines.some(x=>x.key===key)){alert('SKU này đã có trong đợt');return}b.lines.push({key,sku:p.sku,productId:p.productId,variantIndex:p.variantIndex,title:p.title,brand:p.brand,variant:p.variant,image:p.image,plan:n,picked:0,last:'',picker:''});logEvent(b,'add',`Thêm kế hoạch ${n} món`,p.sku);closeSheet();render()}
+function planNewSku(key){const p=catalogMap.get(key),b=active();if(!p||!b||b.done)return;openSheet(sheetHeader('Lập kế hoạch nhập')+`<div class="product spaced"><div class="product-photo">${photo(p.image,p.title)}</div><div class="product-info"><b>${esc(p.title)}</b><div class="small">${esc(p.variant)}</div><div class="small">${esc(p.sku)} · Kho: ${p.stock??'—'} · Giá: ¥${number(p.purchase_price_jpy||0)}</div></div></div><label class="form-label" for="planInput">Số lượng dự kiến cần pick</label><input id="planInput" type="number" min="1" max="999999" step="1" inputmode="numeric" value="1"><button class="button primary spaced" style="width:100%" id="addLineBtn">Thêm vào đợt nhập</button>`);$('addLineBtn').onclick=()=>addLine(key)}
+function addLine(key){const b=active(),p=catalogMap.get(key),n=Number($('planInput').value);if(!b||b.done||!p||!validPositive(n)){alert('Số lượng phải là số nguyên dương.');return}if(b.lines.some(x=>x.key===key)){alert('SKU này đã có trong đợt');return}b.lines.push({key,sku:p.sku,productId:p.productId,variantIndex:p.variantIndex,title:p.title,brand:p.brand,variant:p.variant,image:p.image,plan:n,picked:0,last:'',picker:'',purchase_price_jpy:p.purchase_price_jpy||0});logEvent(b,'add',`Thêm kế hoạch ${n} món`,p.sku);closeSheet();render()}
 function editPlan(key){const b=active(),p=b?.lines.find(x=>x.key===key);if(!p||b.done)return;openSheet(sheetHeader('Sửa kế hoạch')+`<div class="small spaced">${esc(p.title)} · ${esc(p.variant)} · ${esc(p.sku)}</div><label class="form-label">Số lượng dự kiến</label><input id="planInput" type="number" min="1" max="999999" value="${p.plan}"><p class="small">Có thể đặt kế hoạch thấp hơn số đã pick; hệ thống sẽ hiển thị phần vượt.</p><button class="button primary spaced" style="width:100%" id="savePlanBtn">Lưu kế hoạch</button>`);$('savePlanBtn').onclick=()=>savePlan(key)}
 function savePlan(key){const b=active(),p=b?.lines.find(x=>x.key===key),n=Number($('planInput').value);if(!p||!validPositive(n)){alert('Số lượng không hợp lệ');return}const old=p.plan;p.plan=n;logEvent(b,'plan',`Kế hoạch ${old} → ${n}`,p.sku);closeSheet();render()}
 function pickForm(key){const b=active(),p=b?.lines.find(x=>x.key===key);if(!p||b.done)return;activeLineKey=key;pickMode='quick';const btns=Array.from({length:10},(_,i)=>`<button class="pick-num ${i===0?'selected':''}" data-qty="${i+1}" aria-pressed="${i===0}">${i+1}</button>`).join('');
