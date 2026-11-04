@@ -7,6 +7,15 @@
       ]
     },
     {
+      "route": "/api/manage/products",
+      "methods": [
+        "GET"
+      ],
+      "allowedRoles": [
+        "morachiadmin"
+      ]
+    },
+    {
       "route": "/api/offline-orders",
       "methods": [
         "POST"
