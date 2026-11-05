@@ -969,7 +969,7 @@ window.goToCheckoutStep = function(step) {
     const labelStep2 = document.getElementById('step-label-2');
 
     if (step === 1) {
-        if (step1El) step1El.style.display = 'block';
+        if (step1El) step1El.style.display = 'flex';
         if (step2El) step2El.style.display = 'none';
         if (indicator1) {
             indicator1.className = 'step-circle active';
@@ -983,7 +983,7 @@ window.goToCheckoutStep = function(step) {
         if (lineProgress) lineProgress.style.width = '0%';
     } else {
         if (step1El) step1El.style.display = 'none';
-        if (step2El) step2El.style.display = 'block';
+        if (step2El) step2El.style.display = 'flex';
         if (indicator1) {
             indicator1.className = 'step-circle done';
             indicator1.innerHTML = '<i class="fas fa-check"></i>';
@@ -996,7 +996,7 @@ window.goToCheckoutStep = function(step) {
         if (lineProgress) lineProgress.style.width = '100%';
     }
 
-    document.querySelector('.checkout-mobile-content')?.scrollTo({ top: 0, behavior: 'smooth' });
+    document.querySelector('#checkout-step-' + step + ' .checkout-step-scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 window.handleCheckoutBack = function() {
@@ -1088,6 +1088,7 @@ function openCheckoutModal(itemsOverride = null, mode = 'cart') {
             <main class="checkout-mobile-content">
                 <!-- ================= BƯỚC 1: THÔNG TIN ĐẶT HÀNG ================= -->
                 <div id="checkout-step-1" class="checkout-step-view">
+                    <div class="checkout-step-scroll">
                     <section class="checkout-order-section">
                         <div class="checkout-section-title">
                             <span>1</span>
@@ -1116,6 +1117,7 @@ function openCheckoutModal(itemsOverride = null, mode = 'cart') {
                         </div>
                     </section>
 
+                    </div><!-- checkout-step-scroll -->
                     <div class="checkout-step-footer">
                         <button type="button" class="btn-checkout-next" onclick="goToCheckoutStep(2)">
                             <span>Tiếp tục</span> <i class="fas fa-arrow-right"></i>
@@ -1125,6 +1127,7 @@ function openCheckoutModal(itemsOverride = null, mode = 'cart') {
 
                 <!-- ================= BƯỚC 2: THANH TOÁN ================= -->
                 <div id="checkout-step-2" class="checkout-step-view" style="display: none;">
+                    <div class="checkout-step-scroll">
                     <section class="checkout-order-section">
                         <div class="checkout-section-title">
                             <span>3</span>
@@ -1154,8 +1157,6 @@ function openCheckoutModal(itemsOverride = null, mode = 'cart') {
                     </section>
 
                     <section class="checkout-order-section">
-                        <h3 class="checkout-summary-title">Tóm tắt đơn hàng</h3>
-                        <div class="checkout-order-products">${renderCheckoutOrderItems(checkoutItems)}</div>
                         <div class="checkout-cost-summary">
                             <div><span>Tạm tính</span><strong>${subtotal.toLocaleString('vi-VN')}đ</strong></div>
                             <div><span>Phí vận chuyển</span><strong>${shippingFee.toLocaleString('vi-VN')}đ</strong></div>
@@ -1167,6 +1168,7 @@ function openCheckoutModal(itemsOverride = null, mode = 'cart') {
                         </div>
                     </section>
 
+                    </div><!-- checkout-step-scroll -->
                     <div class="checkout-step-footer">
                         <button class="btn-checkout-confirm" onclick="submitOrder()">
                             <span class="submit-texts">
@@ -3002,6 +3004,49 @@ checkoutStyle.innerHTML = `
         margin: 10px 0 0;
     }
 `;
+
+/* Giữ nút hành động trong popup; chỉ cuộn nội dung của từng bước. */
+checkoutStyle.textContent += `
+    #checkout-modal .checkout-mobile-order {
+        height: min(94vh, 880px);
+        height: min(94dvh, 880px);
+    }
+    #checkout-modal .checkout-mobile-header-v2,
+    #checkout-modal .checkout-stepper-wrap { flex: 0 0 auto; }
+    #checkout-modal .checkout-mobile-content {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        padding: 0;
+    }
+    #checkout-modal .checkout-step-view {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+    }
+    #checkout-modal .checkout-step-scroll {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        padding: 0 18px 18px;
+    }
+    #checkout-modal .checkout-step-footer {
+        flex: 0 0 auto;
+        padding: 12px 18px calc(12px + env(safe-area-inset-bottom, 0px));
+        border-top: 1px solid #ececef;
+        background: #fff;
+        z-index: 2;
+    }
+    @media (max-width: 600px) {
+        #checkout-modal .checkout-mobile-order { height: 100%; max-height: 100%; }
+        #checkout-modal .checkout-step-scroll { padding-left: 15px; padding-right: 15px; }
+    }
+`;
+
 document.head.appendChild(checkoutStyle);
 
 
