@@ -407,9 +407,13 @@ def reorder_products(req: func.HttpRequest) -> func.HttpResponse:
                 continue
 
             product = items[0]
-            product["display_order"] = order_item["display_order"]
-            product["updated_at"] = now
-            container.replace_item(item=product["id"], body=product)
+            # Only write ordering metadata; never replace variants or SKU prices.
+            container.patch_item(
+                item=product["id"], partition_key=product.get("brand"),
+                patch_operations=[
+                    {"op": "set", "path": "/display_order", "value": order_item["display_order"]},
+                    {"op": "set", "path": "/updated_at", "value": now},
+                ])
             updated_count += 1
 
         return json_response({
@@ -480,10 +484,24 @@ def bulk_product_category(req: func.HttpRequest) -> func.HttpResponse:
 
                 product = items[0]
                 taxonomy = apply_product_taxonomy(product, patch)
-                product.update(taxonomy)
-                product["category_updated_at"] = now
-                product["updated_at"] = now
-                container.replace_item(item=product["id"], body=product)
+                # Taxonomy normalization uses the snapshot above. Reject a stale
+                # snapshot instead of overwriting newer edits; do not touch variants.
+                allowed_fields = {
+                    "category", "subcategory", "product_type", "is_highend",
+                    "collections", "category_source", "category_confidence",
+                }
+                patch_operations = [
+                    {"op": "set", "path": "/" + key, "value": value}
+                    for key, value in taxonomy.items() if key in allowed_fields
+                ]
+                patch_operations.extend([
+                    {"op": "set", "path": "/category_updated_at", "value": now},
+                    {"op": "set", "path": "/updated_at", "value": now},
+                ])
+                container.patch_item(
+                    item=product["id"], partition_key=product.get("brand"),
+                    patch_operations=patch_operations, etag=product["_etag"],
+                    match_condition=MatchConditions.IfNotModified)
                 updated_count += 1
             except Exception as item_error:
                 failed.append({"id": product_id, "error": str(item_error)})

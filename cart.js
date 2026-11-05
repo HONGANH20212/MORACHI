@@ -1056,13 +1056,6 @@ function openCheckoutModal(itemsOverride = null, mode = 'cart') {
                     <i class="fas fa-arrow-left"></i>
                 </button>
                 <div class="checkout-header-branding">
-                    <div class="checkout-logo-wrap">
-                        <img src="images/morachi_logo.png" alt="MORACHI" onerror="this.src='images/icon-logo.png'">
-                        <div>
-                            <h1>MORACHI</h1>
-                            <span>SHOP</span>
-                        </div>
-                    </div>
                     <h2>Đặt hàng</h2>
                 </div>
             </header>
@@ -1107,11 +1100,11 @@ function openCheckoutModal(itemsOverride = null, mode = 'cart') {
                         </div>
                         <div class="checkout-order-products">${renderCheckoutOrderItems(checkoutItems)}</div>
                         <div class="checkout-cost-summary">
-                            <div><span>Tạm tính</span><strong>${subtotal.toLocaleString('vi-VN')}đ</strong></div>
+                            <div><span>Giá trị đơn</span><strong>${subtotal.toLocaleString('vi-VN')}đ</strong></div>
                             <div><span>Phí vận chuyển</span><strong>${shippingFee.toLocaleString('vi-VN')}đ</strong></div>
                             <div><span>Giảm giá</span><strong>-</strong></div>
                             <div class="checkout-grand-total">
-                                <span>Tổng cộng</span>
+                                <span>Tổng tiền</span>
                                 <strong id="chk-total">${total.toLocaleString('vi-VN')}đ</strong>
                             </div>
                         </div>

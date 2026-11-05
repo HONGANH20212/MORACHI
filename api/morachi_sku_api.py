@@ -80,11 +80,13 @@ def ensure_skus_for_product(req: func.HttpRequest) -> func.HttpResponse:
         result = ct.patch_item(
             item=doc['id'],
             partition_key=doc.get('brand'),
-            patch_operations=patch_ops
+            patch_operations=patch_ops,
+            etag=doc['_etag'], match_condition=MatchConditions.IfNotModified
         )
         return resp({'ok': True, 'created': len(patch_ops), 'etag': result.get('_etag'), 'variants': variants})
     except Exception as e:
-        return resp({'error': str(e)}, 500)
+        status = 409 if isinstance(e, Conflict) or getattr(e, 'status_code', None) == 412 else (400 if isinstance(e, ValueError) else 500)
+        return resp({'error': str(e)}, status)
 
 
 # 2. QUÉT & TỰ ĐỘNG CẤP SKU CHO TOÀN BỘ SẢN PHẨM CÒN THIẾU TRONG DB
@@ -94,7 +96,7 @@ def auto_assign_all_missing_skus(req: func.HttpRequest) -> func.HttpResponse:
         ensure_admin(req)
         ct = container()
         docs = list(ct.query_items(
-            query="SELECT c.id, c.brand, c.variants FROM c WHERE NOT IS_DEFINED(c.type) AND IS_DEFINED(c.id)",
+            query="SELECT c.id, c.brand, c.variants, c._etag FROM c WHERE NOT IS_DEFINED(c.type) AND IS_DEFINED(c.id)",
             enable_cross_partition_query=True
         ))
 
@@ -118,14 +120,15 @@ def auto_assign_all_missing_skus(req: func.HttpRequest) -> func.HttpResponse:
             for i in missing:
                 code = reserve_code(ct, used_codes)
                 patch_ops.append({'op': 'set', 'path': f'/variants/{i}/sku', 'value': code})
-                assigned_count += 1
 
             try:
                 ct.patch_item(
                     item=doc['id'],
                     partition_key=doc.get('brand'),
-                    patch_operations=patch_ops
+                    patch_operations=patch_ops,
+            etag=doc['_etag'], match_condition=MatchConditions.IfNotModified
                 )
+                assigned_count += len(patch_ops)
                 updated_products += 1
             except Exception:
                 continue
@@ -136,7 +139,8 @@ def auto_assign_all_missing_skus(req: func.HttpRequest) -> func.HttpResponse:
             'updated_products': updated_products
         })
     except Exception as e:
-        return resp({'error': str(e)}, 500)
+        status = 409 if isinstance(e, Conflict) or getattr(e, 'status_code', None) == 412 else (400 if isinstance(e, ValueError) else 500)
+        return resp({'error': str(e)}, status)
 
 
 # 3. CHỈNH SỬA & NHẬP THÊM HÀNG VÀO KHO
@@ -149,9 +153,18 @@ def update_sku_details(req: func.HttpRequest) -> func.HttpResponse:
         doc = get_doc(ct, body['product_id'])
         
         variants = doc.get('variants') or []
-        idx = body.get('variant_index')
-        if type(idx) is not int or idx < 0 or idx >= len(variants):
-            raise ValueError('Variant index không hợp lệ')
+        # Identity is SKU; a stale row index must never choose the target.
+        sku = str(body.get('sku') or '').strip().upper()
+        if not sku:
+            raise ValueError('Thiếu SKU. Tải lại trang và gửi sku cùng product_id; không cập nhật chỉ bằng variant_index.')
+        matches = [i for i, variant in enumerate(variants)
+                   if isinstance(variant, dict) and
+                   str(variant.get('sku') or '').strip().upper() == sku]
+        if len(matches) != 1:
+            raise ValueError('SKU không tồn tại duy nhất trong sản phẩm. Tải lại dữ liệu.')
+        idx = matches[0]
+        if body.get('etag') and body['etag'] != doc['_etag']:
+            raise Conflict('Dữ liệu đã thay đổi. Tải lại trước khi lưu.')
             
         v = variants[idx]
         action = body.get('action', 'edit')
@@ -170,6 +183,8 @@ def update_sku_details(req: func.HttpRequest) -> func.HttpResponse:
             jpy = body.get('purchase_price_jpy')
             if jpy is not None:
                 jpy_val = int(jpy)
+                if jpy_val <= 0:
+                    raise ValueError('Giá JPY phải lớn hơn 0; không xóa giá bằng giá rỗng/0')
                 patch_ops.append({'op': 'set', 'path': f'/variants/{idx}/purchase_price_jpy', 'value': jpy_val})
                 patch_ops.append({'op': 'set', 'path': f'/variants/{idx}/cost_vnd', 'value': jpy_val * RATE})
             
@@ -192,8 +207,10 @@ def update_sku_details(req: func.HttpRequest) -> func.HttpResponse:
         result = ct.patch_item(
             item=doc['id'],
             partition_key=doc.get('brand'),
-            patch_operations=patch_ops
+            patch_operations=patch_ops,
+            etag=doc['_etag'], match_condition=MatchConditions.IfNotModified
         )
         return resp({'ok': True, 'etag': result.get('_etag'), 'message': 'Đã cập nhật thành công'})
     except Exception as e:
-        return resp({'error': str(e)}, 500)
+        status = 409 if isinstance(e, Conflict) or getattr(e, 'status_code', None) == 412 else (400 if isinstance(e, ValueError) else 500)
+        return resp({'error': str(e)}, status)
