@@ -2811,7 +2811,9 @@ checkoutStyle.innerHTML = `
         }
         .bank-payment-details span { font-size: 8.8px; }
         .bank-payment-details strong { font-size: 9.8px; }
-         /* HEADER THƯƠNG HIỆU V2 */
+    }
+
+    /* HEADER THƯƠNG HIỆU V2 — áp dụng cho mọi kích thước màn hình */
     .checkout-mobile-header-v2 {
         display: flex;
         align-items: center;
@@ -2998,7 +3000,6 @@ checkoutStyle.innerHTML = `
         color: #777a82;
         font-size: 11px;
         margin: 10px 0 0;
-    }
     }
 `;
 document.head.appendChild(checkoutStyle);
