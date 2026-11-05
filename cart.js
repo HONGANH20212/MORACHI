@@ -941,10 +941,73 @@ function renderCheckoutOrderItems(items) {
         </div>
     `).join('');
 }
+// ==============================================================
+// ĐIỀU HƯỚNG 2 BƯỚC CHECKOUT
+// ==============================================================
+let checkoutCurrentStep = 1;
 
+window.goToCheckoutStep = function(step) {
+    if (step === 2) {
+        // Kiểm tra xem đã có địa chỉ hợp lệ trước khi sang Bước 2
+        const selectedAddress = getCheckoutSelectedAddress();
+        const name = document.getElementById('chk-name')?.value.trim() || selectedAddress?.name;
+        const phone = document.getElementById('chk-phone')?.value.trim() || selectedAddress?.phone;
+        const address = document.getElementById('chk-address')?.value.trim() || selectedAddress?.address;
+
+        if (!name || !phone || !address || !selectedAddress?.provinceCode || !selectedAddress?.wardCode) {
+            openCheckoutAddressEditor();
+            return;
+        }
+    }
+
+    checkoutCurrentStep = step;
+    const step1El = document.getElementById('checkout-step-1');
+    const step2El = document.getElementById('checkout-step-2');
+    const indicator1 = document.getElementById('step-indicator-1');
+    const indicator2 = document.getElementById('step-indicator-2');
+    const lineProgress = document.getElementById('step-line-progress');
+    const labelStep2 = document.getElementById('step-label-2');
+
+    if (step === 1) {
+        if (step1El) step1El.style.display = 'block';
+        if (step2El) step2El.style.display = 'none';
+        if (indicator1) {
+            indicator1.className = 'step-circle active';
+            indicator1.innerHTML = '1';
+        }
+        if (indicator2) {
+            indicator2.className = 'step-circle';
+            indicator2.innerHTML = '2';
+        }
+        if (labelStep2) labelStep2.classList.remove('active');
+        if (lineProgress) lineProgress.style.width = '0%';
+    } else {
+        if (step1El) step1El.style.display = 'none';
+        if (step2El) step2El.style.display = 'block';
+        if (indicator1) {
+            indicator1.className = 'step-circle done';
+            indicator1.innerHTML = '<i class="fas fa-check"></i>';
+        }
+        if (indicator2) {
+            indicator2.className = 'step-circle active';
+            indicator2.innerHTML = '2';
+        }
+        if (labelStep2) labelStep2.classList.add('active');
+        if (lineProgress) lineProgress.style.width = '100%';
+    }
+
+    document.querySelector('.checkout-mobile-content')?.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+window.handleCheckoutBack = function() {
+    if (checkoutCurrentStep === 2) {
+        goToCheckoutStep(1);
+    } else {
+        closeCheckoutModal();
+    }
+};
 function openCheckoutModal(itemsOverride = null, mode = 'cart') {
-    const hasOverride =
-        Array.isArray(itemsOverride) && itemsOverride.length > 0;
+    const hasOverride = Array.isArray(itemsOverride) && itemsOverride.length > 0;
     const sourceItems = hasOverride ? itemsOverride : cart;
 
     if (!Array.isArray(sourceItems) || sourceItems.length === 0) {
@@ -954,6 +1017,7 @@ function openCheckoutModal(itemsOverride = null, mode = 'cart') {
 
     isBuyNowMode = mode === 'buy-now';
     checkoutItems = cloneCheckoutItems(sourceItems);
+    checkoutCurrentStep = 1; // Luôn bắt đầu từ Bước 1
 
     const drawer = document.getElementById('cart-drawer');
     const overlay = document.getElementById('cart-overlay');
@@ -965,15 +1029,12 @@ function openCheckoutModal(itemsOverride = null, mode = 'cart') {
     const subtotal = getCheckoutSubtotal();
     const total = subtotal + shippingFee;
 
-    // Đủ entropy cho đơn thật; giữ nguyên mã trong lần retry của popup hiện tại.
     const bytes = new Uint8Array(8);
     if (window.crypto && window.crypto.getRandomValues) {
         window.crypto.getRandomValues(bytes);
         currentCheckoutOrderId = 'MO' + Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
     } else {
-        // Fallback chỉ cho môi trường WebView không hỗ trợ crypto.
-        currentCheckoutOrderId = 'MO' + Date.now().toString(36).toUpperCase() +
-            Math.floor(Math.random() * 0xFFFFFF).toString(36).toUpperCase();
+        currentCheckoutOrderId = 'MO' + Date.now().toString(36).toUpperCase() + Math.floor(Math.random() * 0xFFFFFF).toString(36).toUpperCase();
     }
 
     const BANK_ACCOUNT = '2470168848012';
@@ -990,68 +1051,139 @@ function openCheckoutModal(itemsOverride = null, mode = 'cart') {
 
     modal.innerHTML = `
         <div class="checkout-box checkout-mobile-order">
-            <header class="checkout-mobile-header">
-                <button type="button" onclick="closeCheckoutModal()" aria-label="Quay lại"><i class="fas fa-arrow-left"></i></button>
-                <h2>Đặt hàng</h2>
-                <span></span>
+            <header class="checkout-mobile-header-v2">
+                <button type="button" class="checkout-back-btn" onclick="handleCheckoutBack()" aria-label="Quay lại">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="checkout-header-branding">
+                    <div class="checkout-logo-wrap">
+                        <img src="images/morachi_logo.png" alt="MORACHI" onerror="this.src='images/icon-logo.png'">
+                        <div>
+                            <h1>MORACHI</h1>
+                            <span>SHOP</span>
+                        </div>
+                    </div>
+                    <h2>Đặt hàng</h2>
+                </div>
             </header>
 
+            <!-- THANH TIẾN TRÌNH BƯỚC 1 VÀ 2 -->
+            <div class="checkout-stepper-wrap">
+                <div class="checkout-stepper">
+                    <div class="step-item" onclick="goToCheckoutStep(1)">
+                        <div class="step-circle active" id="step-indicator-1">1</div>
+                        <span class="step-label">Thông tin đặt hàng</span>
+                    </div>
+                    <div class="step-connector">
+                        <div class="step-line-bg"></div>
+                        <div class="step-line-progress" id="step-line-progress"></div>
+                    </div>
+                    <div class="step-item" onclick="goToCheckoutStep(2)">
+                        <div class="step-circle" id="step-indicator-2">2</div>
+                        <span class="step-label" id="step-label-2">Thanh toán</span>
+                    </div>
+                </div>
+            </div>
+
             <main class="checkout-mobile-content">
-                <section class="checkout-order-section checkout-address-section">
-                    <div class="checkout-section-title">
-                        <span>1</span>
-                        <h3>Địa chỉ nhận hàng</h3>
-                    </div>
-                    <div id="chk-address-summary"></div>
-                    <button type="button" class="checkout-add-address-inline" onclick="openCheckoutAddressEditor()">
-                        <i class="fas fa-plus"></i> Thêm địa chỉ mới
-                    </button>
-                </section>
+                <!-- ================= BƯỚC 1: THÔNG TIN ĐẶT HÀNG ================= -->
+                <div id="checkout-step-1" class="checkout-step-view">
+                    <section class="checkout-order-section">
+                        <div class="checkout-section-title">
+                            <span>1</span>
+                            <h3>Địa chỉ nhận hàng</h3>
+                        </div>
+                        <div id="chk-address-summary"></div>
+                        <button type="button" class="checkout-add-address-pill" onclick="openCheckoutAddressEditor()">
+                            <i class="fas fa-plus"></i> Thêm địa chỉ mới
+                        </button>
+                    </section>
 
-                <section class="checkout-order-section">
-                    <div class="checkout-section-title dark">
-                        <span>2</span>
-                        <h3>Thông tin đơn hàng</h3>
-                    </div>
-                    <div class="checkout-order-products">${renderCheckoutOrderItems(checkoutItems)}</div>
-                    <div class="checkout-cost-summary">
-                        <div><span>Tạm tính</span><strong>${subtotal.toLocaleString('vi-VN')}đ</strong></div>
-                        <div><span>Phí vận chuyển</span><strong>${shippingFee.toLocaleString('vi-VN')}đ</strong></div>
-                        <div><span>Giảm giá</span><strong>-</strong></div>
-                        <div class="checkout-grand-total"><span>Tổng cộng</span><strong id="chk-total">${total.toLocaleString('vi-VN')}đ</strong></div>
-                    </div>
-                </section>
+                    <section class="checkout-order-section">
+                        <div class="checkout-section-title">
+                            <span>2</span>
+                            <h3>Thông tin đơn hàng</h3>
+                        </div>
+                        <div class="checkout-order-products">${renderCheckoutOrderItems(checkoutItems)}</div>
+                        <div class="checkout-cost-summary">
+                            <div><span>Tạm tính</span><strong>${subtotal.toLocaleString('vi-VN')}đ</strong></div>
+                            <div><span>Phí vận chuyển</span><strong>${shippingFee.toLocaleString('vi-VN')}đ</strong></div>
+                            <div><span>Giảm giá</span><strong>-</strong></div>
+                            <div class="checkout-grand-total">
+                                <span>Tổng cộng</span>
+                                <strong id="chk-total">${total.toLocaleString('vi-VN')}đ</strong>
+                            </div>
+                        </div>
+                    </section>
 
-                <section class="checkout-order-section">
-                    <div class="checkout-section-title dark">
-                        <span>3</span>
-                        <h3>Phương thức thanh toán</h3>
+                    <div class="checkout-step-footer">
+                        <button type="button" class="btn-checkout-next" onclick="goToCheckoutStep(2)">
+                            <span>Tiếp tục</span> <i class="fas fa-arrow-right"></i>
+                        </button>
                     </div>
-                    <div class="checkout-payment-list">
-                        <label class="checkout-payment-option">
-                            <i class="fas fa-money-bill-wave cod-icon"></i>
-                            <span><strong>Thanh toán khi nhận hàng (COD)</strong><small>Thanh toán bằng tiền mặt khi nhận hàng</small></span>
-                            <input type="radio" name="chk-payment" value="cod" checked onchange="toggleBankInfo()">
-                            <em></em>
-                        </label>
-                        <label class="checkout-payment-option">
-                            <i class="fas fa-university bank-icon"></i>
-                            <span><strong>Chuyển khoản qua VietQR</strong><small>Mã QR tự động điền số tiền &amp; nội dung đơn hàng</small></span>
-                            <input type="radio" name="chk-payment" value="bank" onchange="toggleBankInfo()">
-                            <em></em>
-                        </label>
-                    </div>
+                </div>
 
-                    <div id="bank-info-box" style="display:none;"></div>
-                </section>
+                <!-- ================= BƯỚC 2: THANH TOÁN ================= -->
+                <div id="checkout-step-2" class="checkout-step-view" style="display: none;">
+                    <section class="checkout-order-section">
+                        <div class="checkout-section-title">
+                            <span>3</span>
+                            <h3>Phương thức thanh toán <span style="color:#d20e1d;">*</span></h3>
+                        </div>
+                        <div class="checkout-payment-list">
+                            <label class="checkout-payment-option">
+                                <i class="fas fa-money-bill-wave cod-icon"></i>
+                                <span>
+                                    <strong>Thanh toán khi nhận hàng (COD)</strong>
+                                    <small>Thanh toán bằng tiền mặt khi nhận hàng</small>
+                                </span>
+                                <input type="radio" name="chk-payment" value="cod" checked onchange="toggleBankInfo()">
+                                <em></em>
+                            </label>
+                            <label class="checkout-payment-option">
+                                <i class="fas fa-university bank-icon"></i>
+                                <span>
+                                    <strong>Chuyển khoản qua VietQR</strong>
+                                    <small>Mã QR tự động điền số tiền &amp; nội dung đơn hàng</small>
+                                </span>
+                                <input type="radio" name="chk-payment" value="bank" onchange="toggleBankInfo()">
+                                <em></em>
+                            </label>
+                        </div>
+                        <div id="bank-info-box" style="display:none;"></div>
+                    </section>
+
+                    <section class="checkout-order-section">
+                        <h3 class="checkout-summary-title">Tóm tắt đơn hàng</h3>
+                        <div class="checkout-order-products">${renderCheckoutOrderItems(checkoutItems)}</div>
+                        <div class="checkout-cost-summary">
+                            <div><span>Tạm tính</span><strong>${subtotal.toLocaleString('vi-VN')}đ</strong></div>
+                            <div><span>Phí vận chuyển</span><strong>${shippingFee.toLocaleString('vi-VN')}đ</strong></div>
+                            <div><span>Giảm giá</span><strong>-</strong></div>
+                            <div class="checkout-grand-total">
+                                <span>Tổng cộng</span>
+                                <strong id="chk-total-step2">${total.toLocaleString('vi-VN')}đ</strong>
+                            </div>
+                        </div>
+                    </section>
+
+                    <div class="checkout-step-footer">
+                        <button class="btn-checkout-confirm" onclick="submitOrder()">
+                            <span class="submit-texts">
+                                <strong><i class="fas fa-shopping-cart" style="margin-right:6px;"></i>Đặt hàng</strong>
+                                <small>Xác nhận thông tin và tạo đơn hàng</small>
+                            </span>
+                        </button>
+                        <p class="checkout-secure-note"><i class="fas fa-lock"></i> Thông tin của bạn được bảo mật</p>
+                    </div>
+                </div>
             </main>
 
+            <!-- POPUP QR KHI CHỌN VIETQR -->
             <div id="bank-payment-popup" class="bank-payment-popup" aria-hidden="true">
                 <div class="bank-payment-backdrop" onclick="closeBankPaymentPopup()"></div>
-
                 <section class="bank-payment-dialog" role="dialog" aria-modal="true" aria-labelledby="bank-payment-title">
                     <div class="bank-payment-handle"></div>
-
                     <header class="bank-payment-header">
                         <button type="button" class="bank-payment-close" onclick="closeBankPaymentPopup()" aria-label="Đóng">
                             <i class="fas fa-times"></i>
@@ -1061,53 +1193,26 @@ function openCheckoutModal(itemsOverride = null, mode = 'cart') {
                             <p>Quét mã VietQR để thanh toán</p>
                         </div>
                     </header>
-
                     <div class="bank-payment-body">
                         <div class="bank-payment-order-code">
                             <span>Mã đơn hàng</span>
                             <strong id="chk-order-id">${currentCheckoutOrderId}</strong>
                         </div>
-
                         <div class="bank-payment-qr-wrap">
-                            <img id="chk-qr-img" src="${qrUrl}" alt="Mã QR chuyển khoản VietQR">
+                            <img id="chk-qr-img" src="${qrUrl}" alt="Mã QR VietQR">
                         </div>
-
                         <div class="bank-payment-details">
-                            <div>
-                                <span>Ngân hàng</span>
-                                <strong>MB Quân Đội</strong>
-                            </div>
-                            <div>
-                                <span>Chủ tài khoản</span>
-                                <strong>${ACCOUNT_NAME}</strong>
-                            </div>
-                            <div>
-                                <span>Số tài khoản</span>
-                                <strong class="bank-copy-value">${BANK_ACCOUNT}</strong>
-                            </div>
-                            <div>
-                                <span>Số tiền</span>
-                                <strong id="chk-qr-amount" class="bank-payment-amount">${total.toLocaleString('vi-VN')}đ</strong>
-                            </div>
-                            <div>
-                                <span>Nội dung chuyển khoản</span>
-                                <strong id="chk-qr-content" class="bank-payment-content">${currentCheckoutOrderId}</strong>
-                            </div>
+                            <div><span>Ngân hàng</span><strong>MB Quân Đội</strong></div>
+                            <div><span>Chủ tài khoản</span><strong>${ACCOUNT_NAME}</strong></div>
+                            <div><span>Số tài khoản</span><strong class="bank-copy-value">${BANK_ACCOUNT}</strong></div>
+                            <div><span>Số tiền</span><strong id="chk-qr-amount" class="bank-payment-amount">${total.toLocaleString('vi-VN')}đ</strong></div>
+                            <div><span>Nội dung chuyển khoản</span><strong id="chk-qr-content" class="bank-payment-content">${currentCheckoutOrderId}</strong></div>
                         </div>
                     </div>
-
-
                 </section>
             </div>
 
-            <footer class="checkout-mobile-footer">
-
-                <button class="btn-checkout-confirm" onclick="submitOrder()">
-                    <span class="submit-texts"><strong>Đặt hàng</strong><small>Xác nhận thông tin và tạo đơn hàng</small></span>
-                </button>
-                <p><i class="fas fa-lock"></i> Thông tin của bạn được bảo mật</p>
-            </footer>
-
+            <!-- SHEET ĐỊA CHỈ & INPUT ẨN (BẢO TOÀN FORM VÀ TRUY VẤN) -->
             <div id="checkout-address-sheet" class="checkout-address-sheet" aria-hidden="true">
                 <div class="checkout-address-sheet-backdrop" onclick="closeCheckoutAddressSheet()"></div>
                 <div class="checkout-address-sheet-panel">
@@ -2706,6 +2811,194 @@ checkoutStyle.innerHTML = `
         }
         .bank-payment-details span { font-size: 8.8px; }
         .bank-payment-details strong { font-size: 9.8px; }
+         /* HEADER THƯƠNG HIỆU V2 */
+    .checkout-mobile-header-v2 {
+        display: flex;
+        align-items: center;
+        position: relative;
+        padding: 14px 18px 8px;
+        background: #fff;
+        border-bottom: 0;
+    }
+    .checkout-back-btn {
+        position: absolute;
+        left: 14px;
+        top: 18px;
+        width: 36px;
+        height: 36px;
+        border: none;
+        background: transparent;
+        font-size: 19px;
+        color: #17181c;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .checkout-header-branding {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .checkout-logo-wrap {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .checkout-logo-wrap img {
+        width: 30px;
+        height: 30px;
+        object-fit: contain;
+    }
+    .checkout-logo-wrap h1 {
+        font-family: 'Playfair Display', serif;
+        font-size: 17px;
+        font-weight: 800;
+        margin: 0;
+        line-height: 1;
+        color: #111;
+        letter-spacing: 0.5px;
+    }
+    .checkout-logo-wrap span {
+        font-size: 7px;
+        letter-spacing: 2px;
+        color: #666;
+        display: block;
+        margin-top: 2px;
+    }
+    .checkout-header-branding h2 {
+        font-size: 19px;
+        font-weight: 800;
+        margin: 10px 0 4px;
+        color: #111;
+    }
+
+    /* THANH TIẾN TRÌNH STEPPER (1 - 2) */
+    .checkout-stepper-wrap {
+        padding: 8px 30px 14px;
+        background: #fff;
+        border-bottom: 1px solid #f1f2f4;
+    }
+    .checkout-stepper {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        position: relative;
+        max-width: 320px;
+        margin: 0 auto;
+    }
+    .step-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        z-index: 2;
+        cursor: pointer;
+        min-width: 100px;
+    }
+    .step-circle {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #b6b9bf;
+        color: #fff;
+        font-weight: 700;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.25s ease;
+    }
+    .step-circle.active,
+    .step-circle.done {
+        background: #111;
+        color: #fff;
+    }
+    .step-label {
+        font-size: 11px;
+        color: #777a82;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .step-label.active {
+        color: #111;
+        font-weight: 700;
+    }
+    .step-connector {
+        flex: 1;
+        height: 2px;
+        position: relative;
+        margin: -18px 4px 0;
+        background: #e2e4e8;
+    }
+    .step-line-progress {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 0%;
+        background: #111;
+        transition: width 0.3s ease;
+    }
+
+    /* NÚT THÊM ĐỊA CHỈ DẠNG PILL */
+    .checkout-add-address-pill {
+        width: 100%;
+        min-height: 44px;
+        margin-top: 12px;
+        border: none;
+        border-radius: 12px;
+        background: #f1f3f6;
+        color: #1a1a1a;
+        font-size: 13px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+
+    /* NÚT TIẾP TỤC BƯỚC 1 VÀ ĐẶT HÀNG BƯỚC 2 */
+    .checkout-step-footer {
+        padding: 16px 0 8px;
+    }
+    .btn-checkout-next {
+        width: 100%;
+        min-height: 52px;
+        border: none;
+        border-radius: 999px;
+        background: #15161a;
+        color: #fff;
+        font-size: 15px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .checkout-step-2 .btn-checkout-confirm,
+    #checkout-step-2 .btn-checkout-confirm {
+        border-radius: 999px !important;
+        background: #15161a !important;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15) !important;
+    }
+    .checkout-summary-title {
+        font-size: 15px;
+        font-weight: 800;
+        margin: 0 0 14px;
+        color: #15161a;
+    }
+    .checkout-secure-note {
+        text-align: center;
+        color: #777a82;
+        font-size: 11px;
+        margin: 10px 0 0;
+    }
     }
 `;
 document.head.appendChild(checkoutStyle);
