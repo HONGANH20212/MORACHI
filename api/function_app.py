@@ -76,6 +76,10 @@ def get_cosmos_container():
     database = client.get_database_client(COSMOS_DB_NAME)
     return database.get_container_client(COSMOS_CONTAINER_NAME)
 
+from pick_batches_api import register_pick_batches
+register_pick_batches(app, get_cosmos_container)
+
+
 def get_blob_container_client():
     """Khởi tạo kết nối tới Azure Blob Storage để lưu ảnh"""
     if not BLOB_CONNECTION_STRING:
