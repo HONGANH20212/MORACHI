@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1e2636">
-<title>MORACHI • Quản lý đợt nhập hàng</title>
+<title>MORACHI • Quản lý đợt nhập hàng (UAT)</title>
 <style>
 :root{--navy:#1e2636;--orange:#f77722;--ink:#202939;--muted:#738095;--bg:#f4f6fa;--line:#e5e9f0;--green:#168758;--red:#c84648;--amber:#a76a16}
 *{box-sizing:border-box}body{margin:0;background:#e9edf5;color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}button,input,select{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}.phone{width:min(100%,460px);min-height:100dvh;margin:auto;position:relative;background:var(--bg);padding-bottom:calc(85px + env(safe-area-inset-bottom));box-shadow:0 0 35px #15213e12}
@@ -21,13 +21,12 @@
 <link rel="stylesheet" href="/admin/embedded-v3.css?v=20261028-3">
 </head>
 <body>
-<div class="note" id="syncBar" role="status" aria-live="polite" style="margin:8px auto;max-width:1500px"><span id="syncText">Đang kết nối…</span> <button id="reloadShared" class="button outline tiny">Tải lại</button> <button id="importLocal" class="button outline tiny hidden">Chuyển đợt cũ lên server</button></div>
 <div class="phone">
-  <header class="header"><div class="headtop"><div><div class="logo">MORACHI</div><div class="sub">Đợt nhập hàng · Pick hàng</div></div><span class="env">CHÍNH THỨC</span></div></header>
+  <header class="header"><div class="headtop"><div><div class="logo">MORACHI</div><div class="sub">Đợt nhập hàng · Pick hàng</div></div><span class="env">UAT · LOCAL</span></div></header>
   <section class="content" id="pickPage">
     <div class="row"><h1 class="heading">Đợt nhập hàng</h1><a class="small" href="/admin/" style="text-decoration:none">‹ Admin</a></div>
     <p class="description">Lập danh sách cần mua, ghi nhận số đã pick và thời gian thực hiện trên điện thoại.</p>
-    <div class="note">Đợt nhập dùng chung giữa các thiết bị. Chỉ ghi nhận pick; tồn kho thực tế cập nhật qua quy trình nhận hàng.</div>
+    <div class="note warn"><b>Bản thử giao diện:</b> Lưu dữ liệu đợt pick trên trình duyệt này. Người dùng ở điện thoại khác chưa nhìn thấy các thay đổi. Không thay đổi tồn kho Cosmos DB.</div>
     <div class="card"><div class="row"><span class="eyebrow">Đợt hiện tại</span><span id="batchStatus" class="status">Chưa tạo</span></div>
       <div class="batch-name" id="batchTitle">Chưa có đợt nhập</div>
       <label class="form-label" for="batchSelector">Chuyển đợt nhập</label><select id="batchSelector"><option value="">Chưa có đợt nhập</option></select>
@@ -75,7 +74,7 @@
 <div id="backdrop" class="sheet-backdrop"></div><aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Chỉnh đợt nhập"><div class="grabber"></div><div id="sheetContent"></div></aside>
 <script>
 'use strict';
-/* Shared plans via authenticated API; never writes product inventory. */
+/* UI-only UAT: /api/manage/products GET; localStorage for planned/picked; NEVER writes Cosmos DB. */
 const STORAGE_KEY='morachi_pick_batches_ui_v1';
 const RATE = 170;
 const $=id=>document.getElementById(id);
@@ -88,11 +87,8 @@ const validPositive=n=>Number.isSafeInteger(n)&&n>0&&n<=999999;
 const remaining=line=>Math.max(0,line.plan-line.picked);
 const excess=line=>Math.max(0,line.picked-line.plan);
 let db={batches:[],activeId:''},catalog=[],catalogMap=new Map(),catalogLoaded=false,catalogError='',filter='all',activeLineKey='',pickMode='quick';
-let legacyDb=null;
-try{const raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');if(raw&&Array.isArray(raw.batches)&&raw.batches.length)legacyDb=raw}catch(e){console.warn(e)}
-// Selection is local; changes to batches are committed by runSharedMutation.
-function save(){try{sessionStorage.setItem('morachi_pick_selected',db.activeId)}catch(e){}}
-
+try{const raw=JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');if(raw&&Array.isArray(raw.batches))db=raw}catch(e){console.warn('Không đọc được bản nháp pick',e)}
+function save(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(db))}catch(e){alert('Không lưu được vào trình duyệt. Kiểm tra dung lượng bộ nhớ.')}}
 function active(){return db.batches.find(b=>b.id===db.activeId)||null}
 function makeId(){return 'NH-'+new Date().toISOString().slice(0,10).replaceAll('-','')+'-'+Math.random().toString(36).slice(2,7).toUpperCase()}
 function openSheet(html){$('sheetContent').innerHTML=html;$('backdrop').classList.add('show');$('sheet').classList.add('open')}
@@ -190,7 +186,7 @@ function createBatch(){const title=$('batchName').value.trim(),start=$('batchSta
 function editBatchForm(){const b=active();if(!b||b.done)return;openSheet(sheetHeader('Chỉnh thời gian đợt nhập')+`<label class="form-label">Tên đợt nhập</label><input id="batchName" type="text" maxlength="100" value="${esc(b.title)}"><label class="form-label">Bắt đầu</label><input id="batchStart" type="datetime-local" value="${toInputDate(b.start)}"><label class="form-label">Hạn hoàn tất</label><input id="batchEnd" type="datetime-local" value="${toInputDate(b.end)}"><button class="button primary spaced" style="width:100%" onclick="updateBatch()">Lưu thay đổi</button>`)}
 function updateBatch(){const b=active(),title=$('batchName').value.trim(),start=$('batchStart').value,end=$('batchEnd').value;if(!b||!title||!start||!end||end<start){alert('Thời gian hoặc tên chưa hợp lệ.');return}b.title=title;b.start=new Date(start).toISOString();b.end=new Date(end).toISOString();logEvent(b,'edit','Điều chỉnh tên/thời gian đợt nhập');closeSheet();render()}
 function addSkuForm(){const b=active();if(!b||b.done)return;const loaded=catalog.length;
- openSheet(sheetHeader('Thêm SKU vào đợt nhập')+`<p class="small">Tìm theo SKU, tên hoặc màu. Tồn kho đọc từ Kho sản phẩm.</p><input type="search" id="skuSearch" placeholder="Tìm SKU / tên / màu..." oninput="renderChoices()"><div class="small spaced" id="choiceCount">${loaded} SKU</div><div class="chooser" id="choices"></div>`);
+ openSheet(sheetHeader('Thêm SKU vào đợt nhập')+`<p class="small">Tìm theo SKU, tên hoặc màu. Tồn kho đọc từ Kho sản phẩm UAT.</p><input type="search" id="skuSearch" placeholder="Tìm SKU / tên / màu..." oninput="renderChoices()"><div class="small spaced" id="choiceCount">${loaded} SKU</div><div class="chooser" id="choices"></div>`);
  renderChoices();}
 function renderChoices(){const b=active(),q=($('skuSearch')?.value||'').toLowerCase().trim();if(!$('choices'))return;
  const available=catalog.filter(x=>!b.lines.some(line=>line.key===x.key)&&`${x.sku} ${x.brand} ${x.title} ${x.variant}`.toLowerCase().includes(q));
@@ -214,7 +210,8 @@ function removeLine(key){
  b.logs??=[];
  b.logs.unshift({time,action:'remove',detail:`Xóa khỏi đợt · Kế hoạch ${line.plan} · Hủy pick ${picked}`,sku:line.sku});
  b.updatedAt=time;
- // Persistence is handled by runSharedMutation. Local legacy data stays intact.
+ try{localStorage.setItem(STORAGE_KEY,JSON.stringify(db))}
+ catch(error){db=JSON.parse(before);alert('Không lưu được thay đổi. Sản phẩm vẫn được giữ trong đợt.');return}
  if(activeLineKey===key)activeLineKey='';
  closeSheet();render();
 }
@@ -235,96 +232,7 @@ $('filters').onclick=e=>{const btn=e.target.closest('[data-filter]');if(!btn)ret
 $('products').onclick=e=>{const btn=e.target.closest('[data-action]');if(!btn)return;const key=btn.dataset.key;if(btn.dataset.action==='pick')pickForm(key);if(btn.dataset.action==='plan')editPlan(key);if(btn.dataset.action==='remove')removeLine(key)};
 $('sheetContent').onclick=e=>{const btn=e.target.closest('.choice[data-key]');if(btn)planNewSku(btn.dataset.key)};
 for(const btn of document.querySelectorAll('.nav'))btn.onclick=()=>{for(const x of document.querySelectorAll('.nav'))x.classList.toggle('active',x===btn);$('pickPage').classList.toggle('hidden',btn.dataset.page!=='pickPage');$('revenuePage').classList.toggle('hidden',btn.dataset.page!=='revenuePage');window.scrollTo(0,0)};
-
-const SHARED_API='/api/manage/pick-batches';
-let sharedReady=false,sharedBusy=false;
-function syncStatus(text,failed=false){$('syncText').textContent=text;$('syncBar').classList.toggle('warn',failed)}
-function setSharedLock(locked){
- document.querySelector('.phone').inert=locked;
- $('sheet').inert=locked;
- $('reloadShared').disabled=sharedBusy;
- $('importLocal').disabled=locked;
-}
-async function sharedRequest(url,options={}){
- const response=await fetch(url,{...options,credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/json',...(options.headers||{})},signal:AbortSignal.timeout(30000)});
- let data;try{data=await response.json()}catch(error){throw new Error('Phản hồi API không hợp lệ (HTTP '+response.status+'). Kiểm tra triển khai Functions.')}
- if(!response.ok)throw new Error(data.error||'HTTP '+response.status);
- return data;
-}
-async function loadShared(){
- const data=await sharedRequest(SHARED_API);
- if(!Array.isArray(data.batches))throw new Error('API thiếu danh sách đợt nhập');
- let selected=db.activeId;
- if(!selected)try{selected=sessionStorage.getItem('morachi_pick_selected')||''}catch(error){}
- db={batches:data.batches.sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||''))),activeId:selected};
- if(!db.batches.some(b=>b.id===db.activeId))db.activeId=db.batches[0]?.id||'';
- sharedReady=true;save();render();
- syncStatus('Đã đồng bộ · '+stamp(new Date()));
-}
-async function refreshShared(){
- if(sharedBusy)return;
- sharedBusy=true;setSharedLock(true);
- try{await loadShared()}catch(error){sharedReady=false;syncStatus(error.message,true)}
- finally{sharedBusy=false;setSharedLock(!sharedReady)}
-}
-async function putSharedBatch(batch,etag){
- return sharedRequest(SHARED_API+'/'+encodeURIComponent(batch.id),{method:'PUT',body:JSON.stringify({batch,etag:etag||null})});
-}
-async function runSharedMutation(original,args){
- if(!sharedReady||sharedBusy)return;
- const before=JSON.stringify(db);
- try{original(...args)}catch(error){db=JSON.parse(before);render();alert(error.message);return}
- const old=JSON.parse(before);
- const changed=db.batches.filter(batch=>JSON.stringify(batch)!==JSON.stringify(old.batches.find(b=>b.id===batch.id)));
- if(!changed.length)return;
- if(changed.length!==1){db=old;render();alert('Không thể lưu nhiều đợt trong một thao tác.');return}
- const changedBatch=changed[0],oldBatch=old.batches.find(b=>b.id===changedBatch.id);
- sharedBusy=true;setSharedLock(true);syncStatus('Đang lưu thay đổi lên server…');
- try{
-  const data=await putSharedBatch(changedBatch,oldBatch?.etag);
-  if(!data.batch?.etag)throw new Error('Thiếu xác nhận lưu từ server');
-  db.batches=db.batches.map(b=>b.id===data.batch.id?data.batch:b);
-  render();syncStatus('Đã lưu lên server · '+stamp(new Date()));
- }catch(error){
-  try{localStorage.setItem('morachi_pick_unsaved_'+Date.now(),JSON.stringify(changedBatch))}catch(ignore){}
-  db=old;sharedReady=false;render();
-  syncStatus(error.message+' Bấm Tải lại để kiểm tra kết quả trước khi làm tiếp.',true);
-  alert(error.message+'\nChưa xác nhận lưu thành công. Bấm Tải lại để kiểm tra, không ghi nhận pick lại ngay.');
- }finally{sharedBusy=false;setSharedLock(!sharedReady)}
-}
-// All mutation entry points, including inline onclick handlers, share one commit gate.
-createBatch=((fn)=>(...args)=>runSharedMutation(fn,args))(createBatch);
-updateBatch=((fn)=>(...args)=>runSharedMutation(fn,args))(updateBatch);
-addLine=((fn)=>(...args)=>runSharedMutation(fn,args))(addLine);
-savePlan=((fn)=>(...args)=>runSharedMutation(fn,args))(savePlan);
-savePick=((fn)=>(...args)=>runSharedMutation(fn,args))(savePick);
-removeLine=((fn)=>(...args)=>runSharedMutation(fn,args))(removeLine);
-complete=((fn)=>(...args)=>runSharedMutation(fn,args))(complete);
-// Earlier direct assignments captured old callbacks: rebind them after wrapping.
-$('completeBatch').onclick=complete;
-$('reloadShared').onclick=refreshShared;
-$('importLocal').classList.toggle('hidden',!legacyDb);
-$('importLocal').onclick=async()=>{
- if(sharedBusy||!sharedReady||!legacyDb)return;
- if(!confirm('Chuyển các đợt cũ của trình duyệt này lên server? Đợt trùng mã sẽ bỏ qua, không ghi đè. Bản cũ vẫn giữ trên trình duyệt.'))return;
- sharedBusy=true;setSharedLock(true);
- let imported=0,skipped=0;
- try{
-  // Re-read before migrating; a concurrent create is also protected server-side.
-  await loadShared();
-  for(const batch of legacyDb.batches){
-   if(db.batches.some(b=>b.id===batch.id)){skipped++;continue}
-   syncStatus('Đang chuyển đợt cũ '+(imported+1)+'…');
-   const result=await putSharedBatch(batch,null);db.batches.push(result.batch);imported++;
-  }
-  await loadShared();syncStatus(`Đã chuyển ${imported} đợt; bỏ qua ${skipped} đợt trùng mã. Bản cũ được giữ nguyên.`);
- }catch(error){sharedReady=false;syncStatus(`Đã chuyển ${imported} đợt. ${error.message} Bấm Tải lại trước khi tiếp tục.`,true)}
- finally{sharedBusy=false;setSharedLock(!sharedReady)}
-};
-window.addEventListener('beforeunload',event=>{if(sharedBusy){event.preventDefault();event.returnValue=''}});
-setInterval(()=>{if(sharedReady&&!sharedBusy&&!document.hidden&&!$('sheet').classList.contains('open'))refreshShared()},15000);
-render();setSharedLock(true);refreshShared();loadCatalog();
-
+render();loadCatalog();
 </script>
 </body>
 </html>
