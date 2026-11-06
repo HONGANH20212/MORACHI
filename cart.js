@@ -1029,12 +1029,14 @@ function openCheckoutModal(itemsOverride = null, mode = 'cart') {
     const subtotal = getCheckoutSubtotal();
     const total = subtotal + shippingFee;
 
-    const bytes = new Uint8Array(8);
+    // MO + 6 characters; keep the same code for QR, submission and retries.
+    const orderAlphabet = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const bytes = new Uint8Array(6);
     if (window.crypto && window.crypto.getRandomValues) {
         window.crypto.getRandomValues(bytes);
-        currentCheckoutOrderId = 'MO' + Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+        currentCheckoutOrderId = 'MO' + Array.from(bytes, b => orderAlphabet[b % orderAlphabet.length]).join('');
     } else {
-        currentCheckoutOrderId = 'MO' + Date.now().toString(36).toUpperCase() + Math.floor(Math.random() * 0xFFFFFF).toString(36).toUpperCase();
+        currentCheckoutOrderId = 'MO' + Array.from(bytes, () => orderAlphabet[Math.floor(Math.random() * orderAlphabet.length)]).join('');
     }
 
     const BANK_ACCOUNT = '2470168848012';

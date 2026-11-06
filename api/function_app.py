@@ -2,6 +2,7 @@ import os
 import re
 import json
 import uuid
+import secrets
 import mimetypes
 from datetime import datetime, timedelta
 from email.parser import BytesParser
@@ -1093,9 +1094,11 @@ def validate_and_build_order_items(container, raw_items):
     return safe_items, product_originals, product_updates
 
 
+# Short order codes; existing codes remain valid for lookup and retries.
 def generate_order_code():
-    """Mã đơn do server tạo, không thể thành N/A."""
-    return "MO" + datetime.utcnow().strftime("%m%d%H%M%S") + uuid.uuid4().hex[:4].upper()
+    """MO + 6 random uppercase letters/digits (8 characters total)."""
+    alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
+    return "MO" + "".join(secrets.choice(alphabet) for _ in range(6))
 
 
 def find_order_by_code(container, order_code):
