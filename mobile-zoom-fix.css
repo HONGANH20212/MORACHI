@@ -1,0 +1,32 @@
+@media (max-width: 1024px) and (pointer: coarse) {
+    /* Suppress double-tap zoom while allowing scrolling and pinch zoom.
+       Low specificity lets components keep their existing gesture rules. */
+    :where(html, body, body *) {
+        touch-action: manipulation;
+    }
+
+    /* iOS may zoom when a focused form control uses less than 16px.
+       The home search already has an important font-size declaration. */
+    body.home-products-page .search-bar input {
+        font-size: 16px !important;
+    }
+
+    body.home-mobile-refresh .mobile-brand-search input,
+    body.home-mobile-refresh .mobile-price-input input,
+    #mobile-sort,
+    body .checkout-address-form input[type="text"],
+    body .checkout-address-form input[type="tel"],
+    body .checkout-address-form select,
+    #chk-name,
+    #chk-phone,
+    #chk-address,
+    #chk-province,
+    #chk-district,
+    #chk-ward,
+    .input-wrapper #search-phone,
+    .track-modal-field input,
+    .track-modal-field textarea,
+    .track-ui-field textarea {
+        font-size: 16px;
+    }
+}
