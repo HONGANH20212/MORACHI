@@ -165,6 +165,62 @@ document.addEventListener('DOMContentLoaded', () => {
         syncFilterControls();
     }
 
+    const wishlistKey = 'morachi-mobile-wishlist';
+    const wishlistCount = document.getElementById('morachi-wishlist-count');
+    const wishlistItems = document.getElementById('morachi-wishlist-items');
+    const wishlist = new Set();
+    try {
+        const saved = JSON.parse(localStorage.getItem(wishlistKey) || '[]');
+        if (Array.isArray(saved)) {
+            saved.filter(id => typeof id === 'string' && id).forEach(id => wishlist.add(id));
+        }
+    } catch {
+        // If local storage is unavailable, favorites still work on this page.
+    }
+
+    function renderWishlist() {
+        const fragment = document.createDocumentFragment();
+        for (const product of state.allProducts) {
+            const id = encodeURIComponent(String(product.id ?? ''));
+            if (!wishlist.has(id)) continue;
+            const link = document.createElement('a');
+            link.href = 'product-detail.html?id=' + id;
+            link.textContent = product.title || 'Xem sản phẩm';
+            fragment.append(link);
+        }
+        if (!fragment.childElementCount) {
+            const empty = document.createElement('p');
+            empty.className = 'mobile-menu-caption';
+            empty.textContent = 'Chạm biểu tượng trái tim trên sản phẩm để lưu vào đây.';
+            fragment.append(empty);
+        }
+        wishlistItems.replaceChildren(fragment);
+    }
+
+    function updateWishlistCount() {
+        if (wishlistCount) wishlistCount.textContent = String(wishlist.size);
+    }
+
+    function updateWishlistCard(button, id) {
+        const liked = wishlist.has(id);
+        button.classList.toggle('active', liked);
+        button.setAttribute('aria-pressed', String(liked));
+    }
+
+    function toggleWishlistProduct(button, id) {
+        if (wishlist.has(id)) wishlist.delete(id);
+        else wishlist.add(id);
+        updateWishlistCard(button, id);
+        updateWishlistCount();
+        try {
+            localStorage.setItem(wishlistKey, JSON.stringify([...wishlist]));
+        } catch {
+            // Keep the current selection in memory.
+        }
+    }
+
+    updateWishlistCount();
+
     function openDialog(id, trigger) {
         const dialog = document.getElementById(id);
         if (!dialog || dialog.open) return;
@@ -173,6 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
         previousOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
         if (id === 'mobile-filters') hydrateFilterDraft();
+        if (id === 'mobile-wishlist' && wishlistItems) renderWishlist();
         dialog.showModal();
     }
 
@@ -588,16 +645,27 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const wish = card.querySelector('.btn-wishlist');
             if (wish) {
+                const id = card.dataset.productId;
+                if (mobile.matches && id && wishlistItems) updateWishlistCard(wish, id);
                 wish.setAttribute('aria-label', 'Yêu thích ' + title);
                 wish.setAttribute('aria-pressed', String(wish.classList.contains('active')));
                 if (!wish.dataset.mobileBound) {
                     wish.dataset.mobileBound = 'true';
+                    wish.addEventListener('keydown', event => {
+                        if (mobile.matches && wishlistItems) event.stopPropagation();
+                    });
                     wish.addEventListener('click', () => {
+                        if (mobile.matches && id && wishlistItems) {
+                            toggleWishlistProduct(wish, id);
+                            return;
+                        }
                         wish.setAttribute('aria-pressed', String(wish.classList.contains('active')));
                     });
                 }
             }
         });
+
+        if (wishlistItems?.closest('dialog')?.open) renderWishlist();
 
         // Product data may have just arrived from API; refresh brand choices without touching state.
         if (filterDialog?.open) renderMobileBrandOptions();
@@ -614,6 +682,7 @@ document.addEventListener('DOMContentLoaded', () => {
     mobile.addEventListener('change', () => {
         hideSearchSuggestions();
         syncStickyHeaderOffset();
+        if (mobile.matches) syncPresentation();
         if (!mobile.matches) closeDialogs();
     });
 });

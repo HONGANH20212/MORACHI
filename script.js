@@ -206,6 +206,7 @@ function renderProducts(products) {
         return `
             <article
                 class="product-card"
+                data-product-id="${id}"
                 tabindex="0"
                 role="link"
                 aria-label="Xem ${title}"

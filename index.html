@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="home-mobile.css?v=20260909-5">
     <link rel="stylesheet" href="home-reference-mobile.css?v=20261006-sticky1">
     <link rel="stylesheet" href="/mobile-zoom-fix.css?v=20261116-1">
+    <link rel="stylesheet" href="/morachi-mobile-header.css?v=20261116-1">
 </head>
 
 <body class="home-products-page home-mobile-refresh">
@@ -45,6 +46,10 @@
 
         <div class="main-header">
             <div class="container main-header-inner">
+                <button type="button" class="morachi-header-wishlist" data-open-dialog="mobile-wishlist" aria-label="Sản phẩm yêu thích" aria-haspopup="dialog">
+                    <i class="fa-regular fa-heart" aria-hidden="true"></i>
+                    <span id="morachi-wishlist-count" aria-live="polite">0</span>
+                </button>
                 <button type="button" class="mobile-only mobile-menu-toggle" data-open-dialog="mobile-menu" aria-label="Mở liên hệ nhanh" aria-haspopup="dialog"><i class="fa-solid fa-comments" aria-hidden="true"></i></button>
                 <div class="logo-area">
                     <a href="/">
@@ -306,6 +311,13 @@
         <a href="tracking.html"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i><span>Tra đơn</span></a>
         <button type="button" onclick="openCart()"><span class="mobile-bag-icon"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span class="cart-count">0</span></span><span>Giỏ hàng</span></button>
     </nav>
+    <dialog id="mobile-wishlist" class="mobile-sheet" aria-labelledby="mobile-wishlist-title">
+        <div class="mobile-sheet-heading">
+            <h2 id="mobile-wishlist-title">Sản phẩm yêu thích</h2>
+            <button type="button" data-close-dialog aria-label="Đóng danh sách yêu thích">×</button>
+        </div>
+        <div id="morachi-wishlist-items" class="mobile-menu-links"></div>
+    </dialog>
     <dialog id="mobile-menu" class="mobile-sheet" aria-labelledby="mobile-menu-title">
         <div class="mobile-sheet-heading"><h2 id="mobile-menu-title">Liên hệ nhanh</h2><button type="button" data-close-dialog aria-label="Đóng liên hệ nhanh">×</button></div>
         <div class="mobile-menu-links">
@@ -373,7 +385,7 @@
         </form>
     </dialog>
     <script src="cart.js?v=20261029-checkout-safe1"></script>
-    <script src="script.js"></script>
-    <script src="home-mobile.js?v=20261006-6"></script>
+    <script src="script.js?v=20261116-header1"></script>
+    <script src="home-mobile.js?v=20261116-header1"></script>
 </body>
 </html>
