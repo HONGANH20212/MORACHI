@@ -131,30 +131,21 @@
         display: none !important;
     }
 
-    /* Outline shopping bag, independent of the icon font. */
+    /* Shopping bag SVG selected by the shop owner. */
     body.home-products-page.home-mobile-refresh .home-catalog .btn-buy-now::before {
         content: "";
         position: absolute;
-        width: 10px;
-        height: 10px;
+        width: 22px;
+        height: 22px;
         left: 50%;
         top: 50%;
-        transform: translate(-50%, -35%);
-        border: 1.3px solid currentColor;
-        border-radius: 1px;
+        transform: translate(-50%, -50%);
+        background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23d13b2e%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M6.331%208h11.339a2%202%200%200%201%201.977%202.304l-1.255%208.152a3%203%200%200%201%20-2.966%202.544h-6.852a3%203%200%200%201%20-2.965%20-2.544l-1.255%20-8.152a2%202%200%200%201%201.977%20-2.304%22%2F%3E%3Cpath%20d%3D%22M9%2011v-5a3%203%200%200%201%206%200v5%22%2F%3E%3C%2Fsvg%3E") center / contain no-repeat;
+        pointer-events: none;
     }
 
     body.home-products-page.home-mobile-refresh .home-catalog .btn-buy-now::after {
-        content: "";
-        position: absolute;
-        width: 4px;
-        height: 6px;
-        left: 50%;
-        top: 8px;
-        transform: translateX(-50%);
-        border: 1.3px solid currentColor;
-        border-bottom: 0;
-        border-radius: 4px 4px 0 0;
+        content: none;
     }
 
     body.home-products-page.home-mobile-refresh .home-catalog .product-card .discount-badge {
