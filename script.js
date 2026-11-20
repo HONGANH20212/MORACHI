@@ -244,7 +244,7 @@ function renderProducts(products) {
                         <div class="product-price-meta">
                             <div class="price-group">
                                 <span class="current-price">${currentPrice}</span>
-                                ${oldPrice ? `<span class="old-price">${oldPrice}</span>` : ""}
+                                ${oldPrice ? `<span class="old-price">${oldPrice}</span>` : `<span class="product-origin">Nội địa Nhật</span>`}
                             </div>
 
                         </div>
