@@ -43,15 +43,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const seen = new Set();
         document.querySelectorAll('.floating-contact a').forEach(source => {
             const service = source.classList.contains('btn-messenger') ? 'messenger'
-                : source.classList.contains('btn-facebook') ? 'facebook'
                 : source.classList.contains('btn-tiktok1') ? 'tiktok1'
                 : source.classList.contains('btn-tiktok2') ? 'tiktok2' : '';
             if (!service || seen.has(service + source.href)) return;
             seen.add(service + source.href);
             if (service === 'messenger') {
                 appendContact(source, 'Messenger', 'fa-brands fa-facebook-messenger', '#0084ff');
-            } else if (service === 'facebook') {
-                appendContact(source, 'Facebook', 'fa-brands fa-facebook-f', '#1877f2');
             } else {
                 const label = source.querySelector('.tooltip')?.textContent.trim();
                 appendContact(source, label ? 'TikTok · ' + label : 'TikTok', 'fa-brands fa-tiktok', '#191919');
