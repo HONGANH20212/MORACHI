@@ -30,6 +30,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchSuggestions = document.getElementById('mobile-search-suggestions');
     const mobileHeader = document.querySelector('.modern-header');
 
+    // Keep the mobile category strip inside the same sticky glass surface.
+    const categoryStrip = document.getElementById('home-categories');
+    const categoryAnchor = document.createComment('home-categories original position');
+    if (categoryStrip && mobileHeader) {
+        categoryStrip.before(categoryAnchor);
+        function placeCategoryStrip() {
+            if (mobile.matches) {
+                mobileHeader.append(categoryStrip);
+            } else {
+                categoryAnchor.after(categoryStrip);
+            }
+        }
+        placeCategoryStrip();
+        mobile.addEventListener('change', placeCategoryStrip);
+    }
+
+    let headerFrame = 0;
+    function updateHeaderScroll() {
+        headerFrame = 0;
+        mobileHeader?.classList.toggle(
+            'morachi-header-scrolled',
+            mobile.matches && window.scrollY > 12
+        );
+    }
+    window.addEventListener('scroll', () => {
+        if (!headerFrame) headerFrame = requestAnimationFrame(updateHeaderScroll);
+    }, { passive: true });
+    window.addEventListener('pageshow', updateHeaderScroll);
+    mobile.addEventListener('change', updateHeaderScroll);
+    updateHeaderScroll();
+
+
 
     /* ===== MOBILE MAIN CATEGORY: SINGLE SELECTED VISUAL STATE =====
        Presentation only. Existing category/filter handlers keep running normally.

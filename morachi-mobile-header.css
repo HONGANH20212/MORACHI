@@ -162,3 +162,110 @@
         color: #625a55 !important;
     }
 }
+
+/* The header and categories scroll as one surface on mobile. */
+@media (max-width: 768px) {
+    body.home-products-page .modern-header {
+        position: -webkit-sticky !important;
+        position: sticky !important;
+        top: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: env(safe-area-inset-top, 0px) 0 0 !important;
+        border: 0 !important;
+        border-radius: 0 !important;
+        z-index: 1800 !important;
+        isolation: auto !important;
+        background: rgba(250, 248, 246, .92) !important;
+        -webkit-backdrop-filter: blur(16px) saturate(130%);
+        backdrop-filter: blur(16px) saturate(130%);
+        box-shadow: 0 1px 0 rgba(124, 87, 73, .12) !important;
+        transition: background-color .3s ease, box-shadow .3s ease;
+    }
+
+    body.home-products-page .modern-header.morachi-header-scrolled {
+        background: rgba(250, 248, 246, .76) !important;
+        box-shadow: 0 4px 20px rgba(70, 38, 32, .1) !important;
+    }
+
+    body.home-products-page .main-header-inner {
+        grid-template-columns: 44px minmax(0, 1fr) 40px !important;
+        grid-template-rows: 44px 40px !important;
+        gap: 7px 7px !important;
+        padding: 8px clamp(12px, 4vw, 18px) 9px !important;
+    }
+
+    body.home-products-page .logo-area {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
+        max-width: 100% !important;
+        justify-self: center !important;
+    }
+
+    body.home-products-page .logo-area a {
+        gap: 7px !important;
+    }
+
+    body.home-products-page .mobile-menu-toggle {
+        display: none !important;
+    }
+
+    body.home-products-page .header-actions {
+        grid-column: 3 !important;
+        grid-row: 1 !important;
+    }
+
+    body.home-products-page .search-bar {
+        grid-column: 1 / 3 !important;
+        grid-row: 2 !important;
+    }
+
+    body.home-products-page .mobile-header-filter {
+        grid-column: 3 !important;
+        grid-row: 2 !important;
+    }
+
+    body.home-products-page .modern-header #home-categories.home-category-area {
+        position: static !important;
+        top: auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 7px 0 8px !important;
+        border: 0 !important;
+        border-top: 1px solid rgba(186, 160, 144, .15) !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    body.home-products-page .modern-header #home-categories .home-main-categories {
+        background: transparent !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+    }
+
+    body.home-products-page #home-categories .home-main-category:not(.home-main-category-all) .home-main-category-icon {
+        display: none !important;
+    }
+}
+
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+    body.home-products-page .modern-header {
+        transition: none;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Clip horizontal overflow without creating a separate scroll container. */
+    html:has(body.home-products-page) {
+        overflow-x: clip !important;
+    }
+
+    body.home-products-page {
+        overflow-x: clip !important;
+    }
+}
