@@ -588,7 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return `Thương hiệu ${[...state.selectedBrands][0]}`;
         }
         if (!state.homeCategory && !state.homeSubcategory && !state.selectedBrands.size && state.minPrice === null && state.maxPrice === null) {
-            return 'Tất cả sản phẩm';
+            return 'Bộ Sưu Tập Nổi Bật';
         }
         if (state.homeCategory === 'makeup' && state.homeSubcategory) return `Trang điểm · ${SUBCATEGORY_LABELS[state.homeSubcategory] || ''}`;
         if (state.homeCategory && !state.selectedBrands.size && state.minPrice === null && state.maxPrice === null) {
@@ -658,7 +658,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (resultTitle) resultTitle.textContent = getMobileResultTitle();
         const desktopCount = document.getElementById('home-product-count')?.textContent || '';
-        if (resultCount) resultCount.textContent = desktopCount.replace(/[()]/g, '');
+        if (resultCount) resultCount.textContent = desktopCount
+            ? desktopCount.replace(/[()]/g, '') + ' chính hãng'
+            : 'Đang tải sản phẩm…';
         if (mobileSort) mobileSort.value = state.sort;
 
         const count = countActiveFilters();

@@ -269,3 +269,78 @@
         overflow-x: clip !important;
     }
 }
+
+/* Collection title and sorting use the existing catalog state. */
+@media (max-width: 768px) {
+    body.home-products-page .mobile-results-block {
+        width: 100% !important;
+        margin: 0 0 12px !important;
+        padding: 10px 0 0 !important;
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+
+    body.home-products-page .mobile-result-heading-row {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 4px 10px;
+        min-height: 44px;
+        padding: 0;
+    }
+
+    body.home-products-page #mobile-result-title {
+        margin: 0;
+        color: #1c1b1a;
+        font-family: 'Playfair Display', Georgia, serif !important;
+        font-size: 17px;
+        font-weight: 700;
+        line-height: 1.35;
+    }
+
+    body.home-products-page #mobile-result-count {
+        margin-top: 3px;
+        color: #82786f;
+        font-size: 12px;
+        line-height: 1.4;
+    }
+
+    body.home-products-page .mobile-result-heading-row .mobile-sort {
+        display: block !important;
+        grid-column: 2;
+        grid-row: 1;
+        width: 132px;
+        height: 34px;
+    }
+
+    body.home-products-page .mobile-result-heading-row #mobile-sort {
+        display: block !important;
+        width: 100%;
+        height: 34px;
+        min-height: 34px;
+        padding: 0 25px 0 11px;
+        border: 1px solid #e7dfd8;
+        border-radius: 999px;
+        background-color: #fff;
+        color: #342b25;
+        font: inherit;
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    body.home-products-page .mobile-result-heading-row .mobile-clear-active {
+        grid-column: 1 / -1;
+        justify-self: start;
+    }
+}
+
+@media (max-width: 360px) {
+    body.home-products-page #mobile-result-title {
+        font-size: 15px;
+    }
+
+    body.home-products-page .mobile-result-heading-row .mobile-sort {
+        width: 126px;
+    }
+}

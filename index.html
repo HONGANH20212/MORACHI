@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="home-mobile.css?v=20260909-5">
     <link rel="stylesheet" href="home-reference-mobile.css?v=20261006-sticky1">
     <link rel="stylesheet" href="/mobile-zoom-fix.css?v=20261116-1">
-    <link rel="stylesheet" href="/morachi-mobile-header.css?v=20261120-2">
+    <link rel="stylesheet" href="/morachi-mobile-header.css?v=20261120-featured1">
 </head>
 
 <body class="home-products-page home-mobile-refresh">
@@ -252,9 +252,18 @@
         <section class="mobile-only mobile-results-block" aria-label="Kết quả sản phẩm">
             <div class="mobile-result-heading-row">
                 <div class="mobile-result-heading-copy">
-                    <h2 id="mobile-result-title">Tất cả sản phẩm</h2>
+                    <h2 id="mobile-result-title">Bộ Sưu Tập Nổi Bật</h2>
                     <span id="mobile-result-count" aria-live="polite"></span>
                 </div>
+                <label class="mobile-sort">
+                    <span class="mobile-sr-only">Sắp xếp sản phẩm</span>
+                    <select id="mobile-sort">
+                        <option value="bestseller">Nổi bật</option>
+                        <option value="newest">Mới nhất</option>
+                        <option value="price_asc">Giá tăng dần</option>
+                        <option value="price_desc">Giá giảm dần</option>
+                    </select>
+                </label>
                 <button type="button" id="mobile-clear-active" class="mobile-clear-active" hidden>Xóa lọc</button>
             </div>
             <div id="mobile-active-filters" class="mobile-active-filters" aria-live="polite" hidden></div>
@@ -264,15 +273,7 @@
                     <span>Bộ lọc</span>
                     <span id="mobile-filter-count"></span>
                 </button>
-                <label class="mobile-sort">
-                    <span class="mobile-sr-only">Sắp xếp sản phẩm</span>
-                    <select id="mobile-sort">
-                        <option value="bestseller">Đề xuất</option>
-                        <option value="newest">Mới nhất</option>
-                        <option value="price_asc">Giá tăng dần</option>
-                        <option value="price_desc">Giá giảm dần</option>
-                    </select>
-                </label>
+
             </div>
         </section>
         <div class="home-section-heading">
@@ -385,7 +386,7 @@
         </form>
     </dialog>
     <script src="cart.js?v=20261029-checkout-safe1"></script>
-    <script src="script.js?v=20261120-header2"></script>
-    <script src="home-mobile.js?v=20261120-header2"></script>
+    <script src="script.js?v=20261120-featured1"></script>
+    <script src="home-mobile.js?v=20261120-featured1"></script>
 </body>
 </html>
