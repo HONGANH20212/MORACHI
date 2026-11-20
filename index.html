@@ -17,7 +17,94 @@
     <link rel="stylesheet" href="/morachi-mobile-header.css?v=20261120-cart3">
     <link rel="stylesheet" href="/morachi-product-cards.css?v=20261120-bag2">
     <link rel="stylesheet" href="/morachi-bottom-nav.css?v=20261120-glass2">
-    <link rel="stylesheet" href="/morachi-contact-popover.css?v=20261120-2">
+    <style id="morachi-contact-styles">
+.morachi-contact-popover[hidden] {
+    display: none !important;
+}
+
+@media (max-width: 768px) {
+    body.home-products-page .floating-contact {
+        display: none !important;
+    }
+
+    .morachi-contact-popover {
+        position: fixed;
+        right: 16px;
+        bottom: calc(86px + env(safe-area-inset-bottom, 0px));
+        z-index: 1900;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        width: min(225px, calc(100vw - 32px));
+        max-height: calc(100dvh - 110px - env(safe-area-inset-bottom, 0px));
+        overflow-y: auto;
+        padding: 3px;
+        animation: morachi-contact-reveal .18s ease-out;
+    }
+
+    .morachi-contact-pill {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        min-height: 44px;
+        padding: 5px 6px 5px 15px;
+        border: 1px solid #eee7e1;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, .97);
+        box-shadow: 0 3px 12px rgba(40, 28, 23, .08);
+        color: #171717;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 1.35;
+        text-decoration: none;
+        box-sizing: border-box;
+    }
+
+    .morachi-contact-pill > span:first-child {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .morachi-contact-badge {
+        display: inline-flex;
+        flex: 0 0 32px;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        color: #fff;
+        font-size: 17px;
+    }
+
+    .morachi-contact-pill:focus-visible {
+        outline: 2px solid #a52930;
+        outline-offset: -2px;
+    }
+}
+
+@keyframes morachi-contact-reveal {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .morachi-contact-popover { animation: none; }
+}
+
+@media (max-width: 768px) {
+    #mobile-contact .morachi-contact-trigger-icon {
+        display: block;
+        flex-shrink: 0;
+        width: 22px;
+        height: 22px;
+        color: #111;
+    }
+}
+
+    </style>
 </head>
 
 <body class="home-products-page home-mobile-refresh">
@@ -388,6 +475,76 @@
     <script src="cart.js?v=20261029-checkout-safe1"></script>
     <script src="script.js?v=20261120-cards1"></script>
     <script src="home-mobile.js?v=20261120-featured1"></script>
-    <script src="/morachi-contact-popover.js?v=20261120-2"></script>
+    <div id="morachi-contact-list" class="morachi-contact-popover" role="region" aria-label="Liên hệ MORACHI" hidden>
+        <a class="morachi-contact-pill" data-contact-service="messenger" href="https://www.facebook.com/profile.php?id=61572066442519" target="_blank" rel="noopener noreferrer">
+            <span>Messenger</span><span class="morachi-contact-badge" style="background:#0084ff" aria-hidden="true"><i class="fa-brands fa-facebook-messenger"></i></span>
+        </a>
+        <a class="morachi-contact-pill" data-contact-service="tiktok1" href="https://www.tiktok.com/@donhatnoidia2026" target="_blank" rel="noopener noreferrer">
+            <span>TikTok · Tiệm đồ nhật nội địa</span><span class="morachi-contact-badge" style="background:#191919" aria-hidden="true"><i class="fa-brands fa-tiktok"></i></span>
+        </a>
+        <a class="morachi-contact-pill" data-contact-service="tiktok2" href="https://www.tiktok.com/@morachijanpan" target="_blank" rel="noopener noreferrer">
+            <span>TikTok · Morachi</span><span class="morachi-contact-badge" style="background:#191919" aria-hidden="true"><i class="fa-brands fa-tiktok"></i></span>
+        </a>
+        <a class="morachi-contact-pill" data-contact-service="phone" href="tel:0948313842">
+            <span>Gọi shop</span><span class="morachi-contact-badge" style="background:#258955" aria-hidden="true"><i class="fa-solid fa-phone"></i></span>
+        </a>
+    </div>
+    <script id="morachi-contact-controller">
+    (() => {
+        function initContacts() {
+            const trigger = document.getElementById('mobile-contact');
+            const panel = document.getElementById('morachi-contact-list');
+            if (!trigger || !panel || trigger.dataset.contactBound) return;
+            trigger.dataset.contactBound = 'true';
+
+            function closeContacts(restoreFocus = false) {
+                panel.hidden = true;
+                trigger.setAttribute('aria-expanded', 'false');
+                if (restoreFocus) trigger.focus({ preventScroll: true });
+            }
+
+            function syncContactLinks() {
+                const sources = {
+                    messenger: '.floating-contact .btn-messenger',
+                    tiktok1: '.floating-contact .btn-tiktok1',
+                    tiktok2: '.floating-contact .btn-tiktok2',
+                    phone: '#mobile-menu a[href^="tel:"]'
+                };
+                for (const [service, selector] of Object.entries(sources)) {
+                    const source = document.querySelector(selector);
+                    const link = panel.querySelector('[data-contact-service="' + service + '"]');
+                    if (source && link) link.href = source.href;
+                }
+            }
+
+            trigger.addEventListener('click', () => {
+                const opening = panel.hidden;
+                syncContactLinks();
+                panel.hidden = !opening;
+                trigger.setAttribute('aria-expanded', String(opening));
+            });
+            document.addEventListener('pointerdown', event => {
+                if (!trigger.contains(event.target) && !panel.contains(event.target)) closeContacts();
+            });
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && !panel.hidden) closeContacts(true);
+            });
+            panel.addEventListener('click', event => {
+                if (event.target.closest('a')) closeContacts();
+            });
+            panel.addEventListener('focusout', event => {
+                if (!panel.contains(event.relatedTarget) && !trigger.contains(event.relatedTarget)) closeContacts();
+            });
+            window.matchMedia('(max-width: 768px)').addEventListener('change', () => closeContacts());
+            closeContacts();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initContacts, { once: true });
+        } else {
+            initContacts();
+        }
+    })();
+    </script>
 </body>
 </html>
