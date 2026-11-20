@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="/morachi-mobile-header.css?v=20261120-cart3">
     <link rel="stylesheet" href="/morachi-product-cards.css?v=20261120-bag2">
     <link rel="stylesheet" href="/morachi-bottom-nav.css?v=20261120-glass2">
+    <link rel="stylesheet" href="/morachi-contact-popover.css?v=20261120-1">
 </head>
 
 <body class="home-products-page home-mobile-refresh">
@@ -311,7 +312,7 @@
         <button type="button" class="active" id="mobile-home" aria-current="page"><i class="fa-solid fa-house" aria-hidden="true"></i><span>Trang chủ</span></button>
         <button type="button" id="mobile-categories" hidden aria-hidden="true"><i class="fa-solid fa-border-all" aria-hidden="true"></i><span>Danh mục</span></button>
         <a href="tracking.html"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i><span>Tra đơn</span></a>
-        <button type="button" id="mobile-contact" data-open-dialog="mobile-menu" aria-haspopup="dialog" aria-controls="mobile-menu"><i class="fa-solid fa-headset" aria-hidden="true"></i><span>Liên hệ</span></button>
+        <button type="button" id="mobile-contact" aria-expanded="false" aria-controls="morachi-contact-list"><i class="fa-solid fa-headset" aria-hidden="true"></i><span>Liên hệ</span></button>
     </nav>
     <dialog id="mobile-wishlist" class="mobile-sheet" aria-labelledby="mobile-wishlist-title">
         <div class="mobile-sheet-heading">
@@ -387,5 +388,6 @@
     <script src="cart.js?v=20261029-checkout-safe1"></script>
     <script src="script.js?v=20261120-cards1"></script>
     <script src="home-mobile.js?v=20261120-featured1"></script>
+    <script src="/morachi-contact-popover.js?v=20261120-1"></script>
 </body>
 </html>
