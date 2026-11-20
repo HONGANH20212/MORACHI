@@ -10,9 +10,9 @@
         padding: 5px 8px !important;
         border: 1px solid rgba(255, 255, 255, .72) !important;
         border-radius: 999px !important;
-        background: rgba(244, 235, 228, .78) !important;
-        -webkit-backdrop-filter: blur(22px) saturate(150%);
-        backdrop-filter: blur(22px) saturate(150%);
+        background: rgba(244, 235, 228, .32) !important;
+        -webkit-backdrop-filter: blur(18px) saturate(160%);
+        backdrop-filter: blur(18px) saturate(160%);
         box-shadow: 0 6px 24px rgba(54, 37, 29, .13) !important;
         box-sizing: border-box;
     }
@@ -48,7 +48,7 @@
     body.home-products-page.home-mobile-refresh .mobile-bottom-nav .active,
     body.home-products-page.home-mobile-refresh .mobile-bottom-nav [aria-current="page"] {
         color: #111 !important;
-        background: rgba(255, 255, 255, .24) !important;
+        background: rgba(255, 255, 255, .12) !important;
     }
 
     body.home-products-page.home-mobile-refresh .mobile-bottom-nav .cart-count {
