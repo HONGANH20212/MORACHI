@@ -311,7 +311,7 @@
         <button type="button" class="active" id="mobile-home" aria-current="page"><i class="fa-solid fa-house" aria-hidden="true"></i><span>Trang chủ</span></button>
         <button type="button" id="mobile-categories" hidden aria-hidden="true"><i class="fa-solid fa-border-all" aria-hidden="true"></i><span>Danh mục</span></button>
         <a href="tracking.html"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i><span>Tra đơn</span></a>
-        <button type="button" onclick="openCart()"><span class="mobile-bag-icon"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span class="cart-count">0</span></span><span>Giỏ hàng</span></button>
+        <button type="button" id="mobile-contact" data-open-dialog="mobile-menu" aria-haspopup="dialog" aria-controls="mobile-menu"><i class="fa-solid fa-headset" aria-hidden="true"></i><span>Liên hệ</span></button>
     </nav>
     <dialog id="mobile-wishlist" class="mobile-sheet" aria-labelledby="mobile-wishlist-title">
         <div class="mobile-sheet-heading">
@@ -321,10 +321,8 @@
         <div id="morachi-wishlist-items" class="mobile-menu-links"></div>
     </dialog>
     <dialog id="mobile-menu" class="mobile-sheet" aria-labelledby="mobile-menu-title">
-        <div class="mobile-sheet-heading"><h2 id="mobile-menu-title">Liên hệ nhanh</h2><button type="button" data-close-dialog aria-label="Đóng liên hệ nhanh">×</button></div>
+        <div class="mobile-sheet-heading"><h2 id="mobile-menu-title">Liên hệ MORACHI</h2><button type="button" data-close-dialog aria-label="Đóng liên hệ nhanh">×</button></div>
         <div class="mobile-menu-links">
-            <button type="button" id="mobile-menu-all">Tất cả sản phẩm <span>→</span></button>
-            <a href="tracking.html">Tra cứu đơn hàng <span>→</span></a>
             <a href="tel:0948313842">Gọi shop: 0948 313 842 <span>↗</span></a>
         </div>
         <p class="mobile-menu-caption">Liên hệ MORACHI</p>
